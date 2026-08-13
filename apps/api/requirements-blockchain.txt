@@ -1,0 +1,4 @@
+# Optional EAS on-chain anchor runtime. Local Merkle receipts need no extra dependency.
+web3>=7.13,<8
+eth-abi>=5.2,<6
+

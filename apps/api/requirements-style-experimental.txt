@@ -1,0 +1,9 @@
+# Optional learned creator-style retrieval runtime.
+# CSD itself is kept as an external checkout under vendor/CSD rather than copied into CreatorProof.
+-r requirements-ai.txt
+torchvision>=0.20,<1
+huggingface-hub>=0.26,<2
+ftfy>=6,<7
+regex>=2024.11
+tqdm>=4.66,<5
+git+https://github.com/openai/CLIP.git

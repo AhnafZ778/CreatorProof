@@ -1,0 +1,2 @@
+# Optional local AI runtime. Install into the API environment before enabling SSCD.
+torch>=2.5,<3
