@@ -1,0 +1,49 @@
+.DS_Store
+
+# Local configuration: commit only reviewed examples.
+.env*
+!.env.example
+!.env.*.example
+
+# Python environments, caches, and generated files.
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+*.py[cod]
+
+# JavaScript dependencies, build output, and coverage.
+node_modules/
+.next/
+dist/
+build/
+out/
+coverage/
+htmlcov/
+*.tsbuildinfo
+
+# Runtime state must never enter source history.
+data/
+*.db
+*.db-*
+*.db.*
+*.sqlite
+*.sqlite-*
+*.sqlite.*
+*.sqlite3
+*.sqlite3-*
+*.sqlite3.*
+*.log
+
+# Third-party checkouts, downloaded models, and generated benchmark reports.
+apps/api/vendor/
+apps/api/models/*
+!apps/api/models/README.md
+apps/api/benchmarks/reports/*
+!apps/api/benchmarks/reports/README.md
+
+# Generated local-chain deployment receipt.
+blockchain-local/deployment.json
