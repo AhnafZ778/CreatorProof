@@ -1,0 +1,109 @@
+{
+  "schema": "creatorproof.dependency_terms_registry.v1",
+  "registry_id": "creatorproof-part1-dependency-terms-v1",
+  "legal_approval_state": "NOT_LEGAL_ADVICE_REQUIRES_OWNER_APPROVAL",
+  "records": [
+    {
+      "component_id": "copy-retrieval-sscd",
+      "source_reference": "https://github.com/facebookresearch/sscd-copy-detection",
+      "code_terms_state": "REVIEW_REQUIRED",
+      "artifact_terms_state": "REVIEW_REQUIRED",
+      "training_data_terms_state": "RESEARCH_DISCLOSURE_REVIEW_REQUIRED",
+      "evaluation_data_terms_state": "NOT_APPLICABLE_EXTERNAL_AUTHORIZED_CORPUS_REQUIRED",
+      "attribution_state": "REVIEW_REQUIRED",
+      "removal_path": "Disable learned retrieval; coverage becomes degraded when LEARNED_REQUIRED.",
+      "notes": ["Repository, model artifact, and upstream training data are separate review records."]
+    },
+    {
+      "component_id": "copy-geometry-opencv",
+      "source_reference": "https://github.com/opencv/opencv",
+      "code_terms_state": "RESOLVED_FOR_CURRENT_REPOSITORY_USE",
+      "artifact_terms_state": "NOT_APPLICABLE",
+      "training_data_terms_state": "NOT_APPLICABLE",
+      "evaluation_data_terms_state": "EXTERNAL_AUTHORIZED_CORPUS_REQUIRED",
+      "attribution_state": "NOTICE_REVIEW_REQUIRED",
+      "removal_path": "No non-identical copy finding is allowed without a geometric verifier.",
+      "notes": ["Final distribution notices remain an operator release task."]
+    },
+    {
+      "component_id": "copy-aligned-structure",
+      "source_reference": "CreatorProof repository implementation",
+      "code_terms_state": "PROJECT_CONTROLLED",
+      "artifact_terms_state": "NOT_APPLICABLE",
+      "training_data_terms_state": "NOT_APPLICABLE",
+      "evaluation_data_terms_state": "EXTERNAL_AUTHORIZED_CORPUS_REQUIRED",
+      "attribution_state": "PROJECT_CONTROLLED",
+      "removal_path": "No non-identical copy finding is allowed without aligned corroboration.",
+      "notes": ["Thresholds remain prototype operating points."]
+    },
+    {
+      "component_id": "origin-community-forensics",
+      "source_reference": "https://huggingface.co/OwensLab/commfor-model-384",
+      "code_terms_state": "REVIEW_REQUIRED",
+      "artifact_terms_state": "REVIEW_REQUIRED",
+      "training_data_terms_state": "REVIEW_REQUIRED",
+      "evaluation_data_terms_state": "EXTERNAL_AUTHORIZED_CORPUS_REQUIRED",
+      "attribution_state": "REVIEW_REQUIRED",
+      "removal_path": "Keep AI-origin informational and report detector unavailable.",
+      "notes": ["Do not infer artifact or dataset permission from a repository code license."]
+    },
+    {
+      "component_id": "origin-sightengine-genai",
+      "source_reference": "https://sightengine.com/docs/ai-generated-image-detection",
+      "code_terms_state": "EXTERNAL_SERVICE_API",
+      "artifact_terms_state": "VENDOR_MANAGED_NOT_LOCALLY_PINNED",
+      "training_data_terms_state": "VENDOR_DISCLOSURE_AND_OWNER_REVIEW_REQUIRED",
+      "evaluation_data_terms_state": "EXTERNAL_AUTHORIZED_CORPUS_REQUIRED",
+      "attribution_state": "SERVICE_TERMS_REVIEW_REQUIRED",
+      "removal_path": "Disable the remote primary; local detectors remain the explicit operational fallback when provisioned.",
+      "notes": [
+        "API access does not establish accuracy, training-data rights, or fitness for CreatorProof's deployment domain.",
+        "Credentials must remain in a private environment file or secret manager and never in packets, logs, screenshots, or Git."
+      ]
+    },
+    {
+      "component_id": "origin-c2pa",
+      "source_reference": "https://github.com/contentauth/c2pa-rs",
+      "code_terms_state": "RESOLVED_FOR_CURRENT_REPOSITORY_USE",
+      "artifact_terms_state": "OPERATOR_BINARY_VERSION_REQUIRED",
+      "training_data_terms_state": "NOT_APPLICABLE",
+      "evaluation_data_terms_state": "AUTHORIZED_FIXTURES_REQUIRED",
+      "attribution_state": "NOTICE_REVIEW_REQUIRED",
+      "removal_path": "Report provenance NOT_CHECKED; never infer human origin.",
+      "notes": ["Trust roots and trust policy are configuration, not license facts."]
+    },
+    {
+      "component_id": "origin-visible-marker",
+      "source_reference": "https://github.com/tesseract-ocr/tesseract",
+      "code_terms_state": "RESOLVED_FOR_CURRENT_REPOSITORY_USE",
+      "artifact_terms_state": "OPERATOR_BINARY_AND_LANGUAGE_DATA_REQUIRED",
+      "training_data_terms_state": "LANGUAGE_DATA_TERMS_REVIEW_REQUIRED",
+      "evaluation_data_terms_state": "AUTHORIZED_FIXTURES_REQUIRED",
+      "attribution_state": "NOTICE_REVIEW_REQUIRED",
+      "removal_path": "Report visible marker capability unavailable.",
+      "notes": ["Visible text remains forgeable and is never authenticated provenance."]
+    },
+    {
+      "component_id": "style-csd",
+      "source_reference": "https://github.com/learn2phoenix/CSD",
+      "code_terms_state": "REVIEW_REQUIRED",
+      "artifact_terms_state": "REVIEW_REQUIRED",
+      "training_data_terms_state": "REVIEW_REQUIRED",
+      "evaluation_data_terms_state": "CONSENTED_AUTHORIZED_PROFILE_CORPUS_REQUIRED",
+      "attribution_state": "REVIEW_REQUIRED",
+      "removal_path": "Use diagnostic style signature with no creator-attribution claim.",
+      "notes": ["Exact checkpoint identity and the upstream weight discrepancy must be resolved."]
+    },
+    {
+      "component_id": "style-diagnostic",
+      "source_reference": "CreatorProof repository implementation",
+      "code_terms_state": "PROJECT_CONTROLLED",
+      "artifact_terms_state": "NOT_APPLICABLE",
+      "training_data_terms_state": "NOT_APPLICABLE",
+      "evaluation_data_terms_state": "CONSENTED_AUTHORIZED_PROFILE_CORPUS_REQUIRED",
+      "attribution_state": "PROJECT_CONTROLLED",
+      "removal_path": "Disable the style lane and preserve copy/origin evidence.",
+      "notes": ["Diagnostic output cannot attribute a creator or trigger policy review."]
+    }
+  ]
+}

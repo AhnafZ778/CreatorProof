@@ -7,8 +7,36 @@ from app.services.retrieval import (
     CatalogEntryCoverage,
     RetrievalRuntime,
     RetrievedWork,
+    bounded_candidate_limit,
     corpus_snapshot,
 )
+
+
+def test_small_catalog_is_exhaustively_verified_within_safety_bound():
+    assert (
+        bounded_candidate_limit(
+            total_count=24,
+            requested_top_k=8,
+            exhaustive_max_entries=64,
+        )
+        == 24
+    )
+    assert (
+        bounded_candidate_limit(
+            total_count=65,
+            requested_top_k=8,
+            exhaustive_max_entries=64,
+        )
+        == 8
+    )
+    assert (
+        bounded_candidate_limit(
+            total_count=24,
+            requested_top_k=8,
+            exhaustive_max_entries=0,
+        )
+        == 8
+    )
 
 
 def _entry(work_id: str, state: str = "EXECUTED") -> CatalogEntryCoverage:

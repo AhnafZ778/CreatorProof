@@ -1,0 +1,156 @@
+{
+  "schema": "creatorproof.part1_packet_fixture_set.v1",
+  "fixture_set_id": "creatorproof-part1-agent-handoff-v1",
+  "evidence_contract": "creatorproof.evidence_packet.v1-backward-compatible-part1",
+  "asset_policy": "EXTERNAL_AUTHORIZED_ASSETS_ONLY",
+  "scenarios": [
+    {
+      "id": "exact-licensed-allowed",
+      "expectation": "An exact registered work may pass only because a corroborated rights record explicitly allows the intended use.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:exact-licensed"},
+      "expected_packet_fragment": {
+        "scope": {"coverage_status": "COMPLETE", "complete_for_declared_catalog": true},
+        "matches": [{"fusion": {"classification": "EXACT_BINARY_COPY", "reason_codes": ["EXACT_SHA256_MATCH"]}}],
+        "decision": {
+          "match_status": "MATCH_FOUND",
+          "policy_action": "PASS_BY_POLICY",
+          "rights_path": "EXISTING_LICENSE",
+          "reason_codes": ["MATCHED_USE_ALLOWED_BY_RIGHTS_RECORD"]
+        }
+      }
+    },
+    {
+      "id": "transformed-reuse-geometry-supported",
+      "expectation": "A transformed same-work result requires robust geometry and aligned structure; the evidence remains distinct from permission.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:transformed-reuse"},
+      "expected_packet_fragment": {
+        "scope": {"coverage_status": "COMPLETE"},
+        "matches": [{"fusion": {
+          "classification": "VERIFIED_PARTIAL_COPY_EVIDENCE",
+          "reason_codes": ["ROBUST_GEOMETRY_VERIFIED", "ALIGNED_STRUCTURE_CORROBORATES"]
+        }}],
+        "decision": {
+          "match_status": "MATCH_FOUND",
+          "policy_action": "REVIEW",
+          "reason_codes": ["MATCH_REQUIRES_RIGHTS_REVIEW"]
+        }
+      }
+    },
+    {
+      "id": "hard-negative-no-geometry",
+      "expectation": "A visually similar hard negative without validated geometry is not presented as copying.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:hard-negative"},
+      "expected_packet_fragment": {
+        "scope": {"coverage_status": "COMPLETE"},
+        "matches": [{"fusion": {
+          "classification": "NEAREST_CANDIDATE_ONLY",
+          "match_supported": false,
+          "reason_codes": ["NO_VERIFIED_LOCAL_GEOMETRY"]
+        }}],
+        "decision": {"match_status": "NO_MATCH_IN_CHECKED_SOURCES", "policy_action": "PASS_BY_POLICY"}
+      }
+    },
+    {
+      "id": "complete-declared-catalog-no-match",
+      "expectation": "A no-match is narrowly scoped to the complete declared catalog and is never copyright clearance.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:complete-no-match"},
+      "expected_packet_fragment": {
+        "scope": {"coverage_status": "COMPLETE", "complete_for_declared_catalog": true},
+        "decision": {
+          "match_status": "NO_MATCH_IN_CHECKED_SOURCES",
+          "policy_action": "PASS_BY_POLICY",
+          "reason_codes": ["NO_MATCH_IN_DECLARED_CATALOG", "PASS_IS_POLICY_NOT_COPYRIGHT_CLEARANCE"]
+        }
+      }
+    },
+    {
+      "id": "learned-retrieval-degraded",
+      "expectation": "Missing required learned retrieval degrades scope and cannot produce a reassuring pass.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:degraded-retrieval"},
+      "expected_packet_fragment": {
+        "scope": {
+          "coverage_status": "DEGRADED",
+          "complete_for_declared_catalog": false,
+          "coverage_reason_codes": ["REQUIRED_LEARNED_RETRIEVAL_INCOMPLETE"]
+        },
+        "decision": {
+          "match_status": "SCOPE_INCOMPLETE",
+          "policy_action": "REVIEW",
+          "reason_codes": ["SCOPE_INCOMPLETE_REQUIRES_REVIEW"]
+        }
+      }
+    },
+    {
+      "id": "trusted-c2pa-ai-assertion",
+      "expectation": "A trusted signed AI assertion is provenance-positive even if passive pixel detectors are quiet.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:c2pa-ai"},
+      "expected_packet_fragment": {
+        "provenance": {
+          "status": "VALID_TRUSTED",
+          "trust_details": {
+            "manifest_present": true,
+            "manifest_valid": true,
+            "signature_valid": true,
+            "signer_trusted": true,
+            "relevant_ai_assertion_present": true
+          }
+        },
+        "synthetic_origin": {"classification": "AI_PROVENANCE_CONFIRMED"}
+      }
+    },
+    {
+      "id": "absent-c2pa-detector-unavailable",
+      "expectation": "No C2PA manifest plus unavailable passive detection leaves origin unresolved; it never means human-made.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:origin-unknown"},
+      "expected_packet_fragment": {
+        "provenance": {
+          "status": "NOT_PRESENT",
+          "reason_codes": ["ABSENCE_DOES_NOT_ESTABLISH_HUMAN_ORIGIN"],
+          "trust_details": {"manifest_present": false}
+        },
+        "synthetic_origin": {
+          "classification": "SYNTHETIC_ORIGIN_ANALYSIS_UNAVAILABLE",
+          "negative_clearance_supported": false
+        }
+      }
+    },
+    {
+      "id": "visible-ai-marker-forgeable",
+      "expectation": "A visible AI label routes review as a forgeable observation and is not authenticated provenance.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:visible-marker"},
+      "expected_packet_fragment": {
+        "synthetic_origin": {
+          "visible_marker": {
+            "classification": "VISIBLE_AI_MARKER_FOUND",
+            "trust": "FORGEABLE_VISIBLE_OBSERVATION"
+          }
+        }
+      }
+    },
+    {
+      "id": "creator-profile-resemblance-no-copy",
+      "expectation": "Consent-backed creator-profile resemblance remains advisory and does not manufacture a copy finding.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:creator-profile"},
+      "expected_packet_fragment": {
+        "decision": {"match_status": "NO_MATCH_IN_CHECKED_SOURCES", "policy_action": "REVIEW"},
+        "style_analysis": {
+          "top_profiles": [{"consent_state": "CONFIRMED", "profile_authorized": true}],
+          "decision": {"review_recommended": true, "classification": "STYLE_RESEMBLANCE_REVIEW"}
+        }
+      }
+    },
+    {
+      "id": "disputed-rights-record",
+      "expectation": "Visual match evidence remains intact, but a disputed rights record cannot authorize use.",
+      "source_rights": {"state": "AUTHORIZED", "reference": "replace-before-demo:disputed-rights"},
+      "expected_packet_fragment": {
+        "decision": {
+          "match_status": "MATCH_FOUND",
+          "policy_action": "REVIEW",
+          "rights_path": "DISPUTED",
+          "reason_codes": ["MATCHED_RIGHTS_RECORD_DISPUTED"]
+        }
+      }
+    }
+  ]
+}

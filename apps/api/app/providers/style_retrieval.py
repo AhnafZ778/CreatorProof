@@ -3,7 +3,9 @@ from __future__ import annotations
 import hashlib
 import importlib
 import importlib.util
+import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +30,9 @@ class CSDStyleEmbeddingProvider:
     learned = True
     upstream = "https://github.com/learn2phoenix/CSD"
     checkpoint_status = "UPSTREAM_WEIGHTS_DISCREPANCY_UNDER_INVESTIGATION"
+    model_identity = "CSD_VIT_L_EXTERNAL_CHECKPOINT"
+    preprocessing_identity = "UPSTREAM_CSD_TRANSFORMS_BRANCH0"
+    dimensions = 768
 
     def __init__(
         self,
@@ -37,33 +42,88 @@ class CSDStyleEmbeddingProvider:
         *,
         allow_legacy_pickle: bool = False,
         expected_sha256: str = "",
+        expected_repo_revision: str = "",
     ) -> None:
         self.repo_path = repo_path
         self.model_path = model_path
         self.requested_device = device
         self.allow_legacy_pickle = allow_legacy_pickle
         self.expected_sha256 = expected_sha256.strip().lower()
+        self.expected_repo_revision = expected_repo_revision.strip().lower()
         self._torch = None
         self._model = None
         self._preprocess = None
         self._device = "cpu"
         self._load_error: str | None = None
+        self._artifact_sha256: str | None = None
+        self._repo_revision: str | None = None
+        self._load_lock = threading.Lock()
 
-    def _verified_checkpoint_sha256(self) -> str:
+    def _actual_checkpoint_sha256(self) -> str:
+        if self._artifact_sha256 is not None:
+            return self._artifact_sha256
         digest = hashlib.sha256()
         with self.model_path.open("rb") as source:
             for block in iter(lambda: source.read(1024 * 1024), b""):
                 digest.update(block)
-        actual = digest.hexdigest()
+        self._artifact_sha256 = digest.hexdigest()
+        return self._artifact_sha256
+
+    def _checkpoint_integrity_reason(self) -> str | None:
         if not self.expected_sha256:
-            raise StyleProviderUnavailable("CSD_LEGACY_PICKLE_REQUIRES_EXPECTED_SHA256")
+            return "CSD_CHECKPOINT_EXPECTED_SHA256_REQUIRED"
         if len(self.expected_sha256) != 64 or any(
             character not in "0123456789abcdef" for character in self.expected_sha256
         ):
-            raise StyleProviderUnavailable("CSD_EXPECTED_SHA256_INVALID")
-        if actual != self.expected_sha256:
-            raise StyleProviderUnavailable("CSD_CHECKPOINT_SHA256_MISMATCH")
-        return actual
+            return "CSD_EXPECTED_SHA256_INVALID"
+        if self._actual_checkpoint_sha256() != self.expected_sha256:
+            return "CSD_CHECKPOINT_SHA256_MISMATCH"
+        return None
+
+    def _actual_repo_revision(self) -> str | None:
+        if self._repo_revision is not None:
+            return self._repo_revision
+        try:
+            completed = subprocess.run(
+                ["git", "-C", str(self.repo_path), "rev-parse", "HEAD"],
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if completed.returncode != 0:
+            return None
+        revision = completed.stdout.strip().lower()
+        if len(revision) != 40 or any(
+            character not in "0123456789abcdef" for character in revision
+        ):
+            return None
+        self._repo_revision = revision
+        return revision
+
+    def _repo_integrity_reason(self) -> str | None:
+        if not self.expected_repo_revision:
+            return None
+        if len(self.expected_repo_revision) != 40 or any(
+            character not in "0123456789abcdef" for character in self.expected_repo_revision
+        ):
+            return "CSD_EXPECTED_REPO_REVISION_INVALID"
+        if self._actual_repo_revision() != self.expected_repo_revision:
+            return "CSD_REPO_REVISION_MISMATCH"
+        return None
+
+    def _integrity_reason(self) -> str | None:
+        if not self.model_path.is_file():
+            return None
+        return self._checkpoint_integrity_reason() or self._repo_integrity_reason()
+
+    def _verify_module_origin(self, module) -> None:
+        module_path = Path(str(getattr(module, "__file__", ""))).resolve()
+        expected_root = (self.repo_path / "CSD").resolve()
+        if not module_path.is_relative_to(expected_root):
+            raise StyleProviderUnavailable("CSD_IMPORTED_MODULE_ORIGIN_MISMATCH")
 
     @property
     def device(self) -> str:
@@ -77,7 +137,7 @@ class CSDStyleEmbeddingProvider:
             return False
         if not self.model_path.is_file():
             return False
-        return importlib.util.find_spec("torch") is not None
+        return importlib.util.find_spec("torch") is not None and self._integrity_reason() is None
 
     @property
     def unavailable_reason(self) -> str | None:
@@ -89,7 +149,7 @@ class CSDStyleEmbeddingProvider:
             return f"CSD_MODEL_MISSING:{self.model_path}"
         if importlib.util.find_spec("torch") is None:
             return "PYTORCH_NOT_INSTALLED"
-        return None
+        return self._integrity_reason()
 
     def status(self) -> dict:
         return {
@@ -100,68 +160,113 @@ class CSDStyleEmbeddingProvider:
             "reason": self.unavailable_reason,
             "checkpoint_status": self.checkpoint_status,
             "upstream": self.upstream,
+            "repo_path": str(self.repo_path),
+            "model_path": str(self.model_path),
+            "model_identity": self.model_identity,
+            "preprocessing_identity": self.preprocessing_identity,
+            "expected_artifact_sha256": self.expected_sha256 or None,
+            "actual_artifact_sha256": (
+                self._actual_checkpoint_sha256() if self.model_path.is_file() else None
+            ),
+            "expected_repo_revision": self.expected_repo_revision or None,
+            "actual_repo_revision": self._actual_repo_revision(),
+            "artifact_identity_state": (
+                "ARTIFACT_AND_SOURCE_VERIFIED"
+                if self.available
+                else "INTEGRITY_REQUIREMENTS_NOT_MET"
+            ),
         }
 
     def _ensure_loaded(self):
         if self._model is not None:
             return self._torch, self._model, self._preprocess
-        if not self.available:
-            raise StyleProviderUnavailable(self.unavailable_reason or "CSD_UNAVAILABLE")
+        with self._load_lock:
+            if self._model is not None:
+                return self._torch, self._model, self._preprocess
+            if not self.available:
+                raise StyleProviderUnavailable(self.unavailable_reason or "CSD_UNAVAILABLE")
 
-        try:
-            import torch
-
-            repo = str(self.repo_path.resolve())
-            if repo not in sys.path:
-                sys.path.insert(0, repo)
-            model_module = importlib.import_module("CSD.model")
-            utils_module = importlib.import_module("CSD.utils")
-            loss_module = importlib.import_module("CSD.loss_utils")
-
-            device = (
-                "cuda"
-                if self.requested_device == "auto" and torch.cuda.is_available()
-                else "cpu"
-                if self.requested_device == "auto"
-                else self.requested_device
-            )
-            model = model_module.CSD_CLIP("vit_large", "default")
             try:
-                checkpoint = torch.load(str(self.model_path), map_location="cpu", weights_only=True)
-            except Exception as safe_load_error:
-                if not self.allow_legacy_pickle:
-                    raise StyleProviderUnavailable(
-                        "CSD_SAFE_CHECKPOINT_LOAD_FAILED_LEGACY_PICKLE_DISABLED"
-                    ) from safe_load_error
-                self._verified_checkpoint_sha256()
-                checkpoint = torch.load(
-                    str(self.model_path), map_location="cpu", weights_only=False
-                )
-            state_dict = utils_module.convert_state_dict(checkpoint["model_state_dict"])
-            model.load_state_dict(state_dict, strict=False)
-            model.eval().to(device)
+                import torch
 
-            self._torch = torch
-            self._model = model
-            self._preprocess = loss_module.transforms_branch0
-            self._device = device
-            return torch, model, self._preprocess
-        except Exception as exc:
-            self._load_error = f"CSD_LOAD_FAILED:{type(exc).__name__}"
-            raise StyleProviderUnavailable(self._load_error) from exc
+                # Hash and source identity are verified before either deserialization path.
+                integrity_reason = self._integrity_reason()
+                if integrity_reason is not None:
+                    raise StyleProviderUnavailable(integrity_reason)
+                repo = str(self.repo_path.resolve())
+                if repo not in sys.path:
+                    sys.path.insert(0, repo)
+                model_module = importlib.import_module("CSD.model")
+                utils_module = importlib.import_module("CSD.utils")
+                loss_module = importlib.import_module("CSD.loss_utils")
+                for module in (model_module, utils_module, loss_module):
+                    self._verify_module_origin(module)
+
+                device = (
+                    "cuda"
+                    if self.requested_device == "auto" and torch.cuda.is_available()
+                    else "cpu"
+                    if self.requested_device == "auto"
+                    else self.requested_device
+                )
+                model = model_module.CSD_CLIP("vit_large", "default")
+                try:
+                    checkpoint = torch.load(
+                        str(self.model_path), map_location="cpu", weights_only=True
+                    )
+                except Exception as safe_load_error:
+                    if not self.allow_legacy_pickle:
+                        raise StyleProviderUnavailable(
+                            "CSD_SAFE_CHECKPOINT_LOAD_FAILED_LEGACY_PICKLE_DISABLED"
+                        ) from safe_load_error
+                    checkpoint = torch.load(
+                        str(self.model_path), map_location="cpu", weights_only=False
+                    )
+                if not isinstance(checkpoint, dict) or not isinstance(
+                    checkpoint.get("model_state_dict"), dict
+                ):
+                    raise StyleProviderUnavailable("CSD_CHECKPOINT_STRUCTURE_INVALID")
+                state_dict = utils_module.convert_state_dict(checkpoint["model_state_dict"])
+                model.load_state_dict(state_dict, strict=True)
+                model.eval().to(device)
+
+                self._torch = torch
+                self._model = model
+                self._preprocess = loss_module.transforms_branch0
+                self._device = device
+                return torch, model, self._preprocess
+            except StyleProviderUnavailable as exc:
+                self._load_error = str(exc)
+                raise
+            except Exception as exc:
+                self._load_error = f"CSD_LOAD_FAILED:{type(exc).__name__}"
+                raise StyleProviderUnavailable(self._load_error) from exc
 
     def embed(self, image: Image.Image) -> np.ndarray:
+        return self.embed_many([image])[0]
+
+    def embed_many(self, images: list[Image.Image]) -> list[np.ndarray]:
+        if not images:
+            return []
         torch, model, preprocess = self._ensure_loaded()
-        tensor = preprocess(image.convert("RGB")).unsqueeze(0).to(self._device)
+        tensor = torch.stack([preprocess(image.convert("RGB")) for image in images]).to(
+            self._device
+        )
         with torch.inference_mode():
             output = model(tensor)
         if not isinstance(output, (tuple, list)) or len(output) < 3:
             raise RuntimeError("CSD model returned an unexpected output structure")
-        vector = output[2][0].detach().float().cpu().numpy().reshape(-1).astype(np.float32)
-        norm = float(np.linalg.norm(vector))
-        if not np.isfinite(vector).all() or norm <= 1e-12:
-            raise RuntimeError("CSD produced an invalid style descriptor")
-        return vector / norm
+        matrix = output[2].detach().float().cpu().numpy()
+        if matrix.shape[0] != len(images):
+            raise RuntimeError("CSD batch result count is invalid")
+        vectors: list[np.ndarray] = []
+        for row in matrix:
+            vector = row.reshape(-1).astype(np.float32)
+            norm = float(np.linalg.norm(vector))
+            if not np.isfinite(vector).all() or norm <= 1e-12:
+                raise RuntimeError("CSD produced an invalid style descriptor")
+            vectors.append(vector / norm)
+        return vectors
 
     @staticmethod
     def similarity(left: np.ndarray, right: np.ndarray) -> float:
@@ -187,6 +292,7 @@ class StyleEmbeddingRouter:
         device: str,
         allow_legacy_pickle: bool = False,
         expected_sha256: str = "",
+        expected_repo_revision: str = "",
     ) -> None:
         self.mode = mode
         self.primary = CSDStyleEmbeddingProvider(
@@ -195,6 +301,7 @@ class StyleEmbeddingRouter:
             device,
             allow_legacy_pickle=allow_legacy_pickle,
             expected_sha256=expected_sha256,
+            expected_repo_revision=expected_repo_revision,
         )
         self.fallback = DiagnosticStyleEmbeddingProvider()
         self._primary_failed_reason: str | None = None
@@ -236,6 +343,7 @@ class StyleEmbeddingRouter:
         return self._primary_failed_reason or self.primary.unavailable_reason
 
     def status(self) -> dict:
+        primary_status = self.primary.status()
         return {
             "provider": self.name,
             "available": True,
@@ -245,6 +353,16 @@ class StyleEmbeddingRouter:
             "requested_provider": self.mode,
             "primary_provider": self.primary.name,
             "primary_checkpoint_status": self.primary.checkpoint_status,
+            "primary_identity": {
+                "model_identity": primary_status["model_identity"],
+                "preprocessing_identity": primary_status["preprocessing_identity"],
+                "model_path": primary_status["model_path"],
+                "expected_artifact_sha256": primary_status["expected_artifact_sha256"],
+                "actual_artifact_sha256": primary_status["actual_artifact_sha256"],
+                "expected_repo_revision": primary_status["expected_repo_revision"],
+                "actual_repo_revision": primary_status["actual_repo_revision"],
+                "artifact_identity_state": primary_status["artifact_identity_state"],
+            },
         }
 
     def embed(self, image: Image.Image) -> np.ndarray:
@@ -254,6 +372,14 @@ class StyleEmbeddingRouter:
             except Exception as exc:
                 self._primary_failed_reason = f"CSD_RUNTIME_FALLBACK:{type(exc).__name__}"
         return self.fallback.embed(image)
+
+    def embed_many(self, images: list[Image.Image]) -> list[np.ndarray]:
+        if self._use_primary:
+            try:
+                return self.primary.embed_many(images)
+            except Exception as exc:
+                self._primary_failed_reason = f"CSD_RUNTIME_FALLBACK:{type(exc).__name__}"
+        return self.fallback.embed_many(images)
 
     def force_fallback(self, reason: str) -> None:
         self._primary_failed_reason = reason

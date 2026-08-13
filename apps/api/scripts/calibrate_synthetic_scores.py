@@ -9,6 +9,8 @@ from pathlib import Path
 
 import numpy as np
 
+from app.services.model_bundle import canonical_json_digest
+
 
 def _logit(value: float) -> float:
     clipped = min(max(float(value), 1e-6), 1.0 - 1e-6)
@@ -73,6 +75,28 @@ def main() -> int:
     rows = payload.get("rows")
     if not isinstance(rows, list):
         raise SystemExit("Manifest must contain a rows array.")
+    corpus_integrity = payload.get("corpus_integrity") or {}
+    if corpus_integrity.get("state") != "VALID_CALIBRATION_CORPUS_BINDING":
+        raise SystemExit(
+            "Calibration requires a validated CALIBRATION corpus binding; "
+            "legacy score manifests cannot produce a promoted fit."
+        )
+    required_context = (
+        "dataset_id",
+        "domain_id",
+        "crop_policy_id",
+        "corpus_manifest_set_digest_sha256",
+        "model_bundle_manifest_digest_sha256",
+    )
+    missing_context = [field for field in required_context if not payload.get(field)]
+    if missing_context:
+        raise SystemExit("Calibration context is incomplete: " + ",".join(missing_context))
+    actual_rows_digest = canonical_json_digest(rows)
+    if (
+        payload.get("score_rows_digest_sha256")
+        and payload["score_rows_digest_sha256"] != actual_rows_digest
+    ):
+        raise SystemExit("Calibration score rows digest does not match the manifest.")
     grouped: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
         if not isinstance(row, dict) or row.get("partition", "calibration") != "calibration":
@@ -97,15 +121,38 @@ def main() -> int:
         versions = sorted(
             {str(row["model_version"]) for row in provider_rows if row.get("model_version")}
         )
+        artifacts = sorted(
+            {str(row["artifact_sha256"]) for row in provider_rows if row.get("artifact_sha256")}
+        )
+        preprocessing = sorted(
+            {
+                str(row["preprocessing_identity"])
+                for row in provider_rows
+                if row.get("preprocessing_identity")
+            }
+        )
+        if len(versions) != 1:
+            raise SystemExit(f"Provider {provider} must have exactly one model_version.")
+        if len(artifacts) != 1:
+            raise SystemExit(f"Provider {provider} must have exactly one artifact_sha256.")
+        if len(preprocessing) != 1:
+            raise SystemExit(f"Provider {provider} must have exactly one preprocessing_identity.")
         providers[provider] = {
             "slope": slope,
             "intercept": intercept,
-            "model_version": versions[0] if len(versions) == 1 else None,
+            "model_version": versions[0],
+            "artifact_sha256": artifacts[0],
+            "preprocessing_identity": preprocessing[0],
             "sample_count": len(labels),
             "positive_count": positives,
             "negative_count": negatives,
             "dataset_id": payload.get("dataset_id"),
-            "domain": payload.get("domain"),
+            "domain_id": payload.get("domain_id") or payload.get("domain"),
+            "crop_policy_id": payload.get("crop_policy_id"),
+            "corpus_manifest_set_digest_sha256": payload.get("corpus_manifest_set_digest_sha256"),
+            "model_bundle_manifest_digest_sha256": payload.get(
+                "model_bundle_manifest_digest_sha256"
+            ),
             "brier_score": float(np.mean((calibrated - label_array) ** 2)),
             "expected_calibration_error": _ece(label_array, calibrated),
             "fit_method": "L2_REGULARIZED_PLATT_SCALING_ON_RAW_SCORE_LOGITS",
@@ -114,9 +161,15 @@ def main() -> int:
         raise SystemExit("No provider had enough positive and negative calibration samples.")
 
     output = {
-        "schema": "creatorproof.synthetic_calibration.v1",
+        "schema": "creatorproof.synthetic_calibration.v2",
         "created_at": datetime.now(UTC).isoformat(),
         "source_manifest": str(args.manifest),
+        "source_run_identity": payload.get("run_identity"),
+        "source_corpus_integrity": corpus_integrity,
+        "source_score_rows_digest_sha256": (
+            payload.get("score_rows_digest_sha256") or actual_rows_digest
+        ),
+        "calibration_parameters_digest_sha256": canonical_json_digest(providers),
         "providers": providers,
         "limitations": [
             "Calibration applies only to the recorded domain and model version.",

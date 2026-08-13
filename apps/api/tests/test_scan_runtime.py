@@ -1,5 +1,6 @@
 import json
 import subprocess
+import sys
 import time
 from io import BytesIO
 from threading import Event
@@ -13,11 +14,25 @@ from app.main import create_app
 from app.providers.synthetic_detection import ExternalJsonSyntheticDetector
 from app.services.jobs import LocalThreadJobQueue
 
+LOCAL_SCAN_TEST_TIMEOUT_SECONDS = 10
+
 
 def _png_bytes() -> bytes:
     buffer = BytesIO()
     Image.new("RGB", (96, 96), "#446688").save(buffer, format="PNG")
     return buffer.getvalue()
+
+
+def test_external_detector_with_missing_executable_is_unavailable():
+    detector = ExternalJsonSyntheticDetector(
+        {
+            "name": "missing-runtime",
+            "command": "creatorproof-command-that-does-not-exist --manifest {manifest}",
+        }
+    )
+
+    assert detector.available is False
+    assert detector.unavailable_reason.startswith("EXTERNAL_DETECTOR_EXECUTABLE_NOT_FOUND")
 
 
 def test_external_manifest_detector_spawns_once_for_all_views(monkeypatch):
@@ -44,7 +59,7 @@ def test_external_manifest_detector_spawns_once_for_all_views(monkeypatch):
     detector = ExternalJsonSyntheticDetector(
         {
             "name": "batch-test",
-            "command": "python adapter.py --manifest {manifest}",
+            "command": f"{sys.executable} adapter.py --manifest {{manifest}}",
             "timeout_seconds": 30,
             "evidence_family": "TEST_FAMILY",
         },
@@ -76,7 +91,7 @@ def test_legacy_external_views_share_one_decreasing_deadline(monkeypatch):
     detector = ExternalJsonSyntheticDetector(
         {
             "name": "legacy-test",
-            "command": "python adapter.py --image {image}",
+            "command": f"{sys.executable} adapter.py --image {{image}}",
             "timeout_seconds": 5,
         },
         maximum_timeout_seconds=5,
@@ -221,7 +236,7 @@ def test_local_scan_persists_progress_and_completes(monkeypatch, tmp_path):
             assert 0 < progress["percent"] < 100
 
             release_source_check.set()
-            deadline = time.monotonic() + 4
+            deadline = time.monotonic() + LOCAL_SCAN_TEST_TIMEOUT_SECONDS
             while time.monotonic() < deadline:
                 completed = client.get(
                     f"/v1/scans/{scan_id}",
@@ -261,9 +276,11 @@ def test_deferred_proof_failure_cannot_fail_completed_scan(tmp_path):
         synthetic_detector="off",
         visible_ai_marker_mode="off",
         c2pa_mode="off",
+        sscd_model_path=tmp_path / "models" / "sscd-not-installed.pt",
     )
     app = create_app(settings)
     app.state.container.proof_anchor = ExplodingProof()
+    app.state.container.blockchain.provider = app.state.container.proof_anchor
     with TestClient(app) as client:
         response = client.post(
             "/v1/scans",
@@ -275,7 +292,7 @@ def test_deferred_proof_failure_cannot_fail_completed_scan(tmp_path):
             files={"file": ("candidate.png", _png_bytes(), "image/png")},
         )
         scan_id = response.json()["id"]
-        deadline = time.monotonic() + 4
+        deadline = time.monotonic() + LOCAL_SCAN_TEST_TIMEOUT_SECONDS
         while time.monotonic() < deadline:
             completed = client.get(
                 f"/v1/scans/{scan_id}",

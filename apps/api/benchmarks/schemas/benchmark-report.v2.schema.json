@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://creatorproof.local/schemas/benchmark-report.v2.schema.json",
+  "title": "CreatorProof sealed benchmark report core contract",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_identity",
+    "prediction_digest_sha256",
+    "metric_inputs_digest_sha256",
+    "report_digest_sha256",
+    "evaluation_grade",
+    "evaluation_eligible",
+    "promotion_eligible",
+    "promotion_decision",
+    "minimum_support_gate",
+    "corpus_integrity",
+    "warning"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema": {"type": "string", "pattern": "^creatorproof\\..*benchmark"},
+    "prediction_digest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "metric_inputs_digest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "report_digest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "evaluation_grade": {"type": "string", "minLength": 1},
+    "evaluation_eligible": {"type": "boolean"},
+    "promotion_eligible": {"type": "boolean"},
+    "minimum_support_gate": {"type": "object"},
+    "corpus_integrity": {"type": "object"},
+    "warning": {"type": "string", "minLength": 1},
+    "promotion_decision": {
+      "type": "object",
+      "required": ["state", "reason_code"],
+      "properties": {
+        "state": {
+          "enum": [
+            "NOT_EVALUATED",
+            "EVALUATED_NOT_ACCEPTED",
+            "PROMOTED_FOR_DECLARED_DOMAIN"
+          ]
+        },
+        "reason_code": {"type": "string", "minLength": 1},
+        "acceptance_policy_digest_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "run_identity": {
+      "type": "object",
+      "required": [
+        "lane",
+        "manifest_digest_sha256",
+        "model_bundle_id",
+        "model_bundle_manifest_digest_sha256",
+        "model_bundle_qualification_state",
+        "threshold_policy_id",
+        "run_identity_digest_sha256"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

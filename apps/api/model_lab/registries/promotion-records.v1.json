@@ -1,0 +1,20 @@
+{
+  "schema": "creatorproof.model_promotion_registry.v1",
+  "registry_id": "creatorproof-part1-promotion-records-v1",
+  "records": [],
+  "required_approval_fields": [
+    "promotion_id",
+    "bundle_id",
+    "from_state",
+    "to_state",
+    "manifest_digest_sha256",
+    "acceptance_policy_digest_sha256",
+    "benchmark_report_digests",
+    "promotion_decision",
+    "terms_approval_references",
+    "failure_mode_report",
+    "reviewer",
+    "approved_at"
+  ],
+  "policy": "No test, benchmark script, CI job, or live result may promote a bundle automatically."
+}

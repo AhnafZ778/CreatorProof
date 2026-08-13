@@ -49,6 +49,26 @@ class OriginPolicyMode(StrEnum):
     REQUIRED = "REQUIRED"
 
 
+class RegistrationOriginGate(StrEnum):
+    """How work registration reacts to an AI-origin finding on the submitted file.
+
+    A catalog of protected works is a record of human authorship, so an image the
+    origin lane reports as AI-generated does not belong in it. Refusing is a
+    decision about what this catalog will vouch for, not a finding about the
+    person submitting it, and the three modes exist so an operator can choose
+    where that line sits.
+    """
+
+    OFF = "OFF"
+    """Do not run the check."""
+
+    FLAG_ONLY = "FLAG_ONLY"
+    """Run it and store the verdict on the work, but always accept the file."""
+
+    BLOCK = "BLOCK"
+    """Refuse the registration once the origin lane reports AI indicators."""
+
+
 class CopyRetrievalRequirement(StrEnum):
     BASELINE_ALLOWED = "BASELINE_ALLOWED"
     LEARNED_REQUIRED = "LEARNED_REQUIRED"

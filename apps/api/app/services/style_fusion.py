@@ -55,6 +55,8 @@ class StyleFusionResult:
     content_confound_state: str
     profile_reliability: str
     calibration_state: str
+    selection_correction: str | None
+    negative_tail_p_raw: float | None
     negative_tail_p: float | None
     positive_support_percentile: float | None
     false_match_control_supported: bool
@@ -139,7 +141,10 @@ def fuse_style_evidence(
         reason_codes.append("RAW_COSINE_CATALOG_INVERSION_DETECTED")
 
     calibration = calibration or {}
-    calibration_ready = bool(calibration.get("ready"))
+    selection_correction = calibration.get("selection_correction")
+    selection_adjusted = selection_correction == "BONFERRONI_FAMILY_WISE_V1"
+    calibration_ready = bool(calibration.get("ready") and selection_adjusted)
+    negative_tail_p_raw = calibration.get("negative_tail_p_raw")
     negative_tail_p = calibration.get("negative_tail_p")
     positive_percentile = calibration.get("positive_support_percentile")
     false_match_control = bool(
@@ -153,6 +158,8 @@ def fuse_style_evidence(
         reason_codes.append("CATALOG_RELATIVE_EMPIRICAL_SUPPORT_READY")
     else:
         reason_codes.extend(calibration.get("reason_codes") or ["STYLE_CALIBRATION_INSUFFICIENT"])
+        if calibration.get("ready") and not selection_adjusted:
+            reason_codes.append("STYLE_SELECTION_CORRECTION_REQUIRED")
 
     very_high = (
         learned_provider_active
@@ -216,6 +223,10 @@ def fuse_style_evidence(
         content_confound_state=confound_state,
         profile_reliability=profile_reliability,
         calibration_state=str(calibration.get("state") or "NOT_PROVIDED"),
+        selection_correction=(str(selection_correction) if selection_correction else None),
+        negative_tail_p_raw=(
+            round(float(negative_tail_p_raw), 6) if negative_tail_p_raw is not None else None
+        ),
         negative_tail_p=(round(float(negative_tail_p), 6) if negative_tail_p is not None else None),
         positive_support_percentile=(
             round(float(positive_percentile), 6) if positive_percentile is not None else None

@@ -15,6 +15,7 @@ from app.providers.style_signature import explain_style_pair
 from app.services.ai_index import reference_embedding
 from app.services.style_fusion import fuse_style_evidence
 from app.services.style_index import reference_style_embedding
+from app.services.style_profiles import StyleProfileRegistry
 from app.services.style_readout import (
     aggregated_discrimination_gaps,
     catalog_relative_empirical_support,
@@ -23,7 +24,13 @@ from app.services.style_readout import (
 )
 
 
-def _profile_key(work: Work) -> str:
+def _profile_key(
+    work: Work,
+    registry: StyleProfileRegistry | None = None,
+) -> str:
+    binding = registry.binding_for_work(work.id) if registry is not None else None
+    if binding is not None:
+        return binding.profile_key
     claimant = (work.claimant or "").strip().casefold()
     return f"creator:{claimant}" if claimant else f"singleton:{work.id}"
 
@@ -38,6 +45,47 @@ def _profile_strength(sample_count: int) -> str:
     if sample_count == 2:
         return "LIMITED_PROFILE"
     return "SINGLE_WORK_WEAK"
+
+
+def _profile_metadata(
+    key: str,
+    members: list[Work],
+    registry: StyleProfileRegistry | None,
+) -> dict:
+    binding = registry.binding_for_work(members[0].id) if registry is not None else None
+    if binding is not None:
+        return binding.public_record()
+    return {
+        "profile_id": _profile_id(key),
+        "profile_version": "UNVERSIONED_PROTOTYPE",
+        "display_name": (members[0].claimant or "Unassigned creator").strip(),
+        "consent_state": "NOT_CONFIRMED",
+        "consent_reference": None,
+        "enrollment_method": "CLAIMANT_NAME_GROUPING",
+        "profile_authorized": False,
+        "profile_source": "PROTOTYPE_CLAIMANT_GROUPING",
+    }
+
+
+def _apply_profile_authorization_gate(decision: dict | None, profile: dict | None) -> dict | None:
+    if decision is None or profile is None:
+        return decision
+    if profile.get("profile_authorized") or not decision.get("review_recommended"):
+        return decision
+    reasons = list(decision.get("reason_codes") or [])
+    for reason in (
+        "PROFILE_CONSENT_NOT_CONFIRMED",
+        "STYLE_POLICY_ESCALATION_SUPPRESSED",
+    ):
+        if reason not in reasons:
+            reasons.append(reason)
+    return {
+        **decision,
+        "review_recommended": False,
+        "evidence_tier": "ADVISORY_ONLY",
+        "classification": "PROFILE_ENROLLMENT_NOT_CONSENT_BACKED",
+        "reason_codes": reasons,
+    }
 
 
 def _read_reference(container, work: Work) -> Image.Image:
@@ -59,7 +107,11 @@ def _content_control(
         query_vector = normalize(provider.embed(query_image))
         scores: dict[str, float] = {}
         for work in works:
-            vector = reference_embedding(container, work.storage_key)
+            vector = reference_embedding(
+                container,
+                work.storage_key,
+                source_sha256=work.sha256,
+            )
             if vector is not None:
                 scores[work.id] = provider.similarity(query_vector, vector)
         return scores, None if scores else "SSCD_CONTENT_CONTROL_EMPTY"
@@ -76,13 +128,20 @@ def _rank_with_provider(
     query_vector: np.ndarray | None = None,
 ) -> tuple[list[dict], dict]:
     settings = container.settings
+    registry = getattr(container, "style_profiles", None)
     query_vector = normalize(provider.embed(query_image) if query_vector is None else query_vector)
     vectors = {
-        work.id: reference_style_embedding(container, provider, work.storage_key) for work in works
+        work.id: reference_style_embedding(
+            container,
+            provider,
+            work.storage_key,
+            source_sha256=work.sha256,
+        )
+        for work in works
     }
     grouped: dict[str, list[Work]] = defaultdict(list)
     for work in works:
-        grouped[_profile_key(work)].append(work)
+        grouped[_profile_key(work, registry)].append(work)
     group_ids = {key: [member.id for member in members] for key, members in grouped.items()}
 
     readouts = corpus_profile_readout(
@@ -97,6 +156,7 @@ def _rank_with_provider(
 
     profiles: list[dict] = []
     for key, members in grouped.items():
+        profile_metadata = _profile_metadata(key, members, registry)
         prototype = normalize(np.mean([vectors[member.id] for member in members], axis=0))
         prototype_similarity = provider.similarity(query_vector, prototype)
         member_scores = sorted(
@@ -132,9 +192,9 @@ def _rank_with_provider(
         worst_members = grouped.get(str(worst_key), []) if worst_key else []
         profiles.append(
             {
-                "profile_id": _profile_id(key),
+                **profile_metadata,
                 "_profile_key": key,
-                "creator": (members[0].claimant or "Unassigned creator").strip(),
+                "creator": profile_metadata["display_name"],
                 "sample_count": len(members),
                 "profile_strength": _profile_strength(len(members)),
                 "prototype_similarity": round(float(prototype_similarity), 6),
@@ -226,6 +286,14 @@ def _rank_with_provider(
         "content_control_provider": container.ai_retrieval.name,
         "content_control_active": bool(content_scores),
         "content_control_reason": content_reason,
+        "profile_registry": (
+            registry.status()
+            if registry is not None
+            else {
+                "state": "NOT_CONFIGURED",
+                "reason_codes": ["STYLE_PROFILE_REGISTRY_NOT_AVAILABLE"],
+            }
+        ),
     }
 
 
@@ -270,6 +338,7 @@ def analyze_style(
         )
     )
     router = container.style_retrieval
+    profile_registry = getattr(container, "style_profiles", None)
     if not works:
         return _empty_analysis(router.status())
 
@@ -304,17 +373,25 @@ def analyze_style(
         calibration = catalog_relative_empirical_support(
             float(top_profile["raw_pool_similarity"]),
             vectors={
-                work.id: reference_style_embedding(container, provider, work.storage_key)
+                work.id: reference_style_embedding(
+                    container,
+                    provider,
+                    work.storage_key,
+                    source_sha256=work.sha256,
+                )
                 for work in works
             },
             groups={
-                key: [member.id for member in works if _profile_key(member) == key]
-                for key in {_profile_key(work) for work in works}
+                key: [
+                    member.id for member in works if _profile_key(member, profile_registry) == key
+                ]
+                for key in {_profile_key(work, profile_registry) for work in works}
             },
             target_group=str(top_profile["_profile_key"]),
             min_profile_works=container.settings.style_min_profile_works,
             min_profiles=container.settings.style_min_calibration_profiles,
             min_negatives=container.settings.style_min_calibration_negatives,
+            selection_count=int(readout["profile_count"]),
         )
         top_profile["calibration"] = {
             key: round(float(value), 6) if isinstance(value, float) else value
@@ -362,6 +439,8 @@ def analyze_style(
         "SSCD is used as a copy/content control, never as a style veto.",
         "Palette/tone/edge/texture diagnostics are low-level explanations, not semantic "
         "masks or latent-dimension explanations.",
+        "Claimant-name grouping is a prototype convenience, not consent-backed creator "
+        "enrollment; only a CONFIRMED profile manifest can authorize policy escalation.",
     ]
     if status["learned"]:
         limitations.append(
@@ -376,6 +455,11 @@ def analyze_style(
 
     for profile in profiles:
         profile.pop("_profile_key", None)
+
+    decision = _apply_profile_authorization_gate(
+        asdict(fusion) if fusion is not None else None,
+        profiles[0] if profiles else None,
+    )
 
     return {
         "schema": "creatorproof.style_evidence.v2",
@@ -393,9 +477,17 @@ def analyze_style(
         "legacy_profile_method": "0.65*CENTROID_COSINE+0.35*MEDIAN_TOP3_MEMBER_COSINE",
         "profile_method": "MEAN_QUERY_TO_CREATOR_ANCHOR_COSINE_WITH_OPTIONAL_CSD_PLUS_CSLS_RANKING",
         "readout": readout,
+        "profile_manifest": (
+            profile_registry.status()
+            if profile_registry is not None
+            else {
+                "state": "NOT_CONFIGURED",
+                "reason_codes": ["STYLE_PROFILE_REGISTRY_NOT_AVAILABLE"],
+            }
+        ),
         "top_vs_runner_up_margin": top_margin,
         "top_profiles": profiles,
         "diagnostics": diagnostics,
-        "decision": asdict(fusion) if fusion is not None else None,
+        "decision": decision,
         "limitations": limitations,
     }

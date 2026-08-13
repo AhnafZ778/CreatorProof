@@ -55,6 +55,9 @@ class DiagnosticStyleEmbeddingProvider:
     """
 
     name = "diagnostic-style-signature-v1"
+    model_identity = "CREATORPROOF_DIAGNOSTIC_STYLE_SIGNATURE_V1"
+    preprocessing_identity = "PALETTE_TONE_EDGE_TEXTURE_256_V1"
+    dimensions = 236
     learned = False
     device = "cpu"
 
@@ -77,6 +80,9 @@ class DiagnosticStyleEmbeddingProvider:
 
     def embed(self, image: Image.Image) -> np.ndarray:
         return style_signature(image).vector()
+
+    def embed_many(self, images: list[Image.Image]) -> list[np.ndarray]:
+        return [self.embed(image) for image in images]
 
     @staticmethod
     def similarity(left: np.ndarray, right: np.ndarray) -> float:

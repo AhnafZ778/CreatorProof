@@ -1,6 +1,6 @@
 [project]
 name = "creatorproof-api"
-version = "0.9.2"
+version = "0.10.0"
 description = "CreatorProof image-first creative-rights evidence API"
 requires-python = ">=3.12"
 dependencies = [
@@ -15,11 +15,24 @@ dependencies = [
   "opencv-python-headless>=4.11,<5",
   "redis>=6,<8",
   "psycopg[binary]>=3.2,<4",
+  "alembic>=1.14,<2",
+  "httpx>=0.28,<1",
+]
+
+[project.optional-dependencies]
+# The official container installs this extra so enabling EAS is a configuration
+# change, not an untracked runtime pip install.  Keep direct imports explicit:
+# proof.py imports web3, eth_abi and eth_account itself.
+blockchain = [
+  "web3>=7.13,<8",
+  "eth-abi>=5.2,<6",
+  "eth-account>=0.13.7,<0.14",
 ]
 
 [dependency-groups]
 dev = [
-  "httpx>=0.28,<1",
+  "anyio>=4.8,<4.12",
+  "httpx2>=2.10.0",
   "pytest>=8.4,<10",
   "ruff>=0.12,<1",
 ]

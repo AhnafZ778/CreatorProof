@@ -13,6 +13,14 @@ from app.core.config import Settings
 from app.domain.enums import ProvenanceStatus
 from app.providers.contracts import ProvenanceEvidence
 from app.providers.synthetic_detection import SyntheticDetectorRouter
+from app.services.benchmark_manifest import (
+    benchmark_run_identity,
+    bind_benchmark_input_to_corpus,
+    corpus_asset_binding,
+    seal_benchmark_report,
+)
+from app.services.benchmark_statistics import binary_rate, lineage_cluster_bootstrap_interval
+from app.services.model_bundle import load_model_bundle
 from app.services.synthetic_analysis import analyze_synthetic_origin
 
 
@@ -84,22 +92,44 @@ def main() -> int:
         description="Benchmark AI-origin detection on a labeled, held-out image manifest."
     )
     parser.add_argument("manifest", type=Path)
+    parser.add_argument("--bootstrap-iterations", type=int, default=2000)
     args = parser.parse_args()
     payload = json.loads(args.manifest.read_text(encoding="utf-8"))
     items = payload.get("images")
     if not isinstance(items, list) or not items:
         raise SystemExit("Manifest must contain a non-empty images array.")
+    corpus_integrity = bind_benchmark_input_to_corpus(
+        benchmark_manifest_path=args.manifest,
+        benchmark_payload=payload,
+        lane="AI_ORIGIN",
+        referenced_locations=[str(item["path"]) for item in items],
+    )
 
     settings = Settings()
+    bundle = load_model_bundle(
+        settings.model_bundle_path,
+        strict=settings.model_bundle_strict,
+    )
     router = SyntheticDetectorRouter(
         mode=settings.synthetic_detector,
         community_model_path=settings.synthetic_community_model_path,
         torchscript_model_path=settings.synthetic_torchscript_model_path,
         device=settings.synthetic_device,
         external_detectors_json=settings.synthetic_external_detectors_json,
+        evidence_family_registry_path=settings.synthetic_evidence_family_registry_path,
         calibration_path=settings.synthetic_calibration_path,
         min_calibration_samples=settings.synthetic_min_calibration_samples,
         min_calibration_class_samples=settings.synthetic_min_calibration_class_samples,
+        community_expected_sha256=(
+            settings.synthetic_community_expected_sha256
+            or bundle.declared_artifact_sha256("origin-community-forensics")
+        ),
+        calibration_domain_id=settings.synthetic_calibration_domain_id,
+        crop_policy_id=settings.synthetic_crop_policy_id,
+        model_bundle_manifest_digest=bundle.manifest_digest_sha256 or "",
+        sightengine_api_user=settings.sightengine_api_user,
+        sightengine_api_secret=settings.sightengine_api_secret,
+        sightengine_timeout_seconds=settings.sightengine_timeout_seconds,
     )
     if not router.available:
         raise SystemExit(json.dumps(router.status(), indent=2))
@@ -115,11 +145,14 @@ def main() -> int:
         label = int(item["label"])
         if label not in {0, 1}:
             raise SystemExit("Image labels must be 0 for real or 1 for AI-generated.")
+        image_path = (args.manifest.parent / str(item["path"])).resolve()
         result = analyze_synthetic_origin(
-            image=_image((args.manifest.parent / str(item["path"])).resolve()),
+            image=_image(image_path),
             detector_router=router,
             provenance=provenance,
             settings=settings,
+            source_media=image_path.read_bytes(),
+            source_filename=image_path.name,
         )
         score = result.get("fused_detector_score")
         group = str(item.get("generator") or item.get("source") or "unknown")
@@ -134,17 +167,21 @@ def main() -> int:
             }
         )
         prediction = classification in {"LIKELY_AI_GENERATED", "AI_PROVENANCE_CONFIRMED"}
-        groups[group].append(
-            {"correct": prediction == bool(label), "abstained": abstained, "label": label}
-        )
+        correct = prediction == bool(label)
+        groups[group].append({"correct": correct, "abstained": abstained, "label": label})
+        binding = corpus_asset_binding(corpus_integrity, str(item["path"]))
         rows.append(
             {
                 "path": item["path"],
+                "asset_id": binding["asset_id"],
+                "source_lineage_id": binding["source_lineage_id"],
+                "cohorts": binding["cohorts"],
                 "label": label,
                 "group": group,
                 "score": score,
                 "classification": classification,
                 "prediction": int(prediction),
+                "correct": correct,
                 "abstained": abstained,
                 "transform_stability": result.get("transform_stability"),
                 "all_members_calibrated": bool(result.get("members"))
@@ -170,31 +207,135 @@ def main() -> int:
     recall_denominator = true_positive + false_negative
     specificity_denominator = true_negative + false_positive
     precision_denominator = true_positive + false_positive
-    promotion_eligible = bool(
+    calibration_gate_passed = bool(
+        scored
+        and all(row["all_members_calibrated"] for row in scored)
+        and all(
+            int(row.get("evidence_family_count") or 0)
+            >= settings.synthetic_min_independent_families
+            for row in scored
+        )
+    )
+    intervals = {
+        "roc_auc": lineage_cluster_bootstrap_interval(
+            scored,
+            lambda sample: _auc(
+                [int(row["label"]) for row in sample],
+                [float(row["score"]) for row in sample],
+            ),
+            iterations=args.bootstrap_iterations,
+            minimum_clusters=20,
+        ),
+        "average_precision": lineage_cluster_bootstrap_interval(
+            scored,
+            lambda sample: _average_precision(
+                [int(row["label"]) for row in sample],
+                [float(row["score"]) for row in sample],
+            ),
+            iterations=args.bootstrap_iterations,
+            minimum_clusters=20,
+        ),
+        "decided_false_positive_rate": lineage_cluster_bootstrap_interval(
+            decided,
+            lambda sample: binary_rate(
+                sample,
+                numerator=lambda row: bool(row["prediction"]),
+                denominator=lambda row: not bool(row["label"]),
+            ),
+            iterations=args.bootstrap_iterations,
+            minimum_clusters=20,
+        ),
+        "decided_recall": lineage_cluster_bootstrap_interval(
+            decided,
+            lambda sample: binary_rate(
+                sample,
+                numerator=lambda row: bool(row["prediction"]),
+                denominator=lambda row: bool(row["label"]),
+            ),
+            iterations=args.bootstrap_iterations,
+            minimum_clusters=20,
+        ),
+        "selective_accuracy": lineage_cluster_bootstrap_interval(
+            decided,
+            lambda sample: binary_rate(sample, numerator=lambda row: row["correct"]),
+            iterations=args.bootstrap_iterations,
+            minimum_clusters=20,
+        ),
+    }
+    uncertainty_gate_passed = all(
+        interval["eligible_for_acceptance"] for interval in intervals.values()
+    )
+    evaluation_eligible = bool(
         positive_count >= 100
         and negative_count >= 100
         and len(fake_generators) >= 5
         and len(real_sources) >= 3
         and payload.get("generator_disjoint") is True
+        and uncertainty_gate_passed
+        and corpus_integrity["evaluation_eligible"]
     )
+    error_gallery = [
+        {
+            "path": row["path"],
+            "asset_id": row["asset_id"],
+            "source_lineage_id": row["source_lineage_id"],
+            "cohorts": row["cohorts"],
+            "group": row["group"],
+            "error_type": (
+                "ABSTENTION"
+                if row["abstained"]
+                else "FALSE_POSITIVE"
+                if row["prediction"] and not row["label"]
+                else "FALSE_NEGATIVE"
+            ),
+            "classification": row["classification"],
+            "score": row["score"],
+        }
+        for row in rows
+        if row["abstained"] or not row["correct"]
+    ]
     output = {
-        "schema": "creatorproof.synthetic_benchmark.v1",
+        "schema": "creatorproof.synthetic_benchmark.v2",
+        "run_identity": benchmark_run_identity(
+            lane="AI_ORIGIN",
+            manifest_payload=payload,
+            model_bundle=bundle,
+            threshold_policy_id="creatorproof-origin-evidence-operating-points-v3",
+            corpus_manifest_set_digest_sha256=corpus_integrity["manifest_set_digest_sha256"],
+        ),
+        "corpus_integrity": corpus_integrity,
         "detectors": router.status(),
         "dataset_id": payload.get("dataset_id"),
         "evaluation_grade": (
-            "GENERATOR_DISJOINT_EVALUATION" if promotion_eligible else "SMOKE_TEST_ONLY"
+            "GENERATOR_DISJOINT_EVALUATION" if evaluation_eligible else "SMOKE_TEST_ONLY"
         ),
-        "promotion_eligible": promotion_eligible,
+        "evaluation_eligible": evaluation_eligible,
+        "promotion_eligible": False,
+        "promotion_decision": {
+            "state": "NOT_EVALUATED",
+            "reason_code": "ACCEPTANCE_POLICY_NOT_APPLIED",
+            "acceptance_policy_digest_sha256": None,
+        },
         "minimum_support_gate": {
             "ai_images": 100,
             "real_images": 100,
             "fake_generators": 5,
             "real_sources": 3,
             "generator_disjoint": True,
+            "source_lineage_clusters": 20,
+        },
+        "operating_configuration": {
+            "origin_policy_id": "creatorproof-origin-evidence-operating-points-v3",
+            "likely_threshold": settings.synthetic_likely_threshold,
+            "review_threshold": settings.synthetic_review_threshold,
+            "minimum_independent_families": settings.synthetic_min_independent_families,
+            "crop_policy_id": settings.synthetic_crop_policy_id,
+            "bootstrap_iterations": args.bootstrap_iterations,
         },
         "scored_images": len(scored),
         "ai_images": positive_count,
         "real_images": negative_count,
+        "calibration_gate_passed": calibration_gate_passed,
         "roc_auc": _auc(labels, scores),
         "average_precision": _average_precision(labels, scores),
         **_operating_points(labels, scores),
@@ -202,6 +343,14 @@ def main() -> int:
         "selective_coverage": len(decided) / len(rows),
         "selective_accuracy": decided_correct / len(decided) if decided else None,
         "selective_accuracy_wilson_95": _wilson(decided_correct, len(decided)),
+        "lineage_clustered_confidence_intervals": intervals,
+        "uncertainty_gate_passed": uncertainty_gate_passed,
+        "calibration_diagnostics": {
+            "state": "NOT_APPLICABLE_TO_ENSEMBLE_SIGNAL_SCORE",
+            "brier_score": None,
+            "expected_calibration_error": None,
+            "reason_code": "FUSED_DETECTOR_SCORE_IS_NOT_A_PROBABILITY",
+        },
         "decision_confusion": {
             "true_positive": true_positive,
             "false_positive": false_positive,
@@ -226,14 +375,16 @@ def main() -> int:
             }
             for group, values in sorted(groups.items())
         },
+        "error_gallery": error_gallery,
         "rows": rows,
         "warning": (
-            "This run cannot support deployment claims. Generator-disjoint data, social-media "
-            "transforms, per-domain calibration, and confidence intervals are required."
-            if not promotion_eligible
+            "This run cannot support deployment claims. Valid TEST corpus binding, "
+            "generator-disjoint data, transforms, calibration, and intervals are required."
+            if not evaluation_eligible
             else "Passing the sample gate does not establish universal AI-origin detection."
         ),
     }
+    output = seal_benchmark_report(output)
     print(json.dumps(output, indent=2, sort_keys=True))
     return 0
 

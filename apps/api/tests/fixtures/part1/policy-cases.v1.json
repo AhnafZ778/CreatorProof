@@ -1,0 +1,56 @@
+{
+  "schema": "creatorproof.policy_fixture_set.v1",
+  "policy_version": "creatorproof-demo-policy-v1",
+  "cases": [
+    {
+      "id": "complete-no-match",
+      "input": {"match_status": "NO_MATCH_IN_CHECKED_SOURCES", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": null},
+      "expected": {"action": "PASS_BY_POLICY", "rights_path": "NO_LICENSE_INFO", "reason": "PASS_IS_POLICY_NOT_COPYRIGHT_CLEARANCE"}
+    },
+    {
+      "id": "incomplete-scope",
+      "input": {"match_status": "SCOPE_INCOMPLETE", "coverage_status": "TRUNCATED", "intended_use": "marketing/social", "work": null},
+      "expected": {"action": "REVIEW", "rights_path": "NO_LICENSE_INFO", "reason": "SCOPE_INCOMPLETE_REQUIRES_REVIEW"}
+    },
+    {
+      "id": "inconclusive",
+      "input": {"match_status": "INCONCLUSIVE", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": null},
+      "expected": {"action": "REVIEW", "rights_path": "NO_LICENSE_INFO", "reason": "VISUAL_EVIDENCE_INCONCLUSIVE"}
+    },
+    {
+      "id": "allowed-corroborated-license",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": {"rights_path": "EXISTING_LICENSE", "claim_state": "CORROBORATED", "allowed_uses": ["marketing/social"]}},
+      "expected": {"action": "PASS_BY_POLICY", "rights_path": "EXISTING_LICENSE", "reason": "MATCHED_USE_ALLOWED_BY_RIGHTS_RECORD"}
+    },
+    {
+      "id": "asserted-claim",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": {"rights_path": "EXISTING_LICENSE", "claim_state": "ASSERTED", "allowed_uses": ["marketing/social"]}},
+      "expected": {"action": "REVIEW", "rights_path": "EXISTING_LICENSE", "reason": "MATCHED_CLAIM_NOT_CORROBORATED"}
+    },
+    {
+      "id": "disputed-rights-path",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": {"rights_path": "DISPUTED", "claim_state": "CORROBORATED", "allowed_uses": ["marketing/social"]}},
+      "expected": {"action": "REVIEW", "rights_path": "DISPUTED", "reason": "MATCHED_RIGHTS_RECORD_DISPUTED"}
+    },
+    {
+      "id": "revoked-claim",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": {"rights_path": "EXISTING_LICENSE", "claim_state": "REVOKED", "allowed_uses": ["marketing/social"]}},
+      "expected": {"action": "REVIEW", "rights_path": "EXISTING_LICENSE", "reason": "MATCHED_CLAIM_REVOKED"}
+    },
+    {
+      "id": "license-available-not-granted",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "COMPLETE", "intended_use": "marketing/social", "work": {"rights_path": "LICENSE_AVAILABLE", "claim_state": "CORROBORATED", "allowed_uses": []}},
+      "expected": {"action": "REVIEW", "rights_path": "LICENSE_AVAILABLE", "reason": "LICENSE_PATH_AVAILABLE_REVIEW_REQUIRED"}
+    },
+    {
+      "id": "use-outside-license",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "COMPLETE", "intended_use": "broadcast/tv", "work": {"rights_path": "EXISTING_LICENSE", "claim_state": "CORROBORATED", "allowed_uses": ["marketing/social"]}},
+      "expected": {"action": "REVIEW", "rights_path": "EXISTING_LICENSE", "reason": "MATCH_REQUIRES_RIGHTS_REVIEW"}
+    },
+    {
+      "id": "match-with-truncated-coverage",
+      "input": {"match_status": "MATCH_FOUND", "coverage_status": "TRUNCATED", "intended_use": "marketing/social", "work": {"rights_path": "EXISTING_LICENSE", "claim_state": "CORROBORATED", "allowed_uses": ["marketing/social"]}},
+      "expected": {"action": "REVIEW", "rights_path": "EXISTING_LICENSE", "reason": "MATCH_FOUND_WITH_INCOMPLETE_SCOPE_REQUIRES_REVIEW"}
+    }
+  ]
+}

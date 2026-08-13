@@ -1,0 +1,19 @@
+{
+  "schema": "creatorproof.drift_baseline_registry.v1",
+  "registry_id": "creatorproof-runtime-drift-baselines-v1",
+  "records": [],
+  "required_record_fields": [
+    "lane",
+    "score_name",
+    "domain_id",
+    "model_bundle_id",
+    "model_bundle_manifest_digest_sha256",
+    "source_report_digest_sha256",
+    "baseline_mean",
+    "baseline_standard_deviation",
+    "minimum_current_observations",
+    "warning_standardized_shift",
+    "revalidation_standardized_shift"
+  ],
+  "policy": "Create baselines only from authorized accepted-domain reports; an empty registry is NOT_CONFIGURED, never stable."
+}

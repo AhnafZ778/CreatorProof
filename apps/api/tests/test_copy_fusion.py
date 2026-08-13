@@ -79,3 +79,47 @@ def test_high_global_similarity_without_geometry_never_becomes_a_match():
     assert fusion.match_supported is False
     assert fusion.review_supported is True
     assert fusion.classification == "REVIEW_CANDIDATE"
+
+
+def test_verified_support_mask_recovers_partial_copy_from_unrelated_background():
+    reference = _structured_image()
+    reference_array = np.asarray(reference, dtype=np.uint8)
+    rng = np.random.default_rng(778)
+    query_array = rng.integers(0, 256, size=reference_array.shape, dtype=np.uint8)
+    left, top, right, bottom = 52, 48, 274, 184
+    query_array[top:bottom, left:right] = reference_array[top:bottom, left:right]
+    query = Image.fromarray(query_array)
+    identity = (
+        (1.0, 0.0, 0.0),
+        (0.0, 1.0, 0.0),
+        (0.0, 0.0, 1.0),
+    )
+
+    verifier = AlignedPerceptualVerifier()
+    full = asdict(verifier.verify(query, reference, identity))
+    regional = asdict(
+        verifier.verify(
+            query,
+            reference,
+            identity,
+            [
+                {
+                    "kind": "VERIFIED_SUPPORT_PATCH",
+                    "reference_polygon": [
+                        [left / (reference.width - 1), top / (reference.height - 1)],
+                        [right / (reference.width - 1), top / (reference.height - 1)],
+                        [right / (reference.width - 1), bottom / (reference.height - 1)],
+                        [left / (reference.width - 1), bottom / (reference.height - 1)],
+                    ],
+                }
+            ],
+        )
+    )
+
+    assert full["available"] is True
+    assert regional["available"] is True
+    assert regional["evaluation_mask_policy"] == "GEOMETRY_VERIFIED_SUPPORT_REGIONS_V1"
+    assert regional["support_region_count"] == 1
+    assert regional["support_fraction_of_aligned_overlap"] < 0.20
+    assert regional["structure_consensus"] > 0.95
+    assert regional["structure_consensus"] > full["structure_consensus"] + 0.20

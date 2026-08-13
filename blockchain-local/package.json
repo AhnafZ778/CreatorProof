@@ -1,0 +1,18 @@
+{
+  "name": "blockchain-local",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "chain": "ganache --chain.chainId 31337 --server.host 127.0.0.1 --server.port 8545 --wallet.accounts 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d,0x56BC75E2D63100000 --miner.blockGasLimit 12000000 --hardfork london --logging.quiet",
+    "deploy": "node deploy.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "ethers": "^6.17.0",
+    "ganache": "^7.9.2",
+    "solc": "^0.8.19"
+  }
+}

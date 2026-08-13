@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from app.core.config import Settings
 from app.providers.ai_retrieval import SSCDVisualEmbeddingProvider
+from app.services.model_bundle import load_model_bundle
 
 
 def main() -> None:
@@ -19,7 +21,18 @@ def main() -> None:
     )
     parser.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
     args = parser.parse_args()
-    provider = SSCDVisualEmbeddingProvider(args.model, args.device)
+    settings = Settings()
+    bundle = load_model_bundle(
+        settings.model_bundle_path,
+        strict=settings.model_bundle_strict,
+    )
+    provider = SSCDVisualEmbeddingProvider(
+        args.model,
+        args.device,
+        expected_sha256=(
+            settings.sscd_expected_sha256 or bundle.declared_artifact_sha256("copy-retrieval-sscd")
+        ),
+    )
     if not provider.available:
         raise SystemExit(json.dumps(provider.status(), indent=2))
 
@@ -33,6 +46,7 @@ def main() -> None:
         json.dumps(
             {
                 **provider.status(),
+                "model_bundle": bundle.status(),
                 "embedding_dimensions": int(vector.shape[0]),
                 "embedding_l2_norm": round(float(np.linalg.norm(vector)), 6),
                 "repeat_similarity": round(provider.similarity(vector, repeated), 6),

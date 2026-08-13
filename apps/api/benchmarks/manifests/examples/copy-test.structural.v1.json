@@ -1,0 +1,31 @@
+{
+  "schema": "creatorproof.corpus_manifest.v1",
+  "manifest_id": "copy-test-structural-example-v1",
+  "dataset_id": "structural-example-not-a-demo-corpus",
+  "lane": "COPY",
+  "partition": "TEST",
+  "domain_id": "STRUCTURAL_TEST_ONLY",
+  "items": [
+    {
+      "asset_id": "test-positive-placeholder",
+      "location": "external-authorized/test-positive-placeholder.png",
+      "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "source_lineage_id": "lineage-test-positive",
+      "rights": {"state": "AUTHORIZED", "reference": "TEST_FIXTURE_ONLY_NOT_DEMO_PERMISSION"},
+      "exposure_state": "NEVER_SEEN",
+      "label": {"same_work": true},
+      "cohorts": ["TRANSFORMED_POSITIVE"]
+    },
+    {
+      "asset_id": "test-negative-placeholder",
+      "location": "external-authorized/test-negative-placeholder.png",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "source_lineage_id": "lineage-test-negative",
+      "rights": {"state": "AUTHORIZED", "reference": "TEST_FIXTURE_ONLY_NOT_DEMO_PERMISSION"},
+      "exposure_state": "NEVER_SEEN",
+      "label": {"same_work": false},
+      "cohorts": ["HARD_NEGATIVE"]
+    }
+  ],
+  "limitations": ["Structural validator example only; no asset permission or benchmark result is supplied."]
+}

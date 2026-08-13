@@ -1,11 +1,12 @@
 import hashlib
 import json
+import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC
 
 from PIL import Image
-from sqlalchemy import update
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.domain.enums import (
@@ -20,11 +21,16 @@ from app.domain.enums import (
 from app.models import Scan, Work
 from app.services.copy_fusion import fuse_copy_evidence
 from app.services.images import decode_image
+from app.services.policy_trace import build_policy_trace
 from app.services.retrieval import RetrievedWork, corpus_snapshot, retrieve_candidates
+from app.services.runtime_telemetry import (
+    current_telemetry,
+    increment_counter,
+    record_duration,
+    record_observation,
+)
 from app.services.style_analysis import analyze_style
 from app.services.synthetic_analysis import analyze_synthetic_origin
-
-POLICY_VERSION = "creatorproof-demo-policy-v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,12 +51,23 @@ class CandidateEvidence:
     copy_evidence_score: float
     prototype_evidence_score: float
     verification_state: str
+    ai_regional_similarity: float | None = None
+    retrieval_view: str = "whole_image"
     verification_rank: int = 0
 
 
+def canonical_packet_bytes(payload: dict) -> bytes:
+    """Legacy Evidence Packet v1 canonical bytes (distinct from statement JCS)."""
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("utf-8")
+
+
 def canonical_hash(payload: dict) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
-    return hashlib.sha256(encoded).hexdigest()
+    return hashlib.sha256(canonical_packet_bytes(payload)).hexdigest()
 
 
 def _visualization(item: RetrievedWork, raw_geometry: dict) -> dict:
@@ -200,6 +217,47 @@ def _policy(
     if rights_path == RightsPath.LICENSE_AVAILABLE:
         return PolicyAction.REVIEW, rights_path, ["LICENSE_PATH_AVAILABLE_REVIEW_REQUIRED"]
     return PolicyAction.REVIEW, rights_path, ["MATCH_REQUIRES_RIGHTS_REVIEW"]
+
+
+def _evidence_policy_baseline(
+    match_status: MatchStatus,
+    *,
+    coverage_status: CoverageStatus = CoverageStatus.COMPLETE,
+    coverage_reason_codes: list[str] | None = None,
+) -> tuple[PolicyAction, RightsPath, list[str]]:
+    """Return evidence-only safety semantics before stored rights are evaluated.
+
+    This intentionally has no ``Work`` argument. A copy match can be authorized
+    only later by the pinned PolicyVersion operating on persisted Claim/License
+    facts; denormalized registration fields cannot influence a live decision.
+    """
+    if match_status == MatchStatus.SCOPE_INCOMPLETE:
+        return (
+            PolicyAction.REVIEW,
+            RightsPath.NO_LICENSE_INFO,
+            ["SCOPE_INCOMPLETE_REQUIRES_REVIEW", *(coverage_reason_codes or [])],
+        )
+    if match_status == MatchStatus.ERROR:
+        return PolicyAction.REVIEW, RightsPath.NO_LICENSE_INFO, ["SCAN_ERROR_REQUIRES_REVIEW"]
+    if match_status == MatchStatus.INCONCLUSIVE:
+        return PolicyAction.REVIEW, RightsPath.NO_LICENSE_INFO, ["VISUAL_EVIDENCE_INCONCLUSIVE"]
+    if match_status == MatchStatus.NO_MATCH_IN_CHECKED_SOURCES:
+        return (
+            PolicyAction.PASS_BY_POLICY,
+            RightsPath.NO_LICENSE_INFO,
+            ["NO_MATCH_IN_DECLARED_CATALOG", "PASS_IS_POLICY_NOT_COPYRIGHT_CLEARANCE"],
+        )
+    if coverage_status != CoverageStatus.COMPLETE:
+        return (
+            PolicyAction.REVIEW,
+            RightsPath.NO_LICENSE_INFO,
+            ["MATCH_FOUND_WITH_INCOMPLETE_SCOPE_REQUIRES_REVIEW", *(coverage_reason_codes or [])],
+        )
+    return (
+        PolicyAction.REVIEW,
+        RightsPath.NO_LICENSE_INFO,
+        ["MATCH_REQUIRES_PERSISTED_RIGHTS_EVALUATION"],
+    )
 
 
 def _apply_style_policy_overlay(
@@ -401,7 +459,7 @@ def _disabled_origin_lane(container) -> tuple[dict, dict]:
         "limitations": ["No visible-label inference was made because this lane was disabled."],
     }
     synthetic_analysis = {
-        "schema": "creatorproof.synthetic_origin.v3",
+        "schema": "creatorproof.synthetic_origin.v4",
         "classification": "AI_ORIGIN_CHECK_DISABLED",
         "evidence_tier": "DISABLED",
         "review_recommended": False,
@@ -436,7 +494,7 @@ def _disabled_origin_lane(container) -> tuple[dict, dict]:
 def _failed_origin_analysis(container, visible_marker: dict, exc: Exception) -> dict:
     marker_supported = bool(visible_marker.get("supports_ai_origin_review"))
     return {
-        "schema": "creatorproof.synthetic_origin.v3",
+        "schema": "creatorproof.synthetic_origin.v4",
         "classification": (
             "AI_ORIGIN_MARKER_FOUND"
             if marker_supported
@@ -485,9 +543,17 @@ def _failed_origin_analysis(container, visible_marker: dict, exc: Exception) -> 
     }
 
 
-def _analyze_origin_lane(container, query_image: Image.Image, provenance) -> tuple[dict, dict]:
+def _analyze_origin_lane(
+    container,
+    query_image: Image.Image,
+    provenance,
+    *,
+    candidate_raw: bytes | None = None,
+    candidate_filename: str | None = None,
+    policy_mode: OriginPolicyMode | str | None = None,
+) -> tuple[dict, dict]:
     settings = container.settings
-    mode = OriginPolicyMode(settings.synthetic_policy_mode)
+    mode = OriginPolicyMode(policy_mode or settings.synthetic_policy_mode)
     if mode == OriginPolicyMode.DISABLED:
         visible_marker, synthetic_analysis = _disabled_origin_lane(container)
         return visible_marker, {
@@ -517,6 +583,8 @@ def _analyze_origin_lane(container, query_image: Image.Image, provenance) -> tup
             provenance=provenance,
             settings=settings,
             visible_marker=visible_marker,
+            source_media=candidate_raw,
+            source_filename=candidate_filename,
         )
         execution_state = CapabilityExecutionState.EXECUTED
     except Exception as exc:
@@ -538,24 +606,51 @@ def build_evidence_packet(
     progress: Callable[[str, str, int], None] | None = None,
     defer_proof: bool = False,
 ) -> dict:
+    pipeline_started = time.perf_counter()
+
     def report(stage: str, label: str, percent: int) -> None:
         if progress is not None:
             progress(stage, label, percent)
 
     settings = container.settings
+    from app.models import ScanInputBinding
+
+    input_binding = db.scalar(select(ScanInputBinding).where(ScanInputBinding.scan_id == scan.id))
+    origin_policy_mode = OriginPolicyMode(
+        (
+            (input_binding.requested_capabilities or {}).get("origin_policy_mode")
+            if input_binding is not None
+            else None
+        )
+        or settings.synthetic_policy_mode
+    )
     report("PREPARING_IMAGE", "Preparing the image", 5)
+    stage_started = time.perf_counter()
     query_image = decode_image(
         candidate_raw,
         max_bytes=settings.max_upload_bytes,
         max_pixels=settings.max_image_pixels,
     )
+    record_duration("image_decode", (time.perf_counter() - stage_started) * 1000)
     candidate_path = container.storage.root / scan.candidate_storage_key
     report("CHECKING_SOURCE", "Checking source information", 12)
+    stage_started = time.perf_counter()
     provenance = container.provenance.inspect(candidate_path)
+    record_duration("provenance", (time.perf_counter() - stage_started) * 1000)
     report("CHECKING_VISIBLE_LABELS", "Looking for visible AI labels", 20)
     report("CHECKING_AI_SIGNALS", "Checking AI-use signals", 32)
-    visible_marker, synthetic_analysis = _analyze_origin_lane(container, query_image, provenance)
+    stage_started = time.perf_counter()
+    visible_marker, synthetic_analysis = _analyze_origin_lane(
+        container,
+        query_image,
+        provenance,
+        candidate_raw=candidate_raw,
+        candidate_filename="candidate.bin",
+        policy_mode=origin_policy_mode,
+    )
+    record_duration("origin_analysis", (time.perf_counter() - stage_started) * 1000)
     report("SEARCHING_CATALOG", "Searching registered works", 54)
+    stage_started = time.perf_counter()
     ranked, total_count, retrieval_runtime = retrieve_candidates(
         db,
         container=container,
@@ -565,8 +660,11 @@ def build_evidence_packet(
         candidate_sha256=scan.candidate_sha256,
         candidate_phash=scan.candidate_phash,
         top_k=settings.retrieval_top_k,
+        exhaustive_max_entries=settings.copy_exhaustive_verification_max_entries,
     )
+    record_duration("copy_retrieval", (time.perf_counter() - stage_started) * 1000)
     report("CHECKING_CREATOR_PROFILE", "Checking the creator profile", 66)
+    stage_started = time.perf_counter()
     try:
         style_analysis = analyze_style(
             container,
@@ -601,16 +699,26 @@ def build_evidence_packet(
         **style_analysis,
         "customer_facing_lane": "CREATOR_PROFILE_RESEMBLANCE",
     }
+    record_duration("style_analysis", (time.perf_counter() - stage_started) * 1000)
 
     evidence: list[CandidateEvidence] = []
     work_by_id: dict[str, Work] = {}
     verified_work_ids: list[str] = []
     verification_failures: list[dict] = []
     report("VERIFYING_CLOSEST_MATCHES", "Comparing the closest registered works", 74)
+    verification_started = time.perf_counter()
     for item_index, item in enumerate(ranked):
         work_by_id[item.work.id] = item.work
         try:
-            reference_raw = container.storage.read(item.work.storage_key)
+            asset_version = item.asset_version
+            if asset_version is None:
+                raise ValueError("REFERENCE_ASSET_VERSION_MISSING")
+            reference_raw = container.storage.read(asset_version.storage_key)
+            observed_sha256 = hashlib.sha256(reference_raw).hexdigest()
+            if observed_sha256 != asset_version.sha256:
+                raise ValueError("REFERENCE_ASSET_SHA256_MISMATCH")
+            if len(reference_raw) != asset_version.byte_size:
+                raise ValueError("REFERENCE_ASSET_BYTE_SIZE_MISMATCH")
             with Image.open(__import__("io").BytesIO(reference_raw)) as opened:
                 reference_image = opened.convert("RGB")
                 reference_image.load()
@@ -621,7 +729,12 @@ def build_evidence_packet(
                 else None
             )
             aligned_perceptual = asdict(
-                container.aligned_perceptual.verify(query_image, reference_image, alignment)
+                container.aligned_perceptual.verify(
+                    query_image,
+                    reference_image,
+                    alignment,
+                    raw_geometry.get("regions") if alignment is not None else None,
+                )
             )
             visualization = _visualization(item, raw_geometry)
             geometry = {
@@ -657,6 +770,12 @@ def build_evidence_packet(
                     ai_similarity=(
                         round(item.ai_similarity, 6) if item.ai_similarity is not None else None
                     ),
+                    ai_regional_similarity=(
+                        round(item.ai_regional_similarity, 6)
+                        if item.ai_regional_similarity is not None
+                        else None
+                    ),
+                    retrieval_view=item.retrieval_view,
                     exact_sha256=item.exact_sha256,
                     phash_distance=item.phash_distance,
                     phash_similarity=round(max(0.0, 1.0 - item.phash_distance / 64.0), 6),
@@ -685,6 +804,14 @@ def build_evidence_packet(
             74 + round(14 * (item_index + 1) / max(1, len(ranked))),
         )
 
+    record_duration(
+        "copy_candidate_verification",
+        (time.perf_counter() - verification_started) * 1000,
+    )
+    increment_counter("copy_candidates_nominated", len(ranked))
+    increment_counter("copy_candidates_verified", len(verified_work_ids))
+    increment_counter("copy_candidate_verification_failures", len(verification_failures))
+
     snapshot = corpus_snapshot(
         ranked,
         total_count=total_count,
@@ -705,23 +832,152 @@ def build_evidence_packet(
     matched_work = (
         work_by_id.get(top.work_id) if top and match_status == MatchStatus.MATCH_FOUND else None
     )
-    policy_action, rights_path, reason_codes = _policy(
+    baseline_action, baseline_rights_path, baseline_reason_codes = _evidence_policy_baseline(
         match_status,
-        matched_work,
-        scan.intended_use,
         coverage_status=CoverageStatus(snapshot["coverage_status"]),
         coverage_reason_codes=snapshot.get("coverage_reason_codes") or [],
     )
     style_decision = style_analysis.get("decision") or {}
-    # Style evidence cannot manufacture a copy match. It can, however, stop a source-scoped
-    # PASS_BY_POLICY and route a high/review learned-style case to a human policy review.
-    policy_action, reason_codes, style_review_recommended = _apply_style_policy_overlay(
-        match_status=match_status,
-        policy_action=policy_action,
-        reason_codes=reason_codes,
-        style_analysis=style_analysis,
-        synthetic_analysis=synthetic_analysis,
-        origin_policy_mode=settings.synthetic_policy_mode,
+    style_review_recommended = bool(style_decision.get("review_recommended"))
+
+    # The exact immutable policy selected when the scan was accepted owns this
+    # decision. Missing/deleted policy state fails closed rather than silently
+    # falling back to a newer version or to the legacy Work projection.
+    from app.services.policy_store import collect_rights_facts, evaluate_policy
+
+    policy_version = (
+        container.policies.get_by_id(
+            db,
+            tenant_id=scan.tenant_id,
+            policy_version_id=scan.policy_version_id,
+        )
+        if scan.policy_version_id
+        else None
+    )
+    rights_facts = collect_rights_facts(
+        db,
+        tenant_id=scan.tenant_id,
+        work_id=matched_work.id if matched_work is not None else None,
+        intended_use=scan.intended_use,
+    )
+    if policy_version is None:
+        policy_evaluation = {
+            "policy_action": str(PolicyAction.REVIEW),
+            "baseline_policy_action": str(baseline_action),
+            "rights_path": str(rights_facts.get("derived_rights_path", baseline_rights_path)),
+            "matched_rules": ["pinned_policy_version_must_exist"],
+            "missing_facts": ["PINNED_POLICY_VERSION_NOT_FOUND"],
+            "reason_codes": sorted(
+                set([*baseline_reason_codes, "PINNED_POLICY_VERSION_NOT_FOUND"])
+            ),
+            "authorizing_license_id": None,
+            "license_reason_codes": rights_facts.get("license_reason_codes") or [],
+            "inputs": {},
+            "notes": ["A missing pinned policy fails closed and requires review."],
+        }
+        policy_identity = "MISSING_PINNED_POLICY_VERSION"
+    else:
+        policy_evaluation = evaluate_policy(
+            rules=policy_version.rules,
+            baseline_action=baseline_action,
+            baseline_reason_codes=baseline_reason_codes,
+            match_status=match_status,
+            coverage_status=CoverageStatus(snapshot["coverage_status"]),
+            rights_path=baseline_rights_path,
+            rights_facts=rights_facts,
+            ai_origin_classification=synthetic_analysis.get("classification"),
+            creator_profile_tier=style_decision.get("evidence_tier"),
+            origin_policy_mode=str(origin_policy_mode),
+            style_review_recommended=style_review_recommended,
+        )
+        policy_identity = policy_version.id
+
+    policy_action = PolicyAction(policy_evaluation["policy_action"])
+    rights_path = RightsPath(policy_evaluation["rights_path"])
+    reason_codes = list(policy_evaluation["reason_codes"])
+    policy_inputs = {
+        "match_status": str(match_status),
+        "coverage_status": snapshot.get("coverage_status"),
+        "origin_policy_mode": str(origin_policy_mode),
+        "intended_use": scan.intended_use,
+        "matched_work_id": matched_work.id if matched_work is not None else None,
+        "evidence_baseline": {
+            "policy_action": str(baseline_action),
+            "rights_path": str(baseline_rights_path),
+            "reason_codes": baseline_reason_codes,
+        },
+        "rights_facts": rights_facts,
+        # Compatibility shape retained for v1 consumers. These values are a
+        # projection of the authoritative Claim/License snapshot, never Work.
+        "matched_work": (
+            {
+                "work_id": matched_work.id,
+                "claim_state": (
+                    (rights_facts.get("claims") or [{}])[0].get("state")
+                    if rights_facts.get("claims")
+                    else None
+                ),
+                "rights_path": rights_facts.get("derived_rights_path"),
+                "allowed_uses": sorted(
+                    {
+                        use
+                        for license_fact in rights_facts.get("licenses") or []
+                        for use in license_fact.get("permitted_uses") or []
+                    }
+                ),
+                "source": "PERSISTED_CLAIM_AND_LICENSE_ROWS",
+            }
+            if matched_work is not None
+            else None
+        ),
+        "policy": (
+            {
+                "id": policy_version.id,
+                "policy_key": policy_version.policy_key,
+                "version": policy_version.version,
+                "digest_sha256": policy_version.digest_sha256,
+            }
+            if policy_version is not None
+            else {"id": scan.policy_version_id, "state": "NOT_FOUND"}
+        ),
+    }
+    policy_trace = build_policy_trace(
+        policy_version=policy_identity,
+        inputs=policy_inputs,
+        outputs={
+            "policy_action": str(policy_action),
+            "rights_path": str(rights_path),
+            "style_review_recommended": style_review_recommended,
+            "authorizing_license_id": policy_evaluation.get("authorizing_license_id"),
+        },
+        matched_rule_codes=list(policy_evaluation.get("matched_rules") or []),
+        missing_facts=list(policy_evaluation.get("missing_facts") or []),
+    )
+    for item in evidence:
+        record_observation("copy_retrieval_score", item.retrieval_score)
+        record_observation("copy_evidence_index", item.copy_evidence_score)
+        record_observation("copy_ai_whole_similarity", item.ai_similarity)
+        record_observation("copy_ai_regional_similarity", item.ai_regional_similarity)
+    record_observation(
+        "origin_fused_detector_score",
+        synthetic_analysis.get("fused_detector_score"),
+    )
+    style_profiles = style_analysis.get("top_profiles") or []
+    if style_profiles:
+        record_observation("style_top_readout_score", style_profiles[0].get("readout_score"))
+    record_duration(
+        "evidence_pipeline_precommit",
+        (time.perf_counter() - pipeline_started) * 1000,
+    )
+    telemetry = current_telemetry()
+    runtime_telemetry = (
+        telemetry.snapshot()
+        if telemetry is not None
+        else {
+            "schema": "creatorproof.runtime_telemetry.v1",
+            "state": "NOT_CAPTURED",
+            "semantics": "OPERATIONAL_DIAGNOSTICS_NOT_ACCURACY_METRICS",
+        }
     )
     packet = {
         "schema": "creatorproof.evidence_packet.v1",
@@ -734,7 +990,15 @@ def build_evidence_packet(
         },
         "scope": snapshot,
         "model_bundle": {
-            "bundle_id": "creatorproof-multi-lane-evidence-v0.9",
+            **container.model_bundle.packet_record(
+                runtime={
+                    "copy_retrieval": container.ai_retrieval.status(),
+                    "style": container.style_retrieval.status(),
+                    "synthetic_origin": container.synthetic_detection.status(),
+                    "visible_marker": container.visible_markers.status(),
+                    "provenance": container.provenance.status(),
+                }
+            ),
             "fingerprint_provider": container.fingerprints.name,
             "retrieval_provider": retrieval_runtime.provider,
             "ai_retrieval_active": retrieval_runtime.ai_active,
@@ -750,57 +1014,77 @@ def build_evidence_packet(
             "synthetic_origin_detectors": [
                 row.get("provider") for row in synthetic_analysis.get("members") or []
             ],
-            "synthetic_origin_fusion": "evidence-family-multicrop-visible-marker-fusion-v3",
-            "synthetic_origin_policy_mode": str(settings.synthetic_policy_mode),
+            "synthetic_origin_fusion": (
+                "sightengine-primary-original-media-local-fallback-fusion-v4"
+            ),
+            "synthetic_origin_policy_mode": str(origin_policy_mode),
             "visible_marker_provider": container.visible_markers.name,
             "visible_marker_classification": visible_marker.get("classification"),
             "fusion": "corroborated-copy-evidence-fusion-v3-UNCALIBRATED",
-            "promotion_state": "EXPERIMENTAL",
+            "runtime_validation": {
+                "declared_state_verified": container.model_bundle_runtime[
+                    "runtime_requirement_met_for_declared_state"
+                ],
+                "runtime_artifact_failures": container.model_bundle_runtime[
+                    "runtime_artifact_failures"
+                ],
+                "terms_failures": container.model_bundle_runtime["terms_failures"],
+                "application_revision_matches": container.model_bundle_runtime[
+                    "application_revision"
+                ]["matches"],
+                "runtime_lock_matches": container.model_bundle_runtime["runtime_lock"]["matches"],
+                "runtime_environment_matches": container.model_bundle_runtime[
+                    "runtime_environment"
+                ]["matches"],
+                "demo_ready": container.model_bundle_runtime["demo_ready"],
+            },
+            "promotion_state": (
+                container.model_bundle.qualification_state
+                if container.model_bundle_runtime["runtime_requirement_met_for_declared_state"]
+                else "DECLARED_STATE_REQUIREMENTS_NOT_MET"
+            ),
         },
         "provenance": {
             "provider": provenance.provider,
             "status": provenance.status,
             "reason_codes": provenance.reason_codes,
             "manifest_summary": provenance.manifest_summary,
+            "trust_details": provenance.trust_details,
         },
         "synthetic_origin": synthetic_analysis,
         "matches": [asdict(item) for item in evidence[:3]],
         "style_analysis": style_analysis,
+        "runtime_telemetry": runtime_telemetry,
         "decision": {
             "match_status": match_status,
             "policy_action": policy_action,
             "rights_path": rights_path,
             "reason_codes": reason_codes,
             "intended_use": scan.intended_use,
-            "policy_version": POLICY_VERSION,
-            "policy_inputs": {
-                "match_status": str(match_status),
-                "coverage_status": snapshot.get("coverage_status"),
-                "origin_policy_mode": str(settings.synthetic_policy_mode),
-                "intended_use": scan.intended_use,
-                "matched_work": (
-                    {
-                        "work_id": matched_work.id,
-                        "claim_state": str(matched_work.claim_state),
-                        "rights_path": str(matched_work.rights_path),
-                        "allowed_uses": list(matched_work.allowed_uses or []),
-                    }
-                    if matched_work is not None
-                    else None
-                ),
-            },
+            "policy_version": policy_identity,
+            "policy_version_id": policy_version.id if policy_version is not None else None,
+            "policy_key": policy_version.policy_key if policy_version is not None else None,
+            "policy_version_number": policy_version.version if policy_version is not None else None,
+            "policy_digest_sha256": (
+                policy_version.digest_sha256 if policy_version is not None else None
+            ),
+            "policy_inputs": policy_inputs,
+            "policy_trace": policy_trace,
+            "policy_evaluation": policy_evaluation,
+            "rights_facts_snapshot_digest_sha256": rights_facts.get("snapshot_digest_sha256"),
+            "authorizing_license_id": policy_evaluation.get("authorizing_license_id"),
             "style_review_recommended": style_review_recommended,
             "style_evidence_tier": style_decision.get("evidence_tier"),
             "style_classification": style_decision.get("classification"),
             "synthetic_origin_classification": synthetic_analysis.get("classification"),
-            "synthetic_origin_policy_mode": str(settings.synthetic_policy_mode),
+            "synthetic_origin_policy_mode": str(origin_policy_mode),
             "coverage_status": snapshot.get("coverage_status"),
             "joint_risk": _joint_risk_summary(
                 match_status=match_status,
                 policy_action=policy_action,
                 style_analysis=style_analysis,
                 synthetic_analysis=synthetic_analysis,
-                origin_policy_mode=settings.synthetic_policy_mode,
+                origin_policy_mode=origin_policy_mode,
                 coverage_status=str(snapshot.get("coverage_status")),
             ),
         },
@@ -844,7 +1128,16 @@ def build_evidence_packet(
         "receipt": None,
     }
     if not defer_proof:
-        proof = container.proof_anchor.anchor(packet_hash)
+        blockchain = getattr(container, "blockchain", None)
+        proof = (
+            blockchain.anchor_packet(
+                packet_hash=packet_hash,
+                scan_id=scan.id,
+                tenant_id=scan.tenant_id,
+            )
+            if blockchain is not None
+            else container.proof_anchor.anchor(packet_hash)
+        )
         packet["proof"].update(
             {
                 "anchor_status": proof.status,
@@ -863,102 +1156,13 @@ def build_evidence_packet(
 
 
 def process_scan(container, scan_id: str) -> None:
-    from app.domain.enums import MatchStatus, ScanState
-    from app.models import Scan
+    """Run one scan.
 
-    db = container.database.session_factory()
-    scan: Scan | None = None
-    claimed = False
-    try:
-        claim = db.execute(
-            update(Scan)
-            .where(Scan.id == scan_id, Scan.state == ScanState.QUEUED)
-            .values(state=ScanState.PROCESSING, error_code=None)
-        )
-        db.commit()
-        if claim.rowcount != 1:
-            return
-        claimed = True
-        scan = db.get(Scan, scan_id)
-        if scan is None:
-            return
+    Execution is owned by the platform layer. This wrapper keeps the original
+    entry point stable for the worker, the container wiring and existing tests
+    while the durable stage ledger, leases, retries, statement signing and proof
+    anchoring live in :mod:`app.services.scan_runner`.
+    """
+    from app.services.scan_runner import run_scan
 
-        progress_started_at = datetime.now(UTC).isoformat()
-
-        def update_progress(stage: str, label: str, percent: int) -> None:
-            scan.evidence_packet = {
-                "schema": "creatorproof.scan_progress.v1",
-                "progress": {
-                    "stage": stage,
-                    "label": label,
-                    "percent": max(0, min(int(percent), 99)),
-                    "started_at": progress_started_at,
-                    "updated_at": datetime.now(UTC).isoformat(),
-                    "poll_after_ms": 750,
-                    "can_resume": True,
-                },
-            }
-            scan.reason_codes = ["SCAN_IN_PROGRESS"]
-            db.commit()
-
-        update_progress("STARTING", "Starting the evidence checks", 2)
-        if not scan.candidate_storage_key:
-            raise RuntimeError("CANDIDATE_MISSING")
-        raw = container.storage.read(scan.candidate_storage_key)
-        defer_proof = container.settings.environment != "test"
-        packet = build_evidence_packet(
-            container,
-            db,
-            scan,
-            raw,
-            progress=update_progress,
-            defer_proof=defer_proof,
-        )
-        scan.state = ScanState.COMPLETED
-        scan.completed_at = datetime.now(UTC)
-        db.commit()
-        if defer_proof:
-            try:
-                packet_hash = str(packet["proof"]["packet_hash_sha256"])
-                try:
-                    proof = container.proof_anchor.anchor(packet_hash)
-                    proof_status = proof.status
-                    proof_provider = proof.provider
-                    proof_receipt = proof.receipt
-                except Exception as exc:
-                    proof_status = "FAILED"
-                    proof_provider = container.proof_anchor.name
-                    proof_receipt = {"error_code": f"PROOF_ANCHOR_FAILED:{type(exc).__name__}"}
-                packet = {
-                    **packet,
-                    "proof": {
-                        **packet["proof"],
-                        "anchor_status": proof_status,
-                        "provider": proof_provider,
-                        "receipt": proof_receipt,
-                    },
-                }
-                scan.anchor_status = str(proof_status)
-                scan.evidence_packet = packet
-                db.commit()
-            except Exception:
-                # The core evidence result is already committed. A proof-provider or
-                # proof-update failure must never turn that completed result into FAILED.
-                db.rollback()
-    except Exception as exc:
-        db.rollback()
-        if scan is None:
-            scan = db.get(Scan, scan_id)
-        if scan is not None:
-            scan.state = ScanState.FAILED
-            scan.match_status = MatchStatus.ERROR
-            scan.policy_action = PolicyAction.REVIEW
-            scan.error_code = type(exc).__name__
-            scan.reason_codes = ["PIPELINE_ERROR"]
-            scan.completed_at = datetime.now(UTC)
-            db.commit()
-        raise
-    finally:
-        if claimed and scan is not None and container.settings.candidate_retention_seconds == 0:
-            container.storage.delete(scan.candidate_storage_key)
-        db.close()
+    run_scan(container, scan_id)

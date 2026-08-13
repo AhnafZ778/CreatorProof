@@ -1,4 +1,9 @@
 .env*
+.git/
+*.pem
+*.key
+*.p12
+*.pfx
 .venv/
 models/
 vendor/
@@ -14,5 +19,7 @@ __pycache__/
 *.db*
 *.sqlite*
 *.log
+*.pid
+*.sock
 benchmarks/reports/*
 !benchmarks/reports/README.md

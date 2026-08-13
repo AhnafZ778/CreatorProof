@@ -1,9 +1,26 @@
 .DS_Store
 
-# Local configuration: commit only reviewed examples.
+# Local configuration and credentials: commit only reviewed examples.
 .env*
+**/.env*
 !.env.example
 !.env.*.example
+!**/.env.example
+!**/.env.*.example
+.envrc
+.direnv/
+.secret*
+secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+credentials*.json
+service-account*.json
 
 # Python environments, caches, and generated files.
 .venv/
@@ -14,6 +31,12 @@ __pycache__/
 .mypy_cache/
 .cache/
 *.py[cod]
+*.egg-info/
+.coverage
+.coverage.*
+coverage.xml
+.tox/
+.nox/
 
 # JavaScript dependencies, build output, and coverage.
 node_modules/
@@ -24,6 +47,16 @@ out/
 coverage/
 htmlcov/
 *.tsbuildinfo
+.npm/
+.yarn/
+.pnpm-store/
+.turbo/
+playwright-report/
+test-results/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Runtime state must never enter source history.
 data/
@@ -37,6 +70,10 @@ data/
 *.sqlite3-*
 *.sqlite3.*
 *.log
+*.pid
+*.sock
+*.db.saved
+*.db.bak
 
 # Third-party checkouts, downloaded models, and generated benchmark reports.
 apps/api/vendor/
@@ -47,6 +84,7 @@ apps/api/benchmarks/reports/*
 
 # Generated local-chain deployment receipt.
 blockchain-local/deployment.json
+blockchain-local/.ganache/
 
 # Next.js-generated declarations.
 /apps/web/next-env.d.ts

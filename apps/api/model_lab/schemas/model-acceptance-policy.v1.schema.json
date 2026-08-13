@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://creatorproof.local/schemas/model-acceptance-policy.v1.schema.json",
+  "title": "CreatorProof model acceptance policy",
+  "type": "object",
+  "required": [
+    "schema",
+    "policy_id",
+    "domain_id",
+    "ratification_state",
+    "model_bundle",
+    "final_test_lock",
+    "report_policies",
+    "required_external_gates",
+    "automatic_promotion_allowed"
+  ],
+  "properties": {
+    "schema": {"const": "creatorproof.model_acceptance_policy.v1"},
+    "policy_id": {"type": "string", "minLength": 1},
+    "domain_id": {"type": "string", "minLength": 1},
+    "ratification_state": {
+      "enum": ["DRAFT_NOT_RATIFIED", "RATIFIED_BEFORE_FINAL_TEST"]
+    },
+    "automatic_promotion_allowed": {"const": false},
+    "model_bundle": {
+      "type": "object",
+      "required": ["bundle_id", "manifest_digest_sha256"]
+    },
+    "final_test_lock": {
+      "type": "object",
+      "required": ["required", "rules"],
+      "properties": {"required": {"const": true}}
+    },
+    "report_policies": {"type": "array", "minItems": 1},
+    "required_external_gates": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

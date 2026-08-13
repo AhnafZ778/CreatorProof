@@ -64,9 +64,19 @@ def test_exact_match_keeps_evidence_separate_from_policy(client, api_key, image_
     assert visual["homography_query_to_reference"] is not None
     assert body["evidence_packet"]["proof"]["packet_hash_sha256"]
     decision = body["evidence_packet"]["decision"]
-    assert decision["policy_version"] == "creatorproof-demo-policy-v1"
+    assert decision["policy_version"] == decision["policy_version_id"]
+    assert decision["policy_version_id"].startswith("pol_")
+    assert decision["policy_digest_sha256"]
     assert decision["policy_inputs"]["matched_work"]["claim_state"] == "CORROBORATED"
+    assert decision["policy_inputs"]["matched_work"]["source"] == "PERSISTED_CLAIM_AND_LICENSE_ROWS"
     assert decision["policy_inputs"]["intended_use"] == "marketing/social"
+    assert decision["policy_trace"]["schema"] == "creatorproof.policy_trace.v1"
+    assert len(decision["policy_trace"]["trace_digest_sha256"]) == 64
+    telemetry = body["evidence_packet"]["runtime_telemetry"]
+    assert telemetry["schema"] == "creatorproof.runtime_telemetry.v1"
+    assert telemetry["timings_ms"]["evidence_pipeline_precommit"]["count"] == 1
+    assert telemetry["score_summaries"]["copy_evidence_index"]["maximum"] == 1.0
+    assert telemetry["semantics"].endswith("NOT_ACCURACY_METRICS")
     assert "copyright clear" not in json.dumps(body).lower()
 
 
@@ -157,6 +167,42 @@ def test_asserted_claim_cannot_authorize_an_exact_match(client, api_key, image_b
     assert "MATCHED_CLAIM_NOT_CORROBORATED" in body["reason_codes"]
 
 
+def test_legacy_work_fields_cannot_authorize_without_persisted_rights_rows(
+    client, api_key, image_bytes
+):
+    raw = image_bytes(41)
+    registered = register(client, api_key, raw)
+    assert registered.status_code == 201
+
+    from sqlalchemy import delete
+
+    from app.models import Claim, License, Work
+
+    container = client.app.state.container
+    db = container.database.session_factory()
+    try:
+        work_id = registered.json()["id"]
+        # Leave the compatibility projection looking fully authorized while
+        # removing the authoritative facts a scan is permitted to trust.
+        work = db.get(Work, work_id)
+        assert work.claim_state == "CORROBORATED"
+        assert work.rights_path == "EXISTING_LICENSE"
+        assert work.allowed_uses == ["marketing/social"]
+        db.execute(delete(License).where(License.work_id == work_id))
+        db.execute(delete(Claim).where(Claim.work_id == work_id))
+        db.commit()
+    finally:
+        db.close()
+
+    result = scan(client, api_key, raw, key="idem-persisted-rights-required")
+    assert result.status_code == 202, result.text
+    decision = result.json()["evidence_packet"]["decision"]
+    assert decision["policy_action"] == "REVIEW"
+    assert decision["authorizing_license_id"] is None
+    assert "NO_RECORDED_CLAIM" in decision["policy_evaluation"]["missing_facts"]
+    assert "NO_RECORDED_LICENSE" in decision["policy_evaluation"]["missing_facts"]
+
+
 def test_revoked_claim_cannot_authorize_an_exact_match(client, api_key, image_bytes):
     raw = image_bytes(5)
     assert register(client, api_key, raw, claim_state="REVOKED").status_code == 201
@@ -209,7 +255,9 @@ def test_disabled_origin_lane_is_skipped_and_cannot_change_policy(client, api_ke
 
 def test_api_key_is_required(client, image_bytes):
     response = client.get("/v1/works")
-    assert response.status_code == 422
+    # A missing credential is an authentication failure, not a malformed request.
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "MISSING_API_KEY"
 
 
 def test_style_lane_builds_creator_profile_and_cross_content_map(client, api_key, image_bytes):
@@ -230,6 +278,8 @@ def test_style_lane_builds_creator_profile_and_cross_content_map(client, api_key
     assert style["top_profiles"][0]["creator"] == "Demo Rightsholder"
     assert style["top_profiles"][0]["sample_count"] == 2
     assert style["top_profiles"][0]["profile_strength"] == "LIMITED_PROFILE"
+    assert style["top_profiles"][0]["profile_source"] == "PROTOTYPE_CLAIMANT_GROUPING"
+    assert style["top_profiles"][0]["profile_authorized"] is False
     assert style["top_profiles"][0]["raw_pool_similarity"] is not None
     assert style["decision"]["evidence_tier"] == "DIAGNOSTIC"
     assert style["decision"]["review_recommended"] is False
@@ -237,3 +287,29 @@ def test_style_lane_builds_creator_profile_and_cross_content_map(client, api_key
     assert tile_map["semantics"] == "CROSS_CONTENT_STYLE_DIAGNOSTIC_NOT_PIXEL_CORRESPONDENCE"
     assert len(tile_map["query_cells"]) == 16
     assert len(tile_map["reference_cells"]) == 16
+
+
+def test_demo_sized_catalog_is_verified_exhaustively_beyond_top_k(
+    client,
+    api_key,
+    image_bytes,
+):
+    for seed in range(9):
+        response = register(
+            client,
+            api_key,
+            image_bytes(seed),
+            title=f"Catalog work {seed}",
+        )
+        assert response.status_code == 201, response.text
+
+    result = scan(client, api_key, image_bytes(40), key="idem-exhaustive-demo-catalog")
+    assert result.status_code == 202, result.text
+    scope = result.json()["evidence_packet"]["scope"]
+
+    assert scope["eligible_reference_count"] == 9
+    assert scope["candidate_limit"] == 9
+    assert scope["nominated_candidate_count"] == 9
+    assert scope["verified_candidate_count"] == 9
+    assert scope["omitted_candidate_count"] == 0
+    assert scope["coverage_status"] == "COMPLETE"

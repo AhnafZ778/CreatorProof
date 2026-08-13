@@ -20,7 +20,7 @@ class AlignedPerceptualVerifier:
     no third-party metric source code is vendored into CreatorProof.
     """
 
-    name = "aligned-structure-ncc-gms-ssim-v1"
+    name = "aligned-structure-ncc-gms-ssim-region-aware-v2"
 
     def __init__(self, min_overlap: float = 0.08) -> None:
         self.min_overlap = min_overlap
@@ -107,11 +107,66 @@ class AlignedPerceptualVerifier:
         # cannot be hidden by a single excellent one.
         return float(math.exp(sum(math.log(value) for value in usable) / len(usable)))
 
+    @staticmethod
+    def _reference_support_mask(
+        support_regions: tuple[dict, ...] | list[dict] | None,
+        *,
+        width: int,
+        height: int,
+    ) -> tuple[np.ndarray | None, int]:
+        """Rasterize only validated geometry support envelopes in reference space."""
+
+        if not support_regions:
+            return None, 0
+        mask = np.zeros((height, width), dtype=np.uint8)
+        accepted = 0
+        for region in support_regions:
+            if not isinstance(region, dict):
+                continue
+            if region.get("kind") != "VERIFIED_SUPPORT_PATCH":
+                continue
+            polygon = region.get("reference_polygon")
+            if not isinstance(polygon, (list, tuple)) or len(polygon) < 3:
+                continue
+            points: list[list[int]] = []
+            valid = True
+            for point in polygon:
+                if not isinstance(point, (list, tuple)) or len(point) != 2:
+                    valid = False
+                    break
+                try:
+                    x, y = float(point[0]), float(point[1])
+                except (TypeError, ValueError):
+                    valid = False
+                    break
+                if (
+                    not math.isfinite(x)
+                    or not math.isfinite(y)
+                    or not (0 <= x <= 1 and 0 <= y <= 1)
+                ):
+                    valid = False
+                    break
+                points.append(
+                    [
+                        round(x * max(width - 1, 1)),
+                        round(y * max(height - 1, 1)),
+                    ]
+                )
+            if not valid:
+                continue
+            contour = np.asarray(points, dtype=np.int32)
+            if abs(float(cv2.contourArea(contour))) < 64.0:
+                continue
+            cv2.fillPoly(mask, [contour], color=1)
+            accepted += 1
+        return (mask.astype(bool), accepted) if accepted else (None, 0)
+
     def verify(
         self,
         query: Image.Image,
         reference: Image.Image,
         homography_query_to_reference: tuple[tuple[float, ...], ...] | None,
+        support_regions: tuple[dict, ...] | list[dict] | None = None,
     ) -> AlignedPerceptualEvidence:
         if homography_query_to_reference is None:
             return AlignedPerceptualEvidence(available=False, reason="NO_VALIDATED_ALIGNMENT")
@@ -148,14 +203,43 @@ class AlignedPerceptualVerifier:
                 reason="INSUFFICIENT_ALIGNED_OVERLAP",
             )
 
+        evaluation_mask = warped_mask
+        mask_policy = "FULL_VALIDATED_ALIGNMENT_V1"
+        support_region_count = 0
+        support_overlap_ratio = overlap_ratio
+        support_fraction = 1.0
+        support_mask, support_region_count = self._reference_support_mask(
+            support_regions,
+            width=reference_width,
+            height=reference_height,
+        )
+        if support_mask is not None:
+            evaluation_mask = warped_mask & support_mask
+            support_pixels = int(evaluation_mask.sum())
+            support_overlap_ratio = float(evaluation_mask.mean())
+            support_fraction = support_pixels / max(int(warped_mask.sum()), 1)
+            mask_policy = "GEOMETRY_VERIFIED_SUPPORT_REGIONS_V1"
+            if support_pixels < 256:
+                return AlignedPerceptualEvidence(
+                    available=False,
+                    overlap_ratio=round(overlap_ratio, 6),
+                    evaluation_mask_policy=mask_policy,
+                    support_region_count=support_region_count,
+                    support_overlap_ratio=round(support_overlap_ratio, 6),
+                    support_fraction_of_aligned_overlap=round(support_fraction, 6),
+                    reason="INSUFFICIENT_VERIFIED_SUPPORT_REGION_OVERLAP",
+                )
+
         query_luma = self._luminance(warped_query)
         reference_luma = self._luminance(reference_rgb)
-        luminance_correlation = self._masked_correlation(query_luma, reference_luma, warped_mask)
+        luminance_correlation = self._masked_correlation(
+            query_luma, reference_luma, evaluation_mask
+        )
 
         query_gradient = self._gradient_magnitude(query_luma)
         reference_gradient = self._gradient_magnitude(reference_luma)
         gradient_correlation = self._masked_correlation(
-            query_gradient, reference_gradient, warped_mask
+            query_gradient, reference_gradient, evaluation_mask
         )
         # A normalized gradient-magnitude similarity map. The small stabilizer is in
         # [0,1] luminance-gradient units; the mean communicates preserved edge energy.
@@ -163,10 +247,10 @@ class AlignedPerceptualVerifier:
         gms_map = (2.0 * query_gradient * reference_gradient + stabilizer) / (
             query_gradient * query_gradient + reference_gradient * reference_gradient + stabilizer
         )
-        gradient_magnitude_similarity = float(np.mean(gms_map[warped_mask]))
+        gradient_magnitude_similarity = float(np.mean(gms_map[evaluation_mask]))
         gradient_magnitude_similarity = max(0.0, min(1.0, gradient_magnitude_similarity))
-        structural_similarity = self._masked_ssim(query_luma, reference_luma, warped_mask)
-        color_similarity = self._color_similarity(warped_query, reference_rgb, warped_mask)
+        structural_similarity = self._masked_ssim(query_luma, reference_luma, evaluation_mask)
+        color_similarity = self._color_similarity(warped_query, reference_rgb, evaluation_mask)
         structure_consensus = self._consensus(
             [
                 luminance_correlation,
@@ -188,4 +272,8 @@ class AlignedPerceptualVerifier:
             structural_similarity=rounded(structural_similarity),
             color_similarity=rounded(color_similarity),
             structure_consensus=rounded(structure_consensus),
+            evaluation_mask_policy=mask_policy,
+            support_region_count=support_region_count,
+            support_overlap_ratio=round(support_overlap_ratio, 6),
+            support_fraction_of_aligned_overlap=round(support_fraction, 6),
         )

@@ -27,15 +27,13 @@ export async function POST(request: Request) {
         {
           role: "system",
           content:
-            "Explain the supplied CreatorProof detector metrics in plain language. " +
-            "Do not decide copyright infringement, ownership, or originality. " +
-            "State the source-coverage status before explaining a no-match; incomplete, empty, " +
-            "degraded, truncated, or failed scope can never be described as clearance. " +
-            "Clearly separate the copy/derivative lane (SSCD plus verified geometry) from " +
-            "the creator-profile resemblance lane (profile retrieval plus low-level diagnostics). Never " +
-            "interpret style similarity as proof of model training, copying, or infringement. " +
-            "Call out uncalibrated scores, weak single-work profiles, fallbacks, and missing AI signals. " +
-            "The recorded policy action is an input to explain, never something you may change.",
+            "Explain the supplied CreatorProof evidence in concise, confident plain language for a creative team. " +
+            "Lead with the recorded decision, strongest evidence, and practical next step. " +
+            "Describe source coverage, verified visual matching, AI-origin intelligence, creator-profile insight, " +
+            "rights context, and proof as distinct layers of the same CreatorProof workflow. " +
+            "Use the exact recorded status and policy action; never invent a result, change the policy, or claim " +
+            "that a signal is present when it is not. Keep technical qualification details brief unless they directly " +
+            "affect the recommended next step.",
         },
         { role: "user", content: serialized },
       ],

@@ -89,6 +89,8 @@ def test_catalog_calibration_can_promote_well_supported_style_evidence():
         calibration={
             "ready": True,
             "state": "CATALOG_RELATIVE_EMPIRICAL_SUPPORT_READY",
+            "selection_correction": "BONFERRONI_FAMILY_WISE_V1",
+            "negative_tail_p_raw": 0.013,
             "negative_tail_p": 0.04,
             "positive_support_percentile": 0.80,
         },
@@ -125,7 +127,39 @@ def test_catalog_empirical_tail_uses_cross_creator_negatives():
 
     assert result["ready"] is True
     assert result["negative_calibration_count"] == 20
-    assert result["negative_tail_p"] < 0.05
+    assert result["negative_tail_p_raw"] < 0.05
+    assert result["negative_tail_p"] > result["negative_tail_p_raw"]
+    assert result["negative_tail_p"] == result["negative_tail_p_selection_adjusted"]
+    assert result["selection_count"] == 3
+
+
+def test_style_fusion_rejects_unadjusted_selected_profile_p_value():
+    result = fuse_style_evidence(
+        learned_provider_active=True,
+        raw_style_similarity=0.94,
+        factors={
+            "palette": 0.90,
+            "tone": 0.94,
+            "stroke_orientation": 0.96,
+            "texture": 0.95,
+        },
+        tile_map=_tile_map(0.92),
+        content_similarity=0.30,
+        sample_count=5,
+        discrimination_gap=0.20,
+        catalog_margin=0.15,
+        calibration={
+            "ready": True,
+            "state": "CATALOG_RELATIVE_EMPIRICAL_SUPPORT_READY",
+            "negative_tail_p": 0.01,
+            "positive_support_percentile": 0.90,
+        },
+        settings=Settings(),
+    )
+
+    assert result.evidence_tier == "REVIEW"
+    assert result.false_match_control_supported is False
+    assert "STYLE_SELECTION_CORRECTION_REQUIRED" in result.reason_codes
 
 
 def test_diagnostic_fallback_never_triggers_creator_policy_review():

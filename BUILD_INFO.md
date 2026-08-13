@@ -1,12 +1,12 @@
 # CreatorProof build identity
 
-- Product version: **0.9.2**
-- Build signature: **SEMANTIC-SAFETY-SCOPE-2026.08.10**
-- Edition: **Truthful Scope + Policy Safety**
+- Product version: **0.10.0**
+- Build signature: **MODEL-ACCURACY-HARDENING-2026.08.10**
+- Edition: **Model Accuracy Hardening + Truthful Scope**
 
 Visible acceptance markers:
 
-1. `CreatorProof v0.9.2` appears in the status bar and case header.
+1. `CreatorProof v0.10.0` appears in the status bar and case header.
 2. Every completed case displays a typed source-coverage statement before its bottom line.
 3. Coverage reports eligible, nominated, verified, omitted, and failed reference counts plus a
    catalog version and snapshot digest.
@@ -29,7 +29,10 @@ Visible acceptance markers:
 15. A local scan POST returns a scan ID without waiting for detection to finish, and progress remains
     recoverable by scan ID.
 16. Proof anchoring cannot delay or overturn the completed core evidence result.
-17. The release gate is 85 backend tests, Ruff/format validation, TypeScript, and a production Next.js build.
+17. The release gate is the complete backend suite, Ruff/format validation, TypeScript, and a
+    production Next.js build.
+18. Regional retrieval, region-aware aligned structure, and selected-profile correction are
+    identified explicitly and cannot bypass the existing fail-closed evidence gates.
 
 The active style stack is CSD (when locally available) plus CSD+ catalog readout, transparent
 mark-making diagnostics, SSCD content-confound control, catalog-relative empirical support, and

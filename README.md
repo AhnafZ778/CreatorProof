@@ -1,8 +1,8 @@
-# CreatorProof v0.9.2 — truthful-scope creative evidence workspace
+# CreatorProof v0.10.0 — model-hardened creative evidence workspace
 
-Build signature: **SEMANTIC-SAFETY-SCOPE-2026.08.10**.
+Build signature: **MODEL-ACCURACY-HARDENING-2026.08.10**.
 
-You can identify this build immediately: the top bar says `CreatorProof v0.9.2`. Every completed
+You can identify this build immediately: the top bar says `CreatorProof v0.10.0`. Every completed
 case starts with a typed source-coverage statement and one plain-language bottom line, followed by three independent question cards:
 **Was AI used?**, **Does it reuse a work?**, and **Does it resemble a creator?** Raw forensic detail
 is collapsed by default.
@@ -16,7 +16,21 @@ It deliberately does **not** claim to determine copyright infringement, original
 - `rights_path`: `EXISTING_LICENSE`, `LICENSE_AVAILABLE`, `NO_LICENSE_INFO`, `DISPUTED`
 - `anchor_status`: `NOT_REQUESTED`, `PENDING`, `ANCHORED`, `FAILED`, `REVOKED`
 
-The v0.9.2 safety patch makes five invariants explicit:
+The v0.10.0 release retains the v0.9.2 safety invariants and adds measurable model-system
+hardening:
+
+- SSCD candidate retrieval now evaluates the whole image plus five deterministic overlapping
+  regions, while final copy findings still require geometry and aligned structure.
+- Aligned structural scoring is restricted to geometry-verified support regions, reducing dilution
+  when a copied patch appears inside unrelated content.
+- Selected creator profiles use a family-wise multiplicity correction; choosing the best profile
+  from many candidates can no longer use a naive one-profile tail value.
+- Benchmarks bind prediction rows, labels, thresholds, corpus manifests, bundle identity, and
+  report content by digest, with source-lineage clustered uncertainty.
+- Runtime telemetry, drift triggers, durable queue recovery, and identity-bound atomic embedding
+  caches make failures and stale results visible.
+
+The retained truthful-scope invariants are:
 
 - `NO_MATCH_IN_CHECKED_SOURCES` is impossible unless the declared catalog coverage is `COMPLETE`.
 - Empty, partial, degraded, truncated, or failed scope routes to `SCOPE_INCOMPLETE` and `REVIEW`.
@@ -33,6 +47,9 @@ The v0.9.2 safety patch makes five invariants explicit:
 - Independent AI-origin lane with official C2PA inspection, the official Community Forensics
   safetensors provider, an Apache-2.0 GRIP CLIP-detector adapter, delivery-transformation probes,
   multi-crop spatial consensus, held-out provider calibration, evidence-family fusion, and abstention.
+- Optional Sightengine-primary routing sends the accepted original media once to the server-side
+  `genai` API, preserves global and generator-category cues, and activates the local detector set
+  only on an operational API failure. A valid low remote score never triggers score shopping.
 - Community Forensics now uses its official evaluation transform: resize the shorter side to 440,
   then center-crop 384. The previous direct 384×384 force-fit was an input-distribution bug.
 - Origin semantics stay honest: missing C2PA is unknown; one raw low model response cannot imply
@@ -48,10 +65,13 @@ The v0.9.2 safety patch makes five invariants explicit:
   states remain visible, while the explicit policy mode determines whether they can affect policy.
 - Reference-work image registration with SHA-256/pHash fingerprints plus cached learned descriptors
   when SSCD is active.
-- Exhaustive nearest-reference retrieval over every registered work in the declared demo catalog.
+- Exhaustive pairwise verification for declared demo catalogs up to the configured safety bound
+  (64 by default); larger catalogs expose truncation and cannot produce a complete no-match.
 - SSCD `sscd_disc_mixup` TorchScript descriptors (512D, cosine-ranked) when the official model and
   PyTorch runtime are installed; explicit pHash fallback otherwise.
-- Independent creator-profile resemblance retrieval: registered works with the same `claimant` form an anchor pool.
+- Independent creator-profile resemblance retrieval: versioned, consent-backed profile manifests
+  define authorized anchor pools. Same-`claimant` grouping remains available only as an explicitly
+  unversioned prototype and cannot escalate policy.
   v0.8 retains mean CSD cosine plus CSD+ CSLS local-density correction, measures a
   catalog-internal discrimination gap, and retains raw cosine only as an explicitly uncalibrated metric.
 - Catalog-relative empirical support uses leave-one-out within-creator scores and cross-creator
@@ -79,7 +99,7 @@ The v0.9.2 safety patch makes five invariants explicit:
   rank can promote a lower global candidate that actually verifies.
 - Evidence Microscope with `Case summary`, `AI origin`, `Copy regions`, `Aligned structure`,
   `Creator profile`, and `Style map`. Misleading raw pixel-difference/overlay modes are absent.
-- Truthful-scope v0.9.2 workbench: source coverage, one bottom line, three clickable question cards, a strong analysis
+- Model-hardened v0.10.0 workbench: source coverage, one bottom line, three clickable question cards, a strong analysis
   sidebar, active-view briefing panels, and purposeful colour separation between origin, copy, and style.
 - Origin detail uses progressive disclosure: a plain conclusion, next action, two understandable
   scores, and three supporting facts are visible immediately; provider ledgers, calibration, and
@@ -94,8 +114,8 @@ The v0.9.2 safety patch makes five invariants explicit:
 - Explicit, uncalibrated evidence fusion with abstention semantics. Its evidence index is never labelled a probability.
 - Rights/policy evaluation kept separate from visual evidence.
 - Claim-state authorization: only corroborated records can produce a rights-based pass.
-- Deterministic, hashable Evidence Packets with typed coverage, catalog manifests, policy inputs,
-  model identity, and limitation metadata.
+- Deterministic, hashable Evidence Packets with typed coverage, catalog manifests, immutable
+  ModelBundle identity, provenance trust facts, policy inputs, replay-trace digests, and limitations.
 - Payload-bound idempotent scan creation with typed conflict responses.
 - Local object storage for development; short-lived scan candidate retention.
 - Non-blocking, single-worker local scan queue for zero-infrastructure development. The POST request
@@ -112,7 +132,9 @@ The v0.9.2 safety patch makes five invariants explicit:
 - Official `c2patool` provenance adapter with trusted/untrusted/invalid/absent states.
 - Verifiable RFC 6962-style local Merkle transparency receipts, explicitly labelled not blockchain.
 - Optional real Ethereum Attestation Service on-chain receipts that commit only the canonical packet
-  SHA-256 through a `bytes32 packetHash` schema and return the mined transaction/attestation UID.
+  SHA-256 through a `bytes32 packetHash` schema, plus durable batched checkpoint anchors for signed
+  registration and rights/status history. Final success requires full attestation binding and the
+  configured confirmation depth.
 - Benchmark promotion gates: tiny copy/style/origin runs are labelled `SMOKE_TEST_ONLY` rather than
   being misreported as production evidence.
 
@@ -123,6 +145,14 @@ not. Model artifacts
 are downloaded separately and the Evidence Packet records provider/fallback state on every scan. It
 also does not bundle C2PA trust material, LightGlue-family weights, external detector repositories,
 or blockchain credentials. A local Merkle receipt is never relabelled as a chain transaction.
+
+The checked-in Part 1 ModelBundle is `RUNTIME_READY`, not `DEMO_READY`.
+The selected external artifact bytes, application source, runtime lock, Python/package
+environment, and optional requirement declarations are pinned, but authorized benchmark media,
+calibration reports, profile consent, immutable build identity, and model/data terms must be
+completed before stronger qualification. The Model Lab,
+corpus validators, benchmark report identities, stable Part 2 fixtures, and no-media preflight are
+under `apps/api/model_lab`, `apps/api/benchmarks`, and `apps/api/docs/part1`.
 
 ## Quick start - zero infrastructure
 
@@ -149,7 +179,7 @@ That starts the safe baseline. To activate the actual learned SSCD retrieval pat
 ```bash
 cd apps/api
 uv pip install -r requirements-ai.txt
-uv run --no-sync python scripts/fetch_sscd_model.py
+uv run --no-sync python scripts/fetch_sscd_model.py --metadata-output models/sscd-fetch.json
 uv run --no-sync python -m scripts.check_ai
 uv run --no-sync uvicorn app.main:app --reload --port 8000
 ```
@@ -175,7 +205,21 @@ Do not skip the style benchmark. CSD's upstream repository currently warns about
 and 2026 research also shows raw CSD cosine should not be treated as a universal calibrated score.
 See `docs/STYLE_SIMILARITY_AND_ATTRIBUTION.md`.
 
-To activate the first open AI-origin detector:
+To make Sightengine the primary AI-origin detector, put the API user and secret in the private
+`creatorproof/.env` file (never `.env.example`):
+
+```dotenv
+CREATORPROOF_SYNTHETIC_DETECTOR=auto
+CREATORPROOF_SIGHTENGINE_API_USER=your-api-user
+CREATORPROOF_SIGHTENGINE_API_SECRET=your-api-secret
+```
+
+The API uploads the original accepted image directly to Sightengine once. The response is recorded
+as a vendor model signal, not a probability, signed provenance, or legal conclusion. Authentication,
+quota, timeout, network, service, and invalid-response failures are the only conditions that activate
+the local fallback. See `apps/api/docs/part1/SIGHTENGINE-PRIMARY-DETECTION.md`.
+
+To provision the first open local AI-origin fallback:
 
 ```bash
 cd apps/api
@@ -202,11 +246,27 @@ Local Merkle receipts work without extra dependencies. For an optional real EAS 
 
 ```bash
 cd apps/api
-uv pip install -r requirements-blockchain.txt
+uv sync --frozen --extra blockchain
 ```
 
-Then configure the EAS values documented in `.env.example`. Only an actually mined and validated EAS
-receipt is shown as a public blockchain anchor.
+Then follow `docs/BLOCKCHAIN_IMPLEMENTATION_AND_DEPLOYMENT.md` to register separate packet and
+checkpoint schemas, configure independent issuer/deployment pins, and pass the live acceptance gate.
+Only an actually mined, data-bound, canonical, sufficiently confirmed EAS receipt is shown as a
+public blockchain anchor.
+
+Important activation boundary: a fresh clone and the supplied development `.env` do **not** write
+to a public blockchain. `PROOF_ANCHOR_MODE=auto` with no schema UID and signer key deliberately
+selects the local signed Merkle log. PostgreSQL/SQLite remains the operational store in either mode;
+EAS stores only 32-byte packet commitments and batched signed checkpoint roots. Before describing a
+deployment as blockchain-active, run the fail-closed check and retain its non-secret JSON output:
+
+```bash
+cd apps/api
+uv run --no-sync python -m scripts.blockchain_acceptance
+```
+
+It succeeds only when the live deployment is explicit EAS/chain-required and both a direct scan
+packet and a lifecycle checkpoint from the current deployment reverify against the configured chain.
 
 Frontend, in a second terminal (the supplied `.env.local` already contains safe blank OpenRouter
 placeholders):
@@ -223,7 +283,7 @@ the explainer, not detection.
 
 Open `http://localhost:3000`.
 
-Before testing, confirm the page says `CreatorProof v0.9.2`. For the copy-AI demo, confirm the runtime
+Before testing, confirm the page says `CreatorProof v0.10.0`. For the copy-AI demo, confirm the runtime
 ledger reports the expected SSCD provider; fallback state remains explicit. For the learned style demo,
 separately require the learned style provider state.
 
@@ -237,13 +297,17 @@ docker compose up --build
 ```
 
 This runs web, API, Redis worker, PostgreSQL, and Redis. The development key is deliberately obvious; replace it before exposing the service.
+Compose passes the private Sightengine variables to both API and worker without baking them into an
+image or exposing them to browser JavaScript.
 
 ## Verify
 
 ```bash
 cd apps/api
+uv run --no-sync python -m scripts.validate_model_bundle
+uv run --no-sync python -m scripts.preflight_part1
 uv run pytest
-uv run ruff check app tests
+uv run ruff check app tests scripts
 uv run ruff format --check app tests scripts
 
 cd ../web
@@ -294,7 +358,9 @@ There is deliberately no promise of "perfect accuracy": no image-retrieval model
 that guarantee on arbitrary unseen media. The included evaluation path is how you measure whether
 your chosen operating point is good enough for the target customer corpus.
 
-Start with `V092_SEMANTIC_SAFETY_REPORT.md` for the v0.9.2 coverage, idempotency, origin-policy,
+Start with `../MODEL_ACCURACY_IMPLEMENTATION_BEFORE_AFTER.md` for the v0.10.0 model-system
+changes, fixed generated-media stress result, and exact verification commands. Use
+`V092_SEMANTIC_SAFETY_REPORT.md` for the earlier v0.9.2 coverage, idempotency, origin-policy,
 claim-state, and terminology changes. Then use `docs/V09_ORIGIN_SCORE_AND_PRODUCT_UI.md` for the visible-label
 architecture, score math, plain-language UI contract, and research-backed upgrade path.
 Use `MASTER_EXECUTION_PROMPT_v0.9.md` only for the archived v0.9 model-activation baseline.

@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: creatorproof
       POSTGRES_USER: creatorproof
-      POSTGRES_PASSWORD: creatorproof-dev
+      POSTGRES_PASSWORD: ${CREATORPROOF_POSTGRES_OWNER_PASSWORD:-creatorproof-dev}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U creatorproof -d creatorproof"]
       interval: 3s
@@ -13,26 +13,119 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  db-init:
+    image: postgres:17-alpine
+    command:
+      [
+        "psql",
+        "--host=postgres",
+        "--username=creatorproof",
+        "--dbname=creatorproof",
+        "--file=/ops/010-runtime-role.sql",
+      ]
+    environment:
+      PGPASSWORD: ${CREATORPROOF_POSTGRES_OWNER_PASSWORD:-creatorproof-dev}
+      CREATORPROOF_POSTGRES_RUNTIME_PASSWORD: ${CREATORPROOF_POSTGRES_RUNTIME_PASSWORD:-creatorproof-app-dev}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./ops/postgres/010-runtime-role.sql:/ops/010-runtime-role.sql:ro
+    restart: "no"
+
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--appendfsync",
+        "everysec",
+      ]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       timeout: 3s
       retries: 20
+    volumes:
+      - redis_data:/data
+
+  migrate:
+    build: ./apps/api
+    command: ["uv", "run", "--no-sync", "python", "-m", "scripts.migrate", "upgrade", "--skip-backup"]
+    environment:
+      # Only this one-shot service receives the owner/migration login.
+      CREATORPROOF_DATABASE_URL: ${CREATORPROOF_MIGRATION_DATABASE_URL:-postgresql+psycopg://creatorproof@postgres:5432/creatorproof}
+      PGPASSWORD: ${CREATORPROOF_POSTGRES_OWNER_PASSWORD:-creatorproof-dev}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: "no"
 
   api:
     build: ./apps/api
     environment: &api_env
-      CREATORPROOF_DATABASE_URL: postgresql+psycopg://creatorproof:creatorproof-dev@postgres:5432/creatorproof
+      # creatorproof_app is NOSUPERUSER/NOBYPASSRLS and owns no tables.
+      CREATORPROOF_DATABASE_URL: ${CREATORPROOF_RUNTIME_DATABASE_URL:-postgresql+psycopg://creatorproof_app@postgres:5432/creatorproof}
+      PGPASSWORD: ${CREATORPROOF_POSTGRES_RUNTIME_PASSWORD:-creatorproof-app-dev}
+      CREATORPROOF_ENVIRONMENT: ${CREATORPROOF_ENVIRONMENT:-development}
       CREATORPROOF_STORAGE_ROOT: /data
       CREATORPROOF_JOB_BACKEND: redis
       CREATORPROOF_REDIS_URL: redis://redis:6379/0
       CREATORPROOF_DEV_API_KEY: ${CREATORPROOF_DEV_API_KEY:-change-me-before-sharing}
+      CREATORPROOF_DEV_AUTH_ENABLED: ${CREATORPROOF_DEV_AUTH_ENABLED:-true}
+      CREATORPROOF_API_KEY_PEPPER: ${CREATORPROOF_API_KEY_PEPPER:-creatorproof-development-pepper}
+      CREATORPROOF_ENABLE_POSTGRES_RLS: ${CREATORPROOF_ENABLE_POSTGRES_RLS:-true}
+      CREATORPROOF_SYNTHETIC_DETECTOR: ${CREATORPROOF_SYNTHETIC_DETECTOR:-auto}
+      CREATORPROOF_SIGHTENGINE_API_USER: ${CREATORPROOF_SIGHTENGINE_API_USER:-}
+      CREATORPROOF_SIGHTENGINE_API_SECRET: ${CREATORPROOF_SIGHTENGINE_API_SECRET:-}
+      CREATORPROOF_SIGHTENGINE_TIMEOUT_SECONDS: ${CREATORPROOF_SIGHTENGINE_TIMEOUT_SECONDS:-20}
+      # Signed local statements are the trust layer that blockchain commitments bind.
+      # Inject both private keys through the deployment secret store; never commit them.
+      CREATORPROOF_STATEMENT_SIGNING_ENABLED: ${CREATORPROOF_STATEMENT_SIGNING_ENABLED:-true}
+      CREATORPROOF_STATEMENT_SIGNING_KID: ${CREATORPROOF_STATEMENT_SIGNING_KID:-creatorproof-dev-ed25519-1}
+      CREATORPROOF_STATEMENT_SIGNING_PRIVATE_KEY_HEX: ${CREATORPROOF_STATEMENT_SIGNING_PRIVATE_KEY_HEX:-}
+      CREATORPROOF_TRUSTED_ISSUER_KEY_SHA256: ${CREATORPROOF_TRUSTED_ISSUER_KEY_SHA256:-}
+      CREATORPROOF_TRANSPARENCY_CHECKPOINT_INTERVAL: ${CREATORPROOF_TRANSPARENCY_CHECKPOINT_INTERVAL:-1}
+      CREATORPROOF_TRANSPARENCY_CHECKPOINT_MAX_AGE_SECONDS: ${CREATORPROOF_TRANSPARENCY_CHECKPOINT_MAX_AGE_SECONDS:-60}
+      CREATORPROOF_PROOF_ANCHOR_MODE: ${CREATORPROOF_PROOF_ANCHOR_MODE:-auto}
+      CREATORPROOF_PROOF_REQUIRE_CHAIN: ${CREATORPROOF_PROOF_REQUIRE_CHAIN:-false}
+      CREATORPROOF_PROOF_LOG_PATH: ${CREATORPROOF_PROOF_LOG_PATH:-/data/proof-log.jsonl}
+      # Safe public Base Sepolia constants. The official RPC is rate-limited; use a
+      # dedicated endpoint for production. Empty schema/private-key values keep EAS off.
+      CREATORPROOF_EAS_RPC_URL: ${CREATORPROOF_EAS_RPC_URL:-https://sepolia.base.org}
+      CREATORPROOF_EAS_RPC_URLS_JSON: '${CREATORPROOF_EAS_RPC_URLS_JSON:-["https://sepolia.base.org"]}'
+      CREATORPROOF_EAS_CONTRACT_ADDRESS: ${CREATORPROOF_EAS_CONTRACT_ADDRESS:-0x4200000000000000000000000000000000000021}
+      CREATORPROOF_EAS_SCHEMA_UID: ${CREATORPROOF_EAS_SCHEMA_UID:-}
+      CREATORPROOF_EAS_SCHEMA_REGISTRY_ADDRESS: ${CREATORPROOF_EAS_SCHEMA_REGISTRY_ADDRESS:-0x4200000000000000000000000000000000000020}
+      CREATORPROOF_EAS_SCHEMA_DEFINITION: ${CREATORPROOF_EAS_SCHEMA_DEFINITION:-bytes32 packetHash}
+      CREATORPROOF_EAS_CHECKPOINT_SCHEMA_UID: ${CREATORPROOF_EAS_CHECKPOINT_SCHEMA_UID:-}
+      CREATORPROOF_EAS_CHECKPOINT_SCHEMA_DEFINITION: ${CREATORPROOF_EAS_CHECKPOINT_SCHEMA_DEFINITION:-bytes32 checkpointHash}
+      CREATORPROOF_EAS_EXPECTED_CONTRACT_CODE_SHA256: ${CREATORPROOF_EAS_EXPECTED_CONTRACT_CODE_SHA256:-}
+      CREATORPROOF_EAS_REQUIRED_ATTESTER_ADDRESS: ${CREATORPROOF_EAS_REQUIRED_ATTESTER_ADDRESS:-}
+      CREATORPROOF_EAS_PRIVATE_KEY: ${CREATORPROOF_EAS_PRIVATE_KEY:-}
+      CREATORPROOF_EAS_RECIPIENT: ${CREATORPROOF_EAS_RECIPIENT:-0x0000000000000000000000000000000000000000}
+      CREATORPROOF_EAS_CHAIN_ID: ${CREATORPROOF_EAS_CHAIN_ID:-84532}
+      CREATORPROOF_EAS_NETWORK_LABEL: ${CREATORPROOF_EAS_NETWORK_LABEL:-Base Sepolia}
+      CREATORPROOF_EAS_EXPLORER_TX_BASE_URL: ${CREATORPROOF_EAS_EXPLORER_TX_BASE_URL:-https://sepolia-explorer.base.org/tx}
+      CREATORPROOF_EAS_EXPLORER_ADDRESS_BASE_URL: ${CREATORPROOF_EAS_EXPLORER_ADDRESS_BASE_URL:-https://sepolia-explorer.base.org/address}
+      CREATORPROOF_EAS_EXPLORER_ATTESTATION_BASE_URL: ${CREATORPROOF_EAS_EXPLORER_ATTESTATION_BASE_URL:-https://base-sepolia.easscan.org/attestation/view}
+      CREATORPROOF_EAS_RECEIPT_TIMEOUT_SECONDS: ${CREATORPROOF_EAS_RECEIPT_TIMEOUT_SECONDS:-90}
+      CREATORPROOF_EAS_REQUIRED_CONFIRMATIONS: ${CREATORPROOF_EAS_REQUIRED_CONFIRMATIONS:-2}
+      CREATORPROOF_EAS_FINALITY_POLICY: ${CREATORPROOF_EAS_FINALITY_POLICY:-safe}
+      CREATORPROOF_EAS_MAX_ATTEMPTS: ${CREATORPROOF_EAS_MAX_ATTEMPTS:-3}
+      CREATORPROOF_EAS_RETRY_BACKOFF_SECONDS: ${CREATORPROOF_EAS_RETRY_BACKOFF_SECONDS:-3}
+      # 0 disables the gas-price circuit breaker. Set an explicit policy before mainnet.
+      CREATORPROOF_EAS_MAX_FEE_PER_GAS_GWEI: ${CREATORPROOF_EAS_MAX_FEE_PER_GAS_GWEI:-0}
+      CREATORPROOF_BLOCKCHAIN_DOMAIN_ANCHORING_ENABLED: ${CREATORPROOF_BLOCKCHAIN_DOMAIN_ANCHORING_ENABLED:-true}
+      CREATORPROOF_BLOCKCHAIN_DISPATCH_INTERVAL_SECONDS: ${CREATORPROOF_BLOCKCHAIN_DISPATCH_INTERVAL_SECONDS:-2}
+      CREATORPROOF_BLOCKCHAIN_ANCHOR_LEASE_SECONDS: ${CREATORPROOF_BLOCKCHAIN_ANCHOR_LEASE_SECONDS:-180}
+      CREATORPROOF_BLOCKCHAIN_ANCHOR_MAX_ATTEMPTS: ${CREATORPROOF_BLOCKCHAIN_ANCHOR_MAX_ATTEMPTS:-8}
+      CREATORPROOF_BLOCKCHAIN_ANCHOR_RETRY_BACKOFF_SECONDS: ${CREATORPROOF_BLOCKCHAIN_ANCHOR_RETRY_BACKOFF_SECONDS:-5}
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     ports:
@@ -45,18 +138,26 @@ services:
     command: ["uv", "run", "python", "-m", "app.worker"]
     environment: *api_env
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     volumes:
       - creatorproof_data:/data
 
   web:
-    build: ./apps/web
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_CREATORPROOF_ISSUER_KEY_FINGERPRINT_SHA256: ${NEXT_PUBLIC_CREATORPROOF_ISSUER_KEY_FINGERPRINT_SHA256:-}
+        NEXT_PUBLIC_CREATORPROOF_DEPLOYMENT_FINGERPRINT_SHA256: ${NEXT_PUBLIC_CREATORPROOF_DEPLOYMENT_FINGERPRINT_SHA256:-}
+        NEXT_PUBLIC_CREATORPROOF_ISSUER: ${NEXT_PUBLIC_CREATORPROOF_ISSUER:-creatorproof}
     environment:
       CREATORPROOF_API_URL: http://api:8000
       CREATORPROOF_DEV_API_KEY: ${CREATORPROOF_DEV_API_KEY:-change-me-before-sharing}
+      NEXT_PUBLIC_CREATORPROOF_ISSUER_KEY_FINGERPRINT_SHA256: ${NEXT_PUBLIC_CREATORPROOF_ISSUER_KEY_FINGERPRINT_SHA256:-}
+      NEXT_PUBLIC_CREATORPROOF_DEPLOYMENT_FINGERPRINT_SHA256: ${NEXT_PUBLIC_CREATORPROOF_DEPLOYMENT_FINGERPRINT_SHA256:-}
+      NEXT_PUBLIC_CREATORPROOF_ISSUER: ${NEXT_PUBLIC_CREATORPROOF_ISSUER:-creatorproof}
     depends_on:
       - api
     ports:
@@ -64,5 +165,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   creatorproof_data:
-

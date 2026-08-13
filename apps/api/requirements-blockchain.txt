@@ -1,4 +1,8 @@
-# Optional EAS on-chain anchor runtime. Local Merkle receipts need no extra dependency.
-web3>=7.13,<8
-eth-abi>=5.2,<6
-
+# Compatibility entry point for local pip/uv-pip workflows. The authoritative
+# dependency declarations are the `blockchain` extra in pyproject.toml and uv.lock.
+# Prefer: `uv sync --frozen --extra blockchain`. These direct pins mirror the
+# current lock for legacy `uv pip install -r` users; transitive reproducibility
+# still requires uv.lock.
+web3==7.16.0
+eth-abi==5.2.0
+eth-account==0.13.7

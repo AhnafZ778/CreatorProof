@@ -1,0 +1,30 @@
+{
+  "schema": "creatorproof.calibration_registry.v1",
+  "registry_id": "creatorproof-part1-calibration-registry-v1",
+  "records": [
+    {
+      "lane": "COPY",
+      "component_id": "copy-retrieval-sscd",
+      "state": "NOT_CALIBRATED_FOR_TARGET_DOMAIN",
+      "threshold_policy_id": "creatorproof-copy-fusion-region-aware-operating-points-v4",
+      "report_digest_sha256": null,
+      "limitations": ["Current thresholds are prototype operating points."]
+    },
+    {
+      "lane": "AI_ORIGIN",
+      "component_id": "origin-community-forensics",
+      "state": "NOT_CALIBRATED_FOR_TARGET_DOMAIN",
+      "threshold_policy_id": "creatorproof-origin-evidence-operating-points-v3",
+      "report_digest_sha256": null,
+      "limitations": ["Raw detector output is not a universal probability."]
+    },
+    {
+      "lane": "CREATOR_PROFILE",
+      "component_id": "style-csd",
+      "state": "NOT_CALIBRATED_FOR_TARGET_DOMAIN",
+      "threshold_policy_id": "creatorproof-style-csd-plus-selection-correction-v3",
+      "report_digest_sha256": null,
+      "limitations": ["Catalog-relative empirical support is not open-set attribution."]
+    }
+  ]
+}

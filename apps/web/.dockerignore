@@ -1,4 +1,14 @@
 node_modules
 .next
 .env*
-npm-debug.log
+.git/
+coverage
+*.tsbuildinfo
+*.pem
+*.key
+*.p12
+*.pfx
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

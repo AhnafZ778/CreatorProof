@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import json
 import re
@@ -152,6 +153,14 @@ class VisibleAIMarkerProvider:
         self.timeout_seconds = timeout_seconds
         self.minimum_confidence = minimum_confidence
         self.configured_terms = _configured_terms(configured_terms_json)
+        self.configured_terms_digest = hashlib.sha256(
+            json.dumps(
+                self.configured_terms,
+                ensure_ascii=True,
+                separators=(",", ":"),
+            ).encode()
+        ).hexdigest()
+        self.preprocessing_identity = "VISIBLE_MARKER_MULTIVIEW_GRAYSCALE_V1"
         self.binary_path = shutil.which(binary) if mode != "off" else None
         self.available = bool(self.binary_path)
         self.unavailable_reason = (
@@ -168,6 +177,9 @@ class VisibleAIMarkerProvider:
             "available": self.available,
             "reason": self.unavailable_reason,
             "configured_term_count": len(self.configured_terms),
+            "configured_terms_digest_sha256": self.configured_terms_digest,
+            "binary_path": self.binary_path,
+            "preprocessing_identity": self.preprocessing_identity,
             "semantics": "VISIBLE_LABEL_REVIEW_SIGNAL_NOT_PROVENANCE",
         }
 

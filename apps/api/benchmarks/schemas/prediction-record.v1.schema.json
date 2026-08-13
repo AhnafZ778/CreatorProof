@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://creatorproof.local/schemas/prediction-record.v1.schema.json",
+  "title": "CreatorProof benchmark prediction record",
+  "type": "object",
+  "required": ["asset_id", "lane", "label", "prediction", "provider_id"],
+  "additionalProperties": true,
+  "properties": {
+    "asset_id": {"type": "string", "minLength": 1},
+    "lane": {"enum": ["COPY", "AI_ORIGIN", "CREATOR_PROFILE"]},
+    "label": {},
+    "prediction": {},
+    "score": {"type": ["number", "null"]},
+    "provider_id": {"type": "string", "minLength": 1},
+    "model_version": {"type": ["string", "null"]},
+    "artifact_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "preprocessing_identity": {"type": ["string", "null"]},
+    "calibration_state": {"type": ["string", "null"]},
+    "reason_codes": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

@@ -52,7 +52,7 @@ Browser
 | Next.js console | WORKING | Registration, scan, polling, JSON inspection |
 | C2PA | WORKING WHEN C2PATOOL INSTALLED | Official CLI adapter; validity, trust and AI assertion are separate; missing manifest is unknown |
 | Local proof | WORKING | Domain-separated Merkle inclusion receipt; explicitly not blockchain |
-| EAS/blockchain | OPTIONAL / WORKING WHEN CONFIGURED | Real EVM attestation of `bytes32 packetHash`; mined receipt and UID are verified |
+| EAS/blockchain | IMPLEMENTED / LIVE ACTIVATION REQUIRED | Locked Web3 runtime; direct packet attestations plus durable batched checkpoint jobs; full EAS field/schema/attester/chain binding and transaction reconciliation. Repository contains no signer or deployment-specific schema UID, and a live acceptance transaction is still required |
 | SSCD | INTEGRATED / EXPERIMENTAL | Local TorchScript provider and cached descriptors; accuracy/threshold promotion still requires project benchmark |
 | OpenRouter explainer | OPTIONAL / WORKING | Server-only API key; explains structured metrics only and never changes detection |
 | Learned matcher | PROMOTION GATE | Tournament LightGlue/ALIKED/XFeat/LoMa/RoMa-family candidates |
@@ -88,7 +88,9 @@ Before selling the API, add or complete:
 7. S3-compatible storage with short-lived candidate objects and deletion verification.
 8. Versioned work/claim/license/catalog entities, database migrations, and backup/restore tests.
 9. Webhook delivery with signatures, replay protection, and retry semantics.
-10. Evidence Packet signing, signed Merkle checkpoints, EAS batch-root anchoring, and revocation policy.
+10. Promote chain custody from an in-process raw EVM key to an external signer,
+    add redundant-RPC/finality monitoring, and complete the live testnet/mainnet
+    acceptance and revocation drills in `BLOCKCHAIN_IMPLEMENTATION_AND_DEPLOYMENT.md`.
 11. Observability, SLOs, load tests, dependency/SBOM scanning, and an incident runbook.
 12. Counsel-reviewed claims language, privacy terms, DPA/retention controls, and a third-party license/model/data inventory.
 

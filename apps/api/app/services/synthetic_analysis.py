@@ -143,6 +143,7 @@ def _origin_scorecard(
     *,
     fused_score: float | None,
     family_count: int,
+    observed_family_count: int,
     calibrated_family_count: int,
     minimum_families: int,
     review_threshold: float,
@@ -226,7 +227,17 @@ def _origin_scorecard(
             "Neutral result — missing source information does not prove human origin."
         )
 
-    if family_count == 0:
+    if fused_score is not None and fused_score >= review_threshold:
+        model_status = "AI model signal found"
+        model_detail = (
+            "The model signal is shown as strength, not as the chance that the image is AI-made."
+        )
+        if family_count == 0 and observed_family_count:
+            model_detail += (
+                " Its detector lineage is not yet approved for independent-family counting, "
+                "so the result remains review evidence."
+            )
+    elif family_count == 0:
         model_status = "AI model checks unavailable"
         model_detail = (
             "Activate at least two independent model families for a dependable quiet result."
@@ -235,11 +246,6 @@ def _origin_scorecard(
         model_status = "Model checks were quiet"
         model_detail = (
             "Independent, calibrated checks were quiet; this still does not prove human origin."
-        )
-    elif fused_score is not None and fused_score >= review_threshold:
-        model_status = "AI model signal found"
-        model_detail = (
-            "The model signal is shown as strength, not as the chance that the image is AI-made."
         )
     else:
         model_status = "Model result is uncertain"
@@ -295,6 +301,7 @@ def _presentation(
     classification: str,
     evidence_tier: str,
     family_count: int,
+    observed_family_count: int,
     calibrated_family_count: int,
     positive_family_count: int,
     transform_stability: float | None,
@@ -381,7 +388,12 @@ def _presentation(
         provenance_value = "No verified AI assertion"
         provenance_detail = "Missing credentials do not imply human origin."
 
-    if family_count == 0:
+    if family_count == 0 and observed_family_count:
+        model_value = "Unverified family declarations"
+        model_detail = (
+            "Model output exists, but its lineage was not approved as an independent family."
+        )
+    elif family_count == 0:
         model_value = "No model evidence"
         model_detail = "The origin lane is unavailable until a detector is activated."
     elif family_count == 1:
@@ -439,8 +451,437 @@ def _presentation(
     }
 
 
+def _safe_error_code(exc: Exception) -> str:
+    """Return an auditable code without serialising untrusted error text or secrets."""
+
+    message = str(exc).strip()
+    if message.startswith("SIGHTENGINE_") and all(
+        character.isupper() or character.isdigit() or character == "_" for character in message
+    ):
+        return message
+    return type(exc).__name__.upper()
+
+
+def _safe_score_map(value: object) -> dict[str, float]:
+    if not isinstance(value, dict):
+        return {}
+    output: dict[str, float] = {}
+    for key, score in value.items():
+        name = str(key or "").strip().lower()
+        if not name or len(name) > 80:
+            continue
+        try:
+            parsed = float(score)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(parsed) and 0.0 <= parsed <= 1.0:
+            output[name] = round(parsed, 6)
+    return dict(sorted(output.items()))
+
+
+def _safe_provider_details(output) -> dict:
+    """Preserve the documented useful details, never arbitrary provider payloads."""
+
+    details = getattr(output, "details", None)
+    if not isinstance(details, dict):
+        return {}
+    request_id = str(details.get("request_id") or "").strip()
+    operations = details.get("operations")
+    if not isinstance(operations, int) or operations < 0:
+        operations = None
+    global_score = details.get("global_ai_generated_score")
+    try:
+        global_score = float(global_score)
+    except (TypeError, ValueError):
+        global_score = None
+    if global_score is not None and (
+        not math.isfinite(global_score) or not 0.0 <= global_score <= 1.0
+    ):
+        global_score = None
+    return {
+        "model": str(details.get("model") or "").strip()[:80] or None,
+        "request_id": request_id[:160] or None,
+        "operations": operations,
+        "global_ai_generated_score": (round(global_score, 6) if global_score is not None else None),
+        "generator_scores": _safe_score_map(details.get("generator_scores")),
+        "secondary_scores": _safe_score_map(details.get("secondary_scores")),
+        "input_mode": str(details.get("input_mode") or "").strip()[:80] or None,
+        "explanation_scope": str(details.get("explanation_scope") or "").strip()[:320] or None,
+    }
+
+
+def _prepare_detector_output(detector_router, detector, output):
+    govern_score = getattr(detector_router, "govern_score", None)
+    if callable(govern_score):
+        output = govern_score(output, detector)
+    raw_score = min(max(float(output.score), 0.0), 1.0)
+    if hasattr(detector_router, "calibrate"):
+        score, calibration = detector_router.calibrate(
+            output.provider,
+            output.model_version,
+            raw_score,
+            output.artifact_sha256,
+            output.preprocessing_identity,
+        )
+    else:
+        score = raw_score
+        calibration = {
+            "applied": False,
+            "state": "NOT_AVAILABLE",
+            "semantics": "RAW_DETECTOR_SCORE_NOT_PROBABILITY",
+        }
+    return output, raw_score, min(max(float(score), 0.0), 1.0), calibration
+
+
+def _record_detector_error(
+    errors: list[dict], *, detector, role: str, view: str, exc: Exception
+) -> None:
+    errors.append(
+        {
+            "provider": detector.name,
+            "role": role,
+            "view": view,
+            "error_code": _safe_error_code(exc),
+        }
+    )
+
+
+def _member_identity(output, *, role: str, details: dict) -> dict:
+    return {
+        "provider": output.provider,
+        "provider_role": role,
+        "model_version": output.model_version,
+        "source_scope": output.source_scope,
+        "evidence_family": output.evidence_family,
+        "evidence_family_verified": output.evidence_family_verified,
+        "artifact_sha256": output.artifact_sha256,
+        "preprocessing_identity": output.preprocessing_identity,
+        "score_semantics": output.score_semantics,
+        "provider_details": details,
+        "warnings": list(output.warnings),
+    }
+
+
+def _run_original_media_detector(
+    *,
+    detector,
+    detector_router,
+    image: Image.Image,
+    source_media: bytes | None,
+    source_filename: str | None,
+    role: str,
+    errors: list[dict],
+) -> dict | None:
+    """Run one cloud-provider request against original bytes when available."""
+
+    started = time.monotonic()
+    try:
+        if source_media is not None and callable(getattr(detector, "predict_media", None)):
+            result = detector.predict_media(source_media, filename=source_filename)
+            view_name = "original_uploaded_bytes"
+        else:
+            result = detector.predict(image)
+            view_name = "original_rendered_image"
+        output, raw_score, score, calibration = _prepare_detector_output(
+            detector_router,
+            detector,
+            result,
+        )
+    except Exception as exc:
+        _record_detector_error(
+            errors,
+            detector=detector,
+            role=role,
+            view="original_media",
+            exc=exc,
+        )
+        return None
+
+    details = _safe_provider_details(output)
+    view_row = {
+        "view": view_name,
+        "scope": "ORIGINAL_MEDIA",
+        "raw_score": round(raw_score, 6),
+        "score": round(score, 6),
+        "quality_weight": 1.0,
+        "calibration": calibration,
+    }
+    return {
+        **_member_identity(output, role=role, details=details),
+        "calibrated": bool(calibration.get("applied")),
+        "calibration_state": calibration.get("state"),
+        "aggregate_score": round(score, 6),
+        "original_score": round(score, 6),
+        "global_delivery_score": round(score, 6),
+        "transformed_delivery_score": None,
+        "spatial_consensus_score": None,
+        "spatial_support_count": 0,
+        "spatial_corroborated": False,
+        "view_standard_deviation": None,
+        "transform_stability": None,
+        "transform_stability_state": "NOT_MEASURED_ORIGINAL_MEDIA_ONLY",
+        "aggregation_strategy": "PRIMARY_ORIGINAL_MEDIA_VENDOR_SCORE_V1",
+        "views": [view_row],
+        "runtime_ms": round((time.monotonic() - started) * 1000, 3),
+        "inference_mode": "ORIGINAL_MEDIA_UPLOAD",
+    }
+
+
+def _run_multiview_detector(
+    *,
+    detector,
+    detector_router,
+    views: list[tuple[str, Image.Image, float, str]],
+    settings,
+    role: str,
+    errors: list[dict],
+) -> dict | None:
+    """Run a local detector over stress and spatial views without score dilution.
+
+    The original image result remains a candidate's primary signal. JPEG/resize/blur
+    responses measure resilience and can support a result, but they cannot average a
+    strong original result down to a weak score. This avoids the former edited-image
+    failure mode while retaining strict stability gates for high-confidence claims.
+    """
+
+    started = time.monotonic()
+    delivery_scores: list[float] = []
+    delivery_weights: list[float] = []
+    transformed_scores: list[float] = []
+    transformed_weights: list[float] = []
+    spatial_scores: list[float] = []
+    metadata = None
+    original_score: float | None = None
+    view_rows: list[dict] = []
+    batch_used = callable(getattr(detector, "predict_many", None))
+    if batch_used:
+        try:
+            detector_outputs = detector.predict_many([view for _, view, _, _ in views])
+            if len(detector_outputs) != len(views):
+                raise RuntimeError("SYNTHETIC_BATCH_RESULT_COUNT_INVALID")
+        except Exception as exc:
+            detector_outputs = [exc] * len(views)
+    else:
+        detector_outputs = [None] * len(views)
+
+    for index, (view_name, view, quality_weight, view_scope) in enumerate(views):
+        result = detector_outputs[index]
+        if result is None:
+            try:
+                result = detector.predict(view)
+            except Exception as exc:
+                result = exc
+        if isinstance(result, Exception):
+            _record_detector_error(
+                errors,
+                detector=detector,
+                role=role,
+                view=view_name,
+                exc=result,
+            )
+            continue
+        try:
+            output, raw_score, score, calibration = _prepare_detector_output(
+                detector_router,
+                detector,
+                result,
+            )
+        except Exception as exc:
+            _record_detector_error(
+                errors,
+                detector=detector,
+                role=role,
+                view=view_name,
+                exc=exc,
+            )
+            continue
+        metadata = output
+        if view_scope == "DELIVERY_TRANSFORM":
+            delivery_scores.append(score)
+            delivery_weights.append(quality_weight)
+            if view_name == "original":
+                original_score = score
+            else:
+                transformed_scores.append(score)
+                transformed_weights.append(quality_weight)
+        else:
+            spatial_scores.append(score)
+        view_rows.append(
+            {
+                "view": view_name,
+                "scope": view_scope,
+                "raw_score": round(raw_score, 6),
+                "score": round(score, 6),
+                "quality_weight": quality_weight,
+                "calibration": calibration,
+            }
+        )
+
+    if not delivery_scores or metadata is None:
+        return None
+    original_score = original_score if original_score is not None else delivery_scores[0]
+    delivery_consensus = _weighted_logit(delivery_scores, delivery_weights)
+    transformed_delivery_score = (
+        _weighted_logit(transformed_scores, transformed_weights) if transformed_scores else None
+    )
+    view_std = float(np.std(delivery_scores)) if len(delivery_scores) >= 2 else None
+    stability = (
+        max(0.0, 1.0 - view_std / max(settings.synthetic_max_view_std, 1e-6))
+        if view_std is not None
+        else None
+    )
+    spatial_consensus = float(np.median(spatial_scores)) if spatial_scores else None
+    spatial_support_count = sum(
+        score >= settings.synthetic_review_threshold for score in spatial_scores
+    )
+    required_spatial_support = min(3, len(spatial_scores))
+    spatial_corroborated = bool(
+        spatial_scores
+        and spatial_support_count >= required_spatial_support
+        and required_spatial_support >= 2
+    )
+    aggregate_candidates = [original_score, delivery_consensus]
+    if spatial_corroborated and spatial_consensus is not None:
+        aggregate_candidates.append(spatial_consensus)
+    aggregate = max(aggregate_candidates)
+    calibration_state = view_rows[0]["calibration"].get("state")
+    return {
+        **_member_identity(output, role=role, details=_safe_provider_details(output)),
+        "calibrated": bool(any(row["calibration"].get("applied") for row in view_rows)),
+        "calibration_state": calibration_state,
+        "aggregate_score": round(aggregate, 6),
+        "original_score": round(original_score, 6),
+        "global_delivery_score": round(delivery_consensus, 6),
+        "transformed_delivery_score": (
+            round(transformed_delivery_score, 6) if transformed_delivery_score is not None else None
+        ),
+        "spatial_consensus_score": (
+            round(spatial_consensus, 6) if spatial_consensus is not None else None
+        ),
+        "spatial_support_count": spatial_support_count,
+        "spatial_corroborated": spatial_corroborated,
+        "view_standard_deviation": round(view_std, 6) if view_std is not None else None,
+        "transform_stability": round(stability, 6) if stability is not None else None,
+        "transform_stability_state": "MEASURED" if stability is not None else "NOT_MEASURED",
+        "aggregation_strategy": "ORIGINAL_PRESERVING_MULTIVIEW_V1",
+        "views": view_rows,
+        "runtime_ms": round((time.monotonic() - started) * 1000, 3),
+        "inference_mode": "BATCHED_VIEWS" if batch_used else "RESIDENT_PER_VIEW",
+    }
+
+
+def _forensic_indicators(member_rows: list[dict], review_threshold: float) -> dict:
+    """Create review-facing facts without claiming a causal pixel explanation."""
+
+    generator_cues: list[dict] = []
+    provider_explanations: list[dict] = []
+    spatial_hotspots: list[dict] = []
+    transformation_resilience: list[dict] = []
+    for member in member_rows:
+        provider = str(member["provider"])
+        role = str(member.get("provider_role") or "LOCAL_PRIMARY")
+        details = member.get("provider_details") or {}
+        generator_scores = _safe_score_map(details.get("generator_scores"))
+        global_score = member.get("original_score", member.get("aggregate_score"))
+        provider_explanations.append(
+            {
+                "provider": provider,
+                "role": role,
+                "input_mode": details.get("input_mode") or member.get("inference_mode"),
+                "global_ai_signal": global_score,
+                "generator_score_count": len(generator_scores),
+                "explanation_scope": details.get("explanation_scope")
+                or "NO_PROVIDER_EXPLANATION_RETURNED",
+            }
+        )
+        if generator_scores:
+            for generator, score in sorted(
+                generator_scores.items(), key=lambda item: (-item[1], item[0])
+            ):
+                generator_cues.append(
+                    {
+                        "provider": provider,
+                        "role": role,
+                        "generator": generator,
+                        "score": score,
+                        "ai_confidence": global_score,
+                        "assessment": (
+                            "Provider-returned generator-category model signal; it is not "
+                            "proof that this generator was used."
+                        ),
+                    }
+                )
+        elif global_score is not None:
+            generator_cues.append(
+                {
+                    "provider": provider,
+                    "role": role,
+                    "generator": "GLOBAL_AI_GENERATED_SIGNAL",
+                    "score": global_score,
+                    "ai_confidence": global_score,
+                    "assessment": (
+                        "Provider returned a global AI-generated signal but no per-generator "
+                        "breakdown."
+                    ),
+                }
+            )
+
+        original_score = member.get("original_score")
+        for view in member.get("views") or []:
+            if view.get("scope") == "SPATIAL_CROP":
+                score = float(view.get("score") or 0.0)
+                spatial_hotspots.append(
+                    {
+                        "provider": provider,
+                        "region": str(view.get("view") or "crop"),
+                        "view_name": str(view.get("view") or "crop"),
+                        "score": round(score, 6),
+                        "is_hotspot": score >= review_threshold,
+                        "assessment": (
+                            "Localized model response for review; it is not a pixel-level "
+                            "segmentation or proof of AI editing."
+                        ),
+                    }
+                )
+            elif view.get("scope") == "DELIVERY_TRANSFORM" and view.get("view") != "original":
+                score = float(view.get("score") or 0.0)
+                baseline = float(original_score) if original_score is not None else score
+                ratio = score / max(baseline, 1e-6)
+                retention_state = (
+                    "SURVIVED" if ratio >= 0.85 else "MODERATE" if ratio >= 0.50 else "DEGRADED"
+                )
+                transformation_resilience.append(
+                    {
+                        "provider": provider,
+                        "transform": str(view.get("view") or "delivery_transform"),
+                        "score": round(score, 6),
+                        "original_score": round(baseline, 6),
+                        "retention_ratio": round(min(max(ratio, 0.0), 1.0), 6),
+                        "retention_state": retention_state,
+                    }
+                )
+    return {
+        "schema": "creatorproof.origin_forensic_indicators.v1",
+        "generator_cues": generator_cues,
+        "provider_explanations": provider_explanations,
+        "spatial_hotspots": spatial_hotspots,
+        "transformation_resilience": transformation_resilience,
+        "limitation": (
+            "Generator-category scores and spatial responses are provider/model signals, not "
+            "pixel-level explanations, provenance, or generator attribution."
+        ),
+    }
+
+
 def analyze_synthetic_origin(
-    *, image: Image.Image, detector_router, provenance, settings, visible_marker: dict | None = None
+    *,
+    image: Image.Image,
+    detector_router,
+    provenance,
+    settings,
+    visible_marker: dict | None = None,
+    source_media: bytes | None = None,
+    source_filename: str | None = None,
 ) -> dict:
     delivery_views = _delivery_views(image)
     spatial_views = (
@@ -451,126 +892,71 @@ def analyze_synthetic_origin(
     views = [*delivery_views, *spatial_views]
     member_rows: list[dict] = []
     errors: list[dict] = []
+    primary_detector = getattr(detector_router, "primary_detector", None)
+    configured_sightengine = getattr(detector_router, "sightengine", None)
+    routing = {
+        "primary_provider": getattr(primary_detector, "name", None),
+        "primary_attempted": False,
+        "primary_succeeded": False,
+        "fallback_activated": False,
+        "fallback_reason": None,
+        "fallback_providers": [],
+    }
 
-    for detector in detector_router.detectors:
-        detector_started = time.monotonic()
-        delivery_scores: list[float] = []
-        delivery_weights: list[float] = []
-        spatial_scores: list[float] = []
-        metadata = None
-        view_rows: list[dict] = []
-        batch_used = callable(getattr(detector, "predict_many", None))
-        if batch_used:
-            try:
-                detector_outputs = detector.predict_many([view for _, view, _, _ in views])
-                if len(detector_outputs) != len(views):
-                    raise RuntimeError("SYNTHETIC_BATCH_RESULT_COUNT_INVALID")
-            except Exception as exc:
-                detector_outputs = [exc] * len(views)
+    if primary_detector is not None:
+        routing["primary_attempted"] = True
+        primary_row = _run_original_media_detector(
+            detector=primary_detector,
+            detector_router=detector_router,
+            image=image,
+            source_media=source_media,
+            source_filename=source_filename,
+            role="PRIMARY",
+            errors=errors,
+        )
+        if primary_row is not None:
+            member_rows.append(primary_row)
+            routing["primary_succeeded"] = True
         else:
-            detector_outputs = [None] * len(views)
-
-        for index, (view_name, view, quality_weight, view_scope) in enumerate(views):
-            result = detector_outputs[index]
-            if result is None:
-                try:
-                    result = detector.predict(view)
-                except Exception as exc:
-                    result = exc
-            if isinstance(result, Exception):
-                errors.append(
-                    {
-                        "provider": detector.name,
-                        "view": view_name,
-                        "error_code": f"{type(result).__name__}",
-                    }
+            routing["fallback_activated"] = True
+            routing["fallback_reason"] = "PRIMARY_OPERATIONAL_FAILURE"
+            fallback_detectors = list(getattr(detector_router, "fallback_detectors", []))
+            routing["fallback_providers"] = [item.name for item in fallback_detectors]
+            for detector in fallback_detectors:
+                row = _run_multiview_detector(
+                    detector=detector,
+                    detector_router=detector_router,
+                    views=views,
+                    settings=settings,
+                    role="FALLBACK",
+                    errors=errors,
                 )
-                continue
-            output = result
-            metadata = output
-            raw_score = min(max(float(output.score), 0.0), 1.0)
-            if output.calibrated:
-                score = raw_score
-                calibration = {
-                    "applied": True,
-                    "state": "PROVIDER_DECLARED_CALIBRATED",
-                    "semantics": "PROVIDER_CALIBRATION_SCOPE_APPLIES",
-                }
-            elif hasattr(detector_router, "calibrate"):
-                score, calibration = detector_router.calibrate(
-                    output.provider,
-                    output.model_version,
-                    raw_score,
-                )
-            else:
-                score = raw_score
-                calibration = {
-                    "applied": False,
-                    "state": "NOT_AVAILABLE",
-                    "semantics": "RAW_DETECTOR_SCORE_NOT_PROBABILITY",
-                }
-            if view_scope == "DELIVERY_TRANSFORM":
-                delivery_scores.append(score)
-                delivery_weights.append(quality_weight)
-            else:
-                spatial_scores.append(score)
-            view_rows.append(
-                {
-                    "view": view_name,
-                    "scope": view_scope,
-                    "raw_score": round(raw_score, 6),
-                    "score": round(score, 6),
-                    "quality_weight": quality_weight,
-                    "calibration": calibration,
-                }
+                if row is not None:
+                    member_rows.append(row)
+    else:
+        fallback_detectors = list(
+            getattr(
+                detector_router,
+                "fallback_detectors",
+                getattr(detector_router, "detectors", []),
             )
-        if not delivery_scores or metadata is None:
-            continue
-        global_score = _weighted_logit(delivery_scores, delivery_weights)
-        view_std = float(np.std(delivery_scores))
-        stability = max(0.0, 1.0 - view_std / max(settings.synthetic_max_view_std, 1e-6))
-        spatial_consensus = float(np.median(spatial_scores)) if spatial_scores else None
-        spatial_support_count = sum(
-            score >= settings.synthetic_review_threshold for score in spatial_scores
         )
-        required_spatial_support = min(3, len(spatial_scores))
-        spatial_corroborated = bool(
-            spatial_scores
-            and spatial_support_count >= required_spatial_support
-            and required_spatial_support >= 2
-        )
-        aggregate = (
-            max(global_score, spatial_consensus)
-            if spatial_corroborated and spatial_consensus is not None
-            else global_score
-        )
-        member_rows.append(
-            {
-                "provider": metadata.provider,
-                "model_version": metadata.model_version,
-                "source_scope": metadata.source_scope,
-                "evidence_family": metadata.evidence_family,
-                "score_semantics": metadata.score_semantics,
-                "calibrated": bool(
-                    metadata.calibrated
-                    or any(row["calibration"].get("applied") for row in view_rows)
-                ),
-                "calibration_state": view_rows[0]["calibration"].get("state"),
-                "aggregate_score": round(aggregate, 6),
-                "global_delivery_score": round(global_score, 6),
-                "spatial_consensus_score": (
-                    round(spatial_consensus, 6) if spatial_consensus is not None else None
-                ),
-                "spatial_support_count": spatial_support_count,
-                "spatial_corroborated": spatial_corroborated,
-                "view_standard_deviation": round(view_std, 6),
-                "transform_stability": round(stability, 6),
-                "views": view_rows,
-                "warnings": list(metadata.warnings),
-                "runtime_ms": round((time.monotonic() - detector_started) * 1000, 3),
-                "inference_mode": "BATCHED_VIEWS" if batch_used else "RESIDENT_PER_VIEW",
-            }
-        )
+        local_role = "LOCAL_PRIMARY"
+        if configured_sightengine is not None:
+            routing["fallback_activated"] = bool(fallback_detectors)
+            routing["fallback_reason"] = "SIGHTENGINE_CREDENTIALS_OR_AVAILABILITY_MISSING"
+            routing["fallback_providers"] = [item.name for item in fallback_detectors]
+        for detector in fallback_detectors:
+            row = _run_multiview_detector(
+                detector=detector,
+                detector_router=detector_router,
+                views=views,
+                settings=settings,
+                role=local_role,
+                errors=errors,
+            )
+            if row is not None:
+                member_rows.append(row)
 
     manifest = provenance.manifest_summary or {}
     ai_assertion = bool(manifest.get("ai_assertion_present"))
@@ -590,44 +976,84 @@ def analyze_synthetic_origin(
         by_family: dict[str, list[dict]] = {}
         for row in member_rows:
             by_family.setdefault(str(row["evidence_family"]), []).append(row)
+        family_reliability: list[float] = []
         for family, rows in by_family.items():
             aggregates = [float(row["aggregate_score"]) for row in rows]
-            stabilities = [float(row["transform_stability"]) for row in rows]
-            reliability = [
-                (1.0 if row["calibrated"] else 0.78) * (0.45 + 0.55 * stability)
-                for row, stability in zip(rows, stabilities, strict=True)
-            ]
+            member_reliability: list[float] = []
+            measured_stabilities: list[float] = []
+            for row in rows:
+                stability = row.get("transform_stability")
+                stability_factor = 0.75
+                if stability is not None:
+                    stability = float(stability)
+                    measured_stabilities.append(stability)
+                    stability_factor = 0.45 + 0.55 * stability
+                member_reliability.append((1.0 if row["calibrated"] else 0.78) * stability_factor)
+            reliability = float(np.mean(member_reliability))
+            family_reliability.append(reliability)
             family_rows.append(
                 {
                     "family": family,
-                    "score": round(_weighted_logit(aggregates, reliability), 6),
+                    "score": round(_weighted_logit(aggregates, member_reliability), 6),
                     "calibrated": all(bool(row["calibrated"]) for row in rows),
-                    "transform_stability": round(float(np.mean(stabilities)), 6),
+                    "independence_verified": all(
+                        bool(row["evidence_family_verified"]) for row in rows
+                    ),
+                    "transform_stability": (
+                        round(float(np.mean(measured_stabilities)), 6)
+                        if measured_stabilities
+                        else None
+                    ),
+                    "transform_stability_state": (
+                        "MEASURED" if measured_stabilities else "NOT_MEASURED"
+                    ),
                     "member_count": len(rows),
                     "providers": [str(row["provider"]) for row in rows],
                 }
             )
         family_scores = [float(row["score"]) for row in family_rows]
-        family_reliability = [
-            (1.0 if row["calibrated"] else 0.78) * (0.45 + 0.55 * float(row["transform_stability"]))
-            for row in family_rows
-        ]
         fused_score = _weighted_logit(family_scores, family_reliability)
         detector_disagreement = float(np.std(family_scores)) if len(family_scores) > 1 else None
-        transform_stability = float(
-            np.average(
-                [float(row["transform_stability"]) for row in family_rows],
-                weights=family_reliability,
+        measured_family_stabilities = [
+            (float(row["transform_stability"]), weight)
+            for row, weight in zip(family_rows, family_reliability, strict=True)
+            if row["transform_stability"] is not None
+        ]
+        if measured_family_stabilities:
+            transform_stability = float(
+                np.average(
+                    [item[0] for item in measured_family_stabilities],
+                    weights=[item[1] for item in measured_family_stabilities],
+                )
             )
-        )
 
     short_side = min(image.size)
     low_quality = short_side < settings.synthetic_min_short_side
-    unstable = bool(member_rows and transform_stability is not None and transform_stability < 0.35)
+    unstable = bool(
+        any(
+            row.get("transform_stability") is not None and float(row["transform_stability"]) < 0.35
+            for row in member_rows
+        )
+    )
     high_disagreement = bool(detector_disagreement is not None and detector_disagreement >= 0.22)
-    family_count = len(family_rows)
-    calibrated_family_count = sum(bool(row["calibrated"]) for row in family_rows)
-    stable_family_rows = [row for row in family_rows if float(row["transform_stability"]) >= 0.35]
+    observed_family_count = len(family_rows)
+    verified_family_rows = [row for row in family_rows if row["independence_verified"]]
+    family_count = len(verified_family_rows)
+    calibrated_family_count = sum(bool(row["calibrated"]) for row in verified_family_rows)
+    stable_observed_family_rows = [
+        row
+        for row in family_rows
+        if row["transform_stability"] is None or float(row["transform_stability"]) >= 0.35
+    ]
+    stable_family_rows = [
+        row
+        for row in verified_family_rows
+        if row["transform_stability"] is None or float(row["transform_stability"]) >= 0.35
+    ]
+    observed_positive_family_count = sum(
+        float(row["score"]) >= settings.synthetic_review_threshold
+        for row in stable_observed_family_rows
+    )
     positive_family_count = sum(
         float(row["score"]) >= settings.synthetic_review_threshold for row in stable_family_rows
     )
@@ -646,7 +1072,10 @@ def analyze_synthetic_origin(
     negative_clearance_supported = bool(
         family_count >= minimum_families
         and calibrated_family_count == family_count
-        and all(float(row["score"]) < settings.synthetic_review_threshold for row in family_rows)
+        and all(
+            float(row["score"]) < settings.synthetic_review_threshold
+            for row in verified_family_rows
+        )
     )
 
     reasons: list[str] = []
@@ -690,11 +1119,6 @@ def analyze_synthetic_origin(
         evidence_tier = "INCONCLUSIVE"
         review_recommended = True
         reasons.extend(["IMAGE_TOO_SMALL_FOR_CONFIGURED_OPERATING_DOMAIN", "ABSTAINED"])
-    elif unstable:
-        classification = "INCONCLUSIVE_TRANSFORM_INSTABILITY"
-        evidence_tier = "INCONCLUSIVE"
-        review_recommended = True
-        reasons.extend(["DETECTOR_UNSTABLE_ACROSS_COMMON_TRANSFORMS", "ABSTAINED"])
     elif high_disagreement:
         classification = "INCONCLUSIVE_DETECTOR_DISAGREEMENT"
         evidence_tier = "INCONCLUSIVE"
@@ -705,22 +1129,30 @@ def analyze_synthetic_origin(
         and fused_score >= settings.synthetic_likely_threshold
         and calibrated_strong_family_count >= minimum_families
         and calibrated_family_count == family_count
+        and not unstable
     ):
         classification = "LIKELY_AI_GENERATED"
         evidence_tier = "HIGH"
         review_recommended = True
         reasons.extend(["SYNTHETIC_DETECTOR_SUPPORT", "TRANSFORM_CONSISTENT_SUPPORT"])
-    elif positive_family_count >= 1 or (
+    elif observed_positive_family_count >= 1 or (
         fused_score is not None and fused_score >= settings.synthetic_review_threshold
     ):
         classification = "AI_ORIGIN_REVIEW_CANDIDATE"
         evidence_tier = "REVIEW"
         review_recommended = True
         reasons.append("SYNTHETIC_DETECTOR_REVIEW_RANGE")
+        if unstable:
+            reasons.append("TRANSFORM_SENSITIVE_SIGNAL_RETAINS_REVIEW_ONLY")
         if family_count < minimum_families:
             reasons.append("INDEPENDENT_EVIDENCE_FAMILY_CORROBORATION_REQUIRED")
         if calibrated_family_count < family_count:
             reasons.append("DEPLOYMENT_CALIBRATION_INCOMPLETE")
+    elif unstable:
+        classification = "INCONCLUSIVE_TRANSFORM_INSTABILITY"
+        evidence_tier = "INCONCLUSIVE"
+        review_recommended = True
+        reasons.extend(["DETECTOR_UNSTABLE_ACROSS_COMMON_TRANSFORMS", "ABSTAINED"])
     elif negative_clearance_supported:
         classification = "NO_AI_ORIGIN_EVIDENCE_DETECTED"
         evidence_tier = "LOW"
@@ -738,10 +1170,21 @@ def analyze_synthetic_origin(
             ]
         )
 
+    if routing["primary_succeeded"]:
+        reasons.append("SIGHTENGINE_PRIMARY_RESULT_USED")
+    elif (
+        routing["fallback_activated"]
+        and routing["fallback_reason"] == "PRIMARY_OPERATIONAL_FAILURE"
+    ):
+        reasons.append("SIGHTENGINE_PRIMARY_FAILURE_LOCAL_FALLBACK_USED")
+    elif routing["fallback_activated"]:
+        reasons.append("SIGHTENGINE_NOT_ACTIVE_LOCAL_DETECTOR_USED")
     if len(member_rows) == 1:
         reasons.append("SINGLE_DETECTOR_LIMITATION")
     if family_count == 1:
         reasons.append("SINGLE_EVIDENCE_FAMILY_LIMITATION")
+    if observed_family_count > family_count:
+        reasons.append("UNVERIFIED_EVIDENCE_FAMILY_DECLARATIONS_EXCLUDED")
     if provenance.status == ProvenanceStatus.NOT_PRESENT:
         reasons.append("C2PA_ABSENCE_IS_NOT_HUMAN_ORIGIN_EVIDENCE")
     if errors:
@@ -757,6 +1200,7 @@ def analyze_synthetic_origin(
         classification=classification,
         evidence_tier=evidence_tier,
         family_count=family_count,
+        observed_family_count=observed_family_count,
         calibrated_family_count=calibrated_family_count,
         positive_family_count=positive_family_count,
         transform_stability=transform_stability,
@@ -770,6 +1214,7 @@ def analyze_synthetic_origin(
     scorecard = _origin_scorecard(
         fused_score=fused_score,
         family_count=family_count,
+        observed_family_count=observed_family_count,
         calibrated_family_count=calibrated_family_count,
         minimum_families=minimum_families,
         review_threshold=settings.synthetic_review_threshold,
@@ -781,13 +1226,14 @@ def analyze_synthetic_origin(
     )
 
     return {
-        "schema": "creatorproof.synthetic_origin.v3",
+        "schema": "creatorproof.synthetic_origin.v4",
         "classification": classification,
         "evidence_tier": evidence_tier,
         "review_recommended": review_recommended,
         "fused_detector_score": round(fused_score, 6) if fused_score is not None else None,
-        "score_semantics": "QUALITY_WEIGHTED_ENSEMBLE_SCORE_NOT_PROBABILITY",
+        "score_semantics": "ORIGINAL_PRESERVING_QUALITY_WEIGHTED_ENSEMBLE_NOT_PROBABILITY",
         "detector_count": len(member_rows),
+        "observed_evidence_family_count": observed_family_count,
         "evidence_family_count": family_count,
         "calibrated_family_count": calibrated_family_count,
         "positive_family_count": positive_family_count,
@@ -825,12 +1271,25 @@ def analyze_synthetic_origin(
         "scorecard": scorecard,
         "members": member_rows,
         "evidence_families": family_rows,
+        "evidence_family_governance": (
+            detector_router.family_registry.status()
+            if getattr(detector_router, "family_registry", None) is not None
+            else {
+                "state": "TEST_OR_LEGACY_ROUTER",
+                "reason": "NO_RUNTIME_FAMILY_REGISTRY_EXPOSED",
+            }
+        ),
         "presentation": presentation,
         "forensic_diagnostics": _spectral_diagnostics(image),
+        "forensic_indicators": _forensic_indicators(
+            member_rows,
+            settings.synthetic_review_threshold,
+        ),
         "runtime": {
             "view_count": len(views),
             "delivery_view_count": len(delivery_views),
             "spatial_view_count": len(spatial_views),
+            "routing": routing,
             "provider_timings_ms": {
                 str(row["provider"]): row.get("runtime_ms") for row in member_rows
             },
@@ -843,6 +1302,10 @@ def analyze_synthetic_origin(
         "limitations": [
             "AI-origin detection is open-world; no detector is universally reliable.",
             "No-AI-evidence is not a claim that an image was created by a human.",
+            (
+                "Sightengine's vendor score and generator categories are not CreatorProof "
+                "calibration, provenance, or attribution."
+            ),
             "Model scores require generator-, domain-, and transformation-specific calibration.",
             "Frequency and residual diagnostics are descriptive and never decide origin alone.",
             "C2PA can confirm signed provenance claims but its absence is inconclusive.",

@@ -1,17 +1,27 @@
 {
   "name": "creatorproof-web",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "build": "next build && node scripts/finalize-standalone.mjs",
+    "start": "node .next/standalone/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test 'app/**/*.test.ts'"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
+    "@paper-design/shaders": "^0.0.80",
+    "clsx": "^2.1.1",
+    "cobe": "^2.0.1",
+    "geist": "^1.7.2",
+    "gsap": "^3.15.0",
+    "lucide-react": "^1.31.0",
+    "motion": "^13.1.0",
     "next": "16.3.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

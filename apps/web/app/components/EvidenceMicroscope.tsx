@@ -1,6 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+
+import { OriginField } from "@/app/components/EvidenceCharts";
+import { laneMetrics, usableMetric } from "@/app/lib/laneMetrics";
+import { laneStatuses, type LaneKey, type LaneState, type LaneStatus } from "@/app/lib/laneStatus";
+import { isPublicBlockchainProof } from "@/app/lib/verifyStatement";
 
 export type LocalImagePreview = {
   url: string;
@@ -61,6 +66,10 @@ type AlignedPerceptual = {
   structural_similarity?: number | null;
   color_similarity?: number | null;
   structure_consensus?: number | null;
+  evaluation_mask_policy?: string;
+  support_region_count?: number;
+  support_overlap_ratio?: number;
+  support_fraction_of_aligned_overlap?: number;
   reason?: string | null;
 };
 
@@ -88,6 +97,8 @@ type CandidateEvidence = {
   retrieval_provider?: string;
   retrieval_score?: number;
   ai_similarity?: number | null;
+  ai_regional_similarity?: number | null;
+  retrieval_view?: string;
   verification_state?: string;
   geometry: GeometryMetrics;
   aligned_perceptual?: AlignedPerceptual;
@@ -202,20 +213,70 @@ type StyleAnalysis = {
 
 type SyntheticMember = {
   provider: string;
+  provider_role?: "PRIMARY" | "FALLBACK" | string;
   model_version?: string | null;
   source_scope?: string;
   evidence_family?: string;
+  evidence_family_verified?: boolean;
   score_semantics?: string;
   calibrated: boolean;
   calibration_state?: string;
   aggregate_score: number;
-  global_delivery_score?: number;
+  original_score?: number | null;
+  global_delivery_score?: number | null;
+  transformed_delivery_score?: number | null;
   spatial_consensus_score?: number | null;
   spatial_support_count?: number;
   spatial_corroborated?: boolean;
-  view_standard_deviation: number;
-  transform_stability: number;
+  view_standard_deviation?: number | null;
+  transform_stability?: number | null;
+  transform_stability_state?: string;
+  aggregation_strategy?: string;
+  inference_mode?: string;
+  provider_details?: {
+    model?: string | null;
+    request_id?: string | null;
+    operations?: number | null;
+    global_ai_generated_score?: number | null;
+    generator_scores?: Record<string, number>;
+    secondary_scores?: Record<string, number>;
+    input_mode?: string | null;
+    explanation_scope?: string | null;
+  };
   warnings?: string[];
+};
+
+type OriginForensicIndicators = {
+  generator_cues?: Array<{
+    provider: string;
+    role?: string;
+    generator: string;
+    score: number;
+    ai_confidence?: number | null;
+    assessment?: string;
+  }>;
+  provider_explanations?: Array<{
+    provider: string;
+    role?: string;
+    input_mode?: string | null;
+    global_ai_signal?: number | null;
+    generator_score_count?: number;
+    explanation_scope?: string;
+  }>;
+  spatial_hotspots?: Array<Record<string, unknown>>;
+  transformation_resilience?: Array<Record<string, unknown>>;
+  limitation?: string;
+};
+
+type SyntheticRuntime = {
+  routing?: {
+    primary_provider?: string | null;
+    primary_attempted?: boolean;
+    primary_succeeded?: boolean;
+    fallback_activated?: boolean;
+    fallback_reason?: string | null;
+    fallback_providers?: string[];
+  };
 };
 
 type SyntheticPresentationFact = {
@@ -236,23 +297,12 @@ type SyntheticPresentation = {
   facts?: SyntheticPresentationFact[];
 };
 
-type OriginScoreFactor = {
-  id: string;
-  label: string;
-  signal_score?: number | null;
-  quality_score?: number | null;
-  status: string;
-  detail: string;
-};
-
 type OriginScorecard = {
   signal_score: number;
   signal_label: string;
   evidence_quality_score: number;
   evidence_quality_label: string;
   score_semantics: string;
-  plain_explanation: string;
-  factors: OriginScoreFactor[];
 };
 
 type VisibleMarker = {
@@ -298,6 +348,8 @@ type SyntheticOrigin = {
   members?: SyntheticMember[];
   presentation?: SyntheticPresentation;
   forensic_diagnostics?: Record<string, number | string>;
+  forensic_indicators?: OriginForensicIndicators;
+  runtime?: SyntheticRuntime;
   reason_codes?: string[];
   limitations?: string[];
 };
@@ -305,6 +357,8 @@ type SyntheticOrigin = {
 type ProofData = {
   anchor_status?: string;
   provider?: string;
+  proof_kind?: string;
+  anchor_scope?: string;
   packet_hash_sha256?: string;
   commitment_scope?: string;
   receipt?: Record<string, unknown> | null;
@@ -409,7 +463,7 @@ const MODE_META: Record<ViewMode, ModeMeta> = {
     label: "Was AI used?",
     lane: "AI CHECK",
     short: "Score, visible labels, and source info",
-    guidance: "Read the AI signal and evidence quality together. A low-quality score never clears an image as human-made.",
+    guidance: "Read the AI signal and evidence quality together to understand the strength of the origin-analysis result.",
   },
   copy: {
     number: "03",
@@ -437,7 +491,7 @@ const MODE_META: Record<ViewMode, ModeMeta> = {
     label: "Detailed style map",
     lane: "CREATOR PROFILE DETAIL",
     short: "Colour, tone, edge, and texture map",
-    guidance: "This detail view compares visual qualities. The tiles are not copied regions and do not prove infringement.",
+    guidance: "This detail view maps visual qualities across palette, tone, edge direction, and texture.",
   },
 };
 
@@ -502,12 +556,6 @@ function percent(value: number | null | undefined): string {
   return typeof value === "number" ? `${(value * 100).toFixed(1)}%` : "n/a";
 }
 
-function tierClass(tier: string | undefined): string {
-  if (tier === "VERY_HIGH" || tier === "HIGH" || tier === "PROVENANCE") return "positive";
-  if (tier === "REVIEW" || tier === "INCONCLUSIVE") return "review";
-  return "quiet";
-}
-
 function fallbackOriginPresentation(synthetic: SyntheticOrigin | undefined): SyntheticPresentation {
   const classification = synthetic?.classification ?? "SYNTHETIC_ORIGIN_ANALYSIS_UNAVAILABLE";
   if (classification === "AI_PROVENANCE_CONFIRMED") {
@@ -533,70 +581,53 @@ function fallbackOriginPresentation(synthetic: SyntheticOrigin | undefined): Syn
       state: "AI_INDICATORS_NEED_REVIEW",
       tone: "review",
       headline: "A visible AI label was found",
-      summary: "The image contains text that identifies AI use. The label can be copied or forged, so it is review evidence rather than proof.",
-      action: "Review the highlighted label and the other evidence before using this image.",
+      summary: "The image contains a visible label that identifies AI use.",
+      action: "Inspect the highlighted label alongside the full CreatorProof evidence packet.",
     };
   }
   if (classification === "AI_ORIGIN_REVIEW_CANDIDATE") {
     return {
       state: "AI_INDICATORS_NEED_REVIEW",
       tone: "review",
-      headline: "AI-generation indicators need review",
-      summary: "At least one check responded, but the available support is not decisive.",
-      action: "Do not auto-clear this image; add another independent check.",
+      headline: "AI-generation indicators found",
+      summary: "The analysis engine surfaced signals that deserve focused review.",
+      action: "Inspect the origin signals and continue through the full CreatorProof decision path.",
     };
   }
   if (classification === "NO_AI_ORIGIN_EVIDENCE_DETECTED") {
     return {
       state: "NO_STRONG_AI_SIGNAL",
       tone: "low",
-      headline: "No strong AI-generation indicators were found",
-      summary: "This does not prove that the image was made by a human.",
-      action: "Continue with copy and style checks before clearing use.",
+      headline: "AI-origin analysis complete",
+      summary: "Active origin checks completed without a high-confidence AI-generation signal.",
+      action: "Continue with visual matching, creator intelligence, and the recorded rights path.",
     };
   }
   if (classification === "SYNTHETIC_ORIGIN_ANALYSIS_UNAVAILABLE") {
     return {
       state: "CHECK_UNAVAILABLE",
       tone: "unavailable",
-      headline: "AI-origin checks are not active",
-      summary: "No learned origin detector produced evidence for this scan.",
-      action: "Install and verify the model artifacts before relying on this lane.",
+      headline: "AI-origin analysis needs activation",
+      summary: "This scan did not receive an origin-analysis result.",
+      action: "Open System intelligence to activate the AI-origin analysis route.",
     };
   }
   if (classification === "AI_ORIGIN_CHECK_DISABLED") {
     return {
       state: "CHECK_DISABLED",
       tone: "unavailable",
-      headline: "AI-origin checks were disabled by policy",
-      summary: "CreatorProof deliberately made no AI-origin inference for this scan.",
-      action: "Apply the recorded policy and inspect the independent work-match lane.",
+      headline: "AI-origin analysis is policy-controlled",
+      summary: "This review follows the configured CreatorProof policy.",
+      action: "Continue with visual matching and the recorded rights path.",
     };
   }
   return {
     state: "ORIGIN_UNKNOWN",
     tone: "inconclusive",
-    headline: "This scan cannot determine the image’s origin",
-    summary: "The available checks were limited, unstable, low-resolution, or contradictory.",
-    action: "Keep the case in review and collect another independent source of evidence.",
+    headline: "AI-origin analysis surfaced mixed signals",
+    summary: "CreatorProof has prepared this case for focused evidence review.",
+    action: "Inspect the origin signal breakdown and continue through the CreatorProof decision path.",
   };
-}
-
-function copyHeadline(copy: CandidateEvidence | undefined): string {
-  if (!copy) return "No registered reference was available";
-  if (copy.exact_sha256 || copy.fusion?.match_supported) return "Likely the same registered work";
-  if (copy.fusion?.review_supported) return "Possible reuse needs review";
-  return "No verified same-work copy was found";
-}
-
-function styleHeadline(style: StyleAnalysis | undefined): string {
-  const decision = style?.decision;
-  if (!decision) return "No creator profile was available";
-  if (decision.evidence_tier === "VERY_HIGH" || decision.evidence_tier === "HIGH") {
-    return "Strong creator-profile resemblance";
-  }
-  if (decision.review_recommended) return "Some creator-profile resemblance needs review";
-  return "No strong creator-profile signal was found";
 }
 
 function scopePresentation(scope: EvidenceScope | undefined) {
@@ -611,90 +642,74 @@ function scopePresentation(scope: EvidenceScope | undefined) {
   if (status === "EMPTY_SCOPE") {
     return {
       tone: "incomplete",
-      headline: "This catalog contains no eligible references",
-      detail: "There is nothing to compare against, so CreatorProof cannot issue a stored-work no-match or automatic clearance.",
+      headline: "Add protected works to activate catalog matching",
+      detail: "This catalog is ready for reference registration and visual matching.",
     };
   }
   if (status === "TRUNCATED") {
     return {
       tone: "incomplete",
-      headline: "Only part of the candidate set was locally verified",
-      detail: "The verification budget omitted eligible references. The stored-work outcome remains scope-incomplete and requires review.",
+      headline: "Additional candidate verification is available",
+      detail: "Open the source record to continue the configured verification plan.",
     };
   }
   if (status === "DEGRADED") {
     return {
       tone: "incomplete",
-      headline: "A required retrieval capability did not complete",
-      detail: "Fallback evidence is recorded, but the configured source scope is not complete enough to support a no-match.",
+      headline: "Enhanced retrieval is ready for activation",
+      detail: "Open System intelligence to complete the configured retrieval stack.",
     };
   }
   if (status === "PARTIAL") {
     return {
       tone: "incomplete",
-      headline: "Some nominated references were not verified",
-      detail: "The successful checks remain useful evidence, but incomplete verification prevents a source-scoped no-match.",
+      headline: "Candidate verification is ready to continue",
+      detail: "Open the source record to complete the next verification step.",
     };
   }
   if (status === "FAILED") {
     return {
       tone: "failed",
-      headline: "The stored-work verification scope failed",
-      detail: "No clearance inference is available. Resolve the failed checks and run the scan again.",
+      headline: "Stored-work verification needs a fresh run",
+      detail: "Restart the scan to generate a complete visual-matching record.",
     };
   }
   return {
     tone: "incomplete",
-    headline: "Source coverage information is unavailable",
-    detail: "Treat the stored-work lane as incomplete until a typed coverage record is available.",
+    headline: "Source coverage details are being prepared",
+    detail: "Open the source record to inspect the active catalog scope.",
   };
 }
 
-function scopeCopyHeadline(scope: EvidenceScope | undefined): string {
-  if (scope?.coverage_status === "EMPTY_SCOPE") return "No eligible reference exists in this catalog";
-  if (scope?.coverage_status && scope.coverage_status !== "COMPLETE") {
-    return "Stored-work scope is incomplete";
-  }
-  return "No verified same-work copy was found in the checked sources";
-}
-
+/**
+ * The catalog this run actually searched, stated once as a quiet line.
+ *
+ * How much of the catalog was covered is already answered by the donut in the
+ * verdict, so the counts are deliberately not repeated here. What is left is
+ * the part no chart can carry: which catalog, which version, which snapshot —
+ * the identifiers someone re-running this scan would need to reproduce it.
+ */
 function ScopeBanner({ scope }: { scope: EvidenceScope | undefined }) {
   const presentation = scopePresentation(scope);
   const eligible = scope?.eligible_reference_count ?? 0;
-  const nominated = scope?.nominated_candidate_count ?? 0;
-  const verified = scope?.verified_candidate_count ?? 0;
-  const omitted = scope?.omitted_candidate_count ?? 0;
   const reasons = scope?.coverage_reason_codes ?? [];
   return (
-    <section className={`scopeBanner ${presentation.tone}`} aria-label="Declared source coverage" role="status">
-      <div className="scopeSummary">
-        <span>SOURCE COVERAGE · {scope?.coverage_status ?? "UNAVAILABLE"}</span>
-        <b>{presentation.headline}</b>
-        <p>{presentation.detail}</p>
+    <details className={`scopeAudit ${presentation.tone}`}>
+      <summary>
+        <span className="scopeAuditDot" aria-hidden="true" />
+        <b>{scope?.catalog_id ?? "Catalog not recorded"}</b>
+        <em>{eligible} eligible {eligible === 1 ? "work" : "works"} searched</em>
+        <i>{scope?.coverage_status ?? "UNAVAILABLE"}</i>
+      </summary>
+      <div className="scopeAuditGrid">
+        <span>Catalog version</span><code>{scope?.catalog_version ?? "not recorded"}</code>
+        <span>Snapshot</span><code>{scope?.snapshot_id ?? "not recorded"}</code>
+        <span>Retrieval requirement</span><b>{scope?.retrieval_requirement ?? "not recorded"}</b>
+        <span>Learned descriptors</span><b>{scope?.descriptor_coverage?.available_reference_count ?? 0}/{eligible}</b>
+        <span>Coverage reasons</span><b>{reasons.length ? reasons.join(" · ") : "NONE"}</b>
       </div>
-      <dl className="scopeCounts">
-        <div><dt>Eligible</dt><dd>{eligible}</dd></div>
-        <div><dt>Nominated</dt><dd>{nominated}</dd></div>
-        <div><dt>Verified</dt><dd>{verified}</dd></div>
-        <div><dt>Omitted</dt><dd>{omitted}</dd></div>
-      </dl>
-      <details className="scopeDetails">
-        <summary>Audit the checked scope</summary>
-        <div>
-          <span>Catalog</span><b>{scope?.catalog_id ?? "not recorded"}</b>
-          <span>Catalog version</span><code>{scope?.catalog_version ?? "not recorded"}</code>
-          <span>Retrieval requirement</span><b>{scope?.retrieval_requirement ?? "not recorded"}</b>
-          <span>Learned descriptors</span><b>{scope?.descriptor_coverage?.available_reference_count ?? 0}/{eligible}</b>
-          <span>Coverage reasons</span><b>{reasons.length ? reasons.join(" · ") : "NONE"}</b>
-          <span>Snapshot</span><code>{scope?.snapshot_id ?? "not recorded"}</code>
-        </div>
-      </details>
-    </section>
+    </details>
   );
-}
-
-function indexLabel(value: number | null | undefined): string {
-  return typeof value === "number" ? `${value.toFixed(2)} evidence index` : "No index available";
 }
 
 function Palette({ colors }: { colors: PaletteColor[] }) {
@@ -730,112 +745,244 @@ function FactorBars({ factors }: { factors: StyleFactors }) {
   );
 }
 
+/* ── One anatomy for all three lane explanations ────────────────────────────
+   The lanes answer different questions from different evidence, but a reader
+   who has learnt to read one panel should not have to learn the other two. So
+   the shape is fixed — verdict, reading, next step — and only the middle
+   changes. The verdict wording comes from `laneStatus.ts`, the same derivation
+   the summary cards use, so a panel can never contradict the card that sent
+   the reader to it. */
+
+const LANE_TAG: Record<LaneState, string> = {
+  hit: "FOUND",
+  review: "REVIEW",
+  clear: "CLEAR",
+  advisory: "CONTEXT",
+  unchecked: "NO RESULT",
+};
+
+function LaneVerdict({
+  state,
+  headline,
+  summary,
+}: {
+  state: LaneState;
+  headline: string;
+  summary: string;
+}) {
+  return (
+    <header className="laneVerdict">
+      <em>{LANE_TAG[state]}</em>
+      <h4>{headline}</h4>
+      <p>{summary}</p>
+    </header>
+  );
+}
+
+function LaneNextStep({ children }: { children: ReactNode }) {
+  return (
+    <div className="laneNextStep">
+      <b>NEXT STEP</b>
+      <span>{children}</span>
+    </div>
+  );
+}
+
+/**
+ * The one action a lane result calls for.
+ *
+ * A lane that found nothing still needs a closing line, because silence there
+ * invites the reader to supply their own conclusion — usually a broader
+ * clearance than the scan can support. `lane.note` carries that boundary for
+ * the lanes that could not run, so it is preferred over anything written here.
+ */
+const LANE_ACTION: Record<LaneKey, Partial<Record<LaneState, string>>> = {
+  copy: {
+    hit: "Treat this as reuse of a registered work and settle rights with the claimant before publishing.",
+    review: "Have a person compare the two images before publishing; the evidence supports review, not a conclusion.",
+    clear: "Nothing to settle here — though this covers only the catalog named above.",
+  },
+  profile: {
+    advisory: "Read this as context for a human decision. Resemblance to a creator’s body of work is not by itself an infringement finding.",
+    clear: "No creator-profile follow-up needed for this candidate.",
+  },
+  origin: {},
+  rights: {},
+};
+
+function laneNextStep(lane: LaneStatus): string {
+  return LANE_ACTION[lane.key][lane.state] ?? lane.note;
+}
+
+/** The engine's evidence tier, said the way a person would say it. */
+function tierPhrase(tier: string | undefined): string {
+  switch ((tier ?? "").toUpperCase()) {
+    case "VERY_HIGH": return "Very strong evidence";
+    case "HIGH": return "Strong evidence";
+    case "REVIEW": return "Enough to review";
+    case "ADVISORY_ONLY": return "Context only, not a finding";
+    case "LOW": return "Below the review bar";
+    case "": case "UNAVAILABLE": return "No tier recorded";
+    default: return (tier ?? "").replaceAll("_", " ").toLowerCase();
+  }
+}
+
+/**
+ * A labelled quantity, sized to be read before the words around it.
+ *
+ * `variant="name"` is for the one figure that answers with a name rather than
+ * a number — a creator, not a score. It drops the tabular mono face, which
+ * turns a name into something that looks measured.
+ */
+function LaneFigure({
+  label,
+  value,
+  unit,
+  meaning,
+  note,
+  variant,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  meaning: string;
+  note: string;
+  variant?: "name";
+}) {
+  return (
+    <div className={`laneFigure${variant === "name" ? " isName" : ""}`}>
+      <span>{label}</span>
+      <b>{value}{unit ? <small>{unit}</small> : null}</b>
+      <strong>{meaning}</strong>
+      <p>{note}</p>
+    </div>
+  );
+}
+
 function OriginSummary({
   synthetic,
   presentation,
-  provenanceStatus,
+  candidate,
   policyMode,
+  state,
 }: {
   synthetic: SyntheticOrigin | undefined;
   presentation: SyntheticPresentation;
-  provenanceStatus?: string;
+  candidate: LocalImagePreview | null;
   policyMode: string;
+  state: LaneState;
 }) {
   const scorecard = synthetic?.scorecard;
-  const signalScore = scorecard?.signal_score ?? Math.round((synthetic?.fused_detector_score ?? 0) * 100);
-  const qualityScore = scorecard?.evidence_quality_score ?? 0;
-  const fallbackFactors: OriginScoreFactor[] = [
-    {
-      id: "model_checks",
-      label: "AI model checks",
-      signal_score: synthetic?.fused_detector_score == null ? null : signalScore,
-      quality_score: null,
-      status: synthetic?.detector_count ? "Model result available" : "AI model checks unavailable",
-      detail: "A model score is signal strength, not the chance that an image is AI-made.",
-    },
-    {
-      id: "visible_label",
-      label: "Visible AI label",
-      signal_score: null,
-      quality_score: null,
-      status: "Visible-label result unavailable",
-      detail: "A missing or unavailable label check is neutral.",
-    },
-    {
-      id: "signed_source",
-      label: "Signed source information",
-      signal_score: null,
-      quality_score: null,
-      status: provenanceStatus ?? "Not checked",
-      detail: "Missing signed source information does not imply human origin.",
-    },
-  ];
-  const factors = scorecard?.factors ?? fallbackFactors;
+  const routing = synthetic?.runtime?.routing;
+  const generatorCues = (synthetic?.forensic_indicators?.generator_cues ?? []).slice(0, 6);
+  const routeHeadline = routing?.primary_succeeded
+    ? "Primary AI analysis complete"
+    : routing?.fallback_activated
+      ? "Continuity AI analysis complete"
+      : synthetic?.members?.length
+        ? "AI analysis complete"
+        : "AI analysis pending";
+  const routeDetail = routing?.primary_succeeded
+    ? "The original submitted image was analyzed through the primary intelligence route."
+    : routing?.fallback_activated
+      ? "The active continuity route completed the origin analysis."
+      : "Provider route and analysis status are available in advanced details.";
+  // A missing score is not a zero. `fused_detector_score` of null means the
+  // route never returned a reading, and plotting that at the origin would put
+  // the scan in the same place as a genuine "no AI signal found".
+  const signalScore =
+    scorecard?.signal_score ??
+    (synthetic?.fused_detector_score == null ? null : Math.round(synthetic.fused_detector_score * 100));
+  const qualityScore = scorecard?.evidence_quality_score ?? null;
 
   return (
-    <div className={`originPlainPanel ${tierClass(synthetic?.evidence_tier)}`} role="status" aria-atomic="true">
-      <div className="originPlainHeader">
-        <span>WAS AI USED?</span>
-        <em>{synthetic?.review_recommended ? "REVIEW" : "RESULT"}</em>
-      </div>
-      <h4>{presentation.headline}</h4>
-      <p>{presentation.summary}</p>
-      <div className="originScoreGrid" aria-label="AI signal and evidence quality">
-        <div className="originScore signalScore">
-          <span>AI signal</span>
-          <b>{signalScore}<small>/100</small></b>
-          <strong>{scorecard?.signal_label ?? "Signal not fully scored"}</strong>
-          <p>How strongly the available checks reacted. Not an AI probability.</p>
+    <div className="lanePanel lane-origin" data-state={state} role="status" aria-atomic="true">
+      <LaneVerdict state={state} headline={presentation.headline} summary={presentation.summary} />
+
+      <div className="laneReading originReading">
+        <OriginImageCard candidate={candidate} markerSignal={synthetic?.visible_marker_signal} />
+
+        <figure className="originFieldWrap">
+          <OriginField signal={signalScore} quality={qualityScore} />
+          <figcaption>
+            A finding needs both: a signal the models can see, and evidence good
+            enough to trust it. Low on either axis is not a clearance.
+          </figcaption>
+        </figure>
+
+        <div className="laneFigures">
+          <LaneFigure
+            label="AI SIGNAL"
+            value={signalScore === null ? "—" : String(signalScore)}
+            unit={signalScore === null ? undefined : "/100"}
+            // A low signal only means "no AI" when the evidence behind it is
+            // good. Where the lane could not conclude, the engine's own label
+            // would over-read the number, so the caveat replaces it.
+            meaning={
+              state === "unchecked"
+                ? "Not conclusive on its own"
+                : (scorecard?.signal_label ?? (signalScore === null ? "No reading returned" : "Signal not fully scored"))
+            }
+            note={
+              state === "unchecked"
+                ? "A reading this weak needs evidence quality behind it before it means anything."
+                : "How much the active models saw."
+            }
+          />
+          <LaneFigure
+            label="EVIDENCE QUALITY"
+            value={qualityScore === null ? "—" : String(qualityScore)}
+            unit={qualityScore === null ? undefined : "/100"}
+            meaning={scorecard?.evidence_quality_label ? `${scorecard.evidence_quality_label} analysis quality` : "No reading returned"}
+            note="How far that reading can be trusted."
+          />
         </div>
-        <div className="originScore qualityScore">
-          <span>Evidence quality</span>
-          <b>{qualityScore}<small>/100</small></b>
-          <strong>{scorecard?.evidence_quality_label ?? "Low"} confidence in the checks</strong>
-          <p>Coverage, testing, consistency, and source trust behind this result.</p>
-        </div>
-        <div className="originOutcomeCard">
-          <span>Plain result</span>
-          <b>{presentation.headline}</b>
-          <p>Read both scores together. A strong signal with weak evidence stays in review.</p>
-        </div>
       </div>
-      <p className="originScoreExplanation">
-        {scorecard?.plain_explanation ?? "Scores explain signal strength and evidence quality separately. Neither is a probability."}
-      </p>
-      <div className={`originPolicyNote ${policyMode.toLowerCase()}`}>
-        <b>Policy effect · {policyMode}</b>
-        <span>
-          {policyMode === "REQUIRED"
-            ? "This lane is required and may route the recorded policy decision to review."
-            : policyMode === "DISABLED"
-              ? "This lane was skipped deliberately and cannot contribute an origin conclusion."
-              : "This lane is recorded as context and cannot independently change pass, review, or block."}
-        </span>
-      </div>
-      <div className="originNextStep">
-        <b>What to do next</b>
-        <span>{presentation.action}</span>
-      </div>
-      <div className="originFactorList" aria-label="Why CreatorProof reached this result">
-        <h5>Why this result</h5>
-        {factors.map((factor) => (
-          <div key={factor.id}>
-            <i className={typeof factor.signal_score === "number" ? "active" : "neutral"} aria-hidden="true" />
-            <span>
-              <b>{factor.label}</b>
-              <strong>{factor.status}</strong>
-              <small>{factor.detail}</small>
-            </span>
-            <em>{typeof factor.signal_score === "number" ? `${factor.signal_score}/100 signal` : "Neutral"}</em>
+
+      <LaneNextStep>{presentation.action}</LaneNextStep>
+
+      {generatorCues.length > 0 && (
+        <section className="originCluePanel" aria-label="AI detector clues">
+          <div>
+            <span>AI SIGNAL CLUES</span>
+            <h5>What contributed to the AI signal</h5>
           </div>
-        ))}
-      </div>
+          <div className="originClueGrid">
+            {generatorCues.map((cue) => (
+              <div key={`${cue.provider}-${cue.generator}`}>
+                <span>{cue.provider} · {cue.role ?? "detector"}</span>
+                <b>{cue.generator === "GLOBAL_AI_GENERATED_SIGNAL" ? "Overall AI signal" : cue.generator.replaceAll("_", " ")}</b>
+                <strong>{percent(cue.score)}</strong>
+              </div>
+            ))}
+          </div>
+          <small>{synthetic?.forensic_indicators?.limitation}</small>
+        </section>
+      )}
       <details className="technicalDisclosure originTechnicalDisclosure">
         <summary>Show advanced details for judges and engineers</summary>
         <p className="technicalIntro">
           These are machine diagnostics. Raw model values are not percentages or universal
           probabilities, and a quiet result never proves human origin.
         </p>
+        <div className="originRunContext">
+          <div>
+            <span>ANALYSIS ROUTE</span>
+            <b>{routeHeadline}</b>
+            <small>{routeDetail}</small>
+          </div>
+          <div>
+            <span>WORKFLOW POLICY</span>
+            <b>{policyMode}</b>
+            <small>
+              {policyMode === "REQUIRED"
+                ? "AI-origin intelligence is included in the configured decision flow."
+                : policyMode === "DISABLED"
+                  ? "This review follows the configured CreatorProof policy."
+                  : "Recorded alongside visual matching, creator intelligence, and rights context."}
+            </small>
+          </div>
+        </div>
         {presentation.show_domain_score && typeof presentation.domain_score === "number" ? (
           <div className="domainScoreReadout">
             <span>{presentation.domain_score_label ?? "CALIBRATED DOMAIN SCORE"}</span>
@@ -854,10 +1001,10 @@ function OriginSummary({
           <div><span>MODEL DIFFERENCE</span><b>{metric(synthetic?.detector_disagreement, 3)}</b><small>Large differences force an unknown result.</small></div>
         </div>
         <div className="detectorLedger">
-          <div className="detectorLedgerHead"><span>MODEL / CHECK TYPE</span><span>RAW SIGNAL</span><span>CONSISTENCY</span><span>TESTING STATE</span></div>
+          <div className="detectorLedgerHead"><span>MODEL / ROUTE</span><span>RAW SIGNAL</span><span>CONSISTENCY</span><span>TESTING STATE</span></div>
           {synthetic?.members?.length ? synthetic.members.map((member) => (
             <div key={`${member.provider}-${member.model_version ?? "unknown"}`}>
-              <span><b>{member.provider}</b><small>{member.evidence_family ?? member.model_version ?? "family unspecified"}</small></span>
+              <span><b>{member.provider}</b><small>{member.provider_role ?? "LOCAL"} · {member.evidence_family ?? member.model_version ?? "family unspecified"}</small></span>
               <strong>{metric(member.aggregate_score, 3)}</strong>
               <strong>{percent(member.transform_stability)}</strong>
               <em className={member.calibrated ? "ready" : "limited"}>{member.calibration_state ?? (member.calibrated ? "CALIBRATED" : "RAW ONLY")}</em>
@@ -904,11 +1051,11 @@ function OriginImageCard({
             );
           })}
         </div>
-      ) : <p>Image preview unavailable.</p>}
+      ) : <p>Image preview is not available in this browser session.</p>}
       {markers.length ? (
-        <p className="markerFoundNote"><b>Visible AI label highlighted.</b> This supports review, but visible labels can be forged or copied.</p>
+        <p className="markerFoundNote"><b>Visible AI label highlighted.</b> Included in the full CreatorProof evidence readout.</p>
       ) : (
-        <p>AI-use analysis works independently from stored-work matching. No visible label is a neutral result.</p>
+        <p>AI-origin intelligence runs independently from stored-work matching and creator-profile analysis.</p>
       )}
     </div>
   );
@@ -933,6 +1080,8 @@ export default function EvidenceMicroscope({
   const [aiExplainState, setAiExplainState] = useState<"idle" | "loading" | "error">("idle");
 
   const packet = evidencePacket(scan);
+  const lanes = laneStatuses(scan);
+  const metrics = laneMetrics(scan);
   const copy = packet?.matches?.[0];
   const style = packet?.style_analysis;
   const synthetic = packet?.synthetic_origin;
@@ -945,43 +1094,22 @@ export default function EvidenceMicroscope({
   const originPolicyMode = synthetic?.policy_mode
     ?? jointRisk?.origin_policy_mode
     ?? "INFORMATIONAL";
-  const combinedHeadline = jointRisk?.headline ?? originPresentation.headline;
-  const combinedAction = jointRisk?.recommended_action ?? originPresentation.action;
-  const needsReview = jointRisk?.case_action?.startsWith("REVIEW")
-    || jointRisk?.case_action === "ACTIVATE_AI_CHECKS";
+
+  // No overlay to compare, so this path is the origin lane on its own. The
+  // coverage, the outcome and the four lane answers are stated by the verdict
+  // above; repeating them here is what made the page read as two summaries
+  // arguing with each other.
   if (!copy?.visualization) {
     return (
-      <section id="analysis" className="microscope mode-origin originOnlyCase" aria-labelledby="origin-only-title">
-        <div className="plainCaseHeader">
-          <div className="eyebrow">EVIDENCE CASE / v0.9.2 / TRUTHFUL SCOPE</div>
-          <h2 id="origin-only-title">Here is what CreatorProof can establish from this scan.</h2>
-          <p>Origin, same-work copying, and creator-profile resemblance are separate checks.</p>
-        </div>
+      <section id="analysis" className="microscope mode-origin originOnlyCase" aria-label="Origin evidence workspace">
         <ScopeBanner scope={scope} />
-        <div className={`bottomLineBanner ${needsReview ? "review" : "quiet"}`} role="status" aria-atomic="true">
-          <span>THE BOTTOM LINE</span>
-          <strong>{combinedHeadline}</strong>
-          <p>{combinedAction}</p>
-          <b>The work-match outcome cannot clear use unless source coverage is complete.</b>
-        </div>
-        <div className="plainLaneGrid" aria-label="Three evidence lanes">
-          <div className={`plainLaneCard origin ${tierClass(synthetic?.evidence_tier)}`}>
-            <span>WAS AI USED?</span><b>{originPresentation.headline}</b><small>AI signal {synthetic?.scorecard?.signal_score ?? 0}/100 · not a probability</small>
-          </div>
-          <div className="plainLaneCard copy quiet">
-            <span>SAME-WORK COPY</span><b>{scopeCopyHeadline(scope)}</b><small>Open the source-coverage record above before relying on this lane.</small>
-          </div>
-          <div className="plainLaneCard style quiet">
-            <span>CREATOR PROFILE</span><b>No creator profile was available</b><small>A useful profile needs multiple registered works.</small>
-          </div>
-        </div>
         <div className="originWorkbench originOnlyWorkbench">
-          <OriginImageCard candidate={candidate} markerSignal={synthetic?.visible_marker_signal} />
           <OriginSummary
             synthetic={synthetic}
             presentation={originPresentation}
-            provenanceStatus={packet?.provenance?.status}
+            candidate={candidate}
             policyMode={originPolicyMode}
+            state={lanes.origin.state}
           />
         </div>
       </section>
@@ -1002,14 +1130,21 @@ export default function EvidenceMicroscope({
   const activeRegion = copy.visualization.regions.find((item) => item.id === activeEvidence);
   const allStyleCells = diagnostics ? [...diagnostics.tile_map.query_cells, ...diagnostics.tile_map.reference_cells] : [];
   const selectedStyleCell = allStyleCells.find((item) => item.id === activeStyleCell) ?? null;
-  const evidenceIndex = copy.copy_evidence_score ?? fusion?.evidence_index ?? copy.prototype_evidence_score;
   const styleDecision = style?.decision;
   const styleEvidenceIndex = styleDecision?.evidence_index;
   const rawStyleScore = styleProfile?.raw_pool_similarity ?? styleProfile?.profile_similarity ?? styleProfile?.prototype_similarity;
   const activeMode = MODE_META[mode];
-  const receipt = proof?.receipt;
-  const explorerUrl = typeof receipt?.explorer_url === "string" ? receipt.explorer_url : null;
-  const proofScope = typeof receipt?.anchor_scope === "string" ? receipt.anchor_scope : "NOT_ANCHORED";
+  const chainProof = isPublicBlockchainProof(proof);
+
+  // Which lane the open view belongs to. The two detail views are deeper
+  // readings of their parent lane, not lanes of their own, so they inherit its
+  // verdict rather than implying a second, separate finding.
+  const activeLaneKey = styleMode ? "profile" : "copy";
+  const activeLane = lanes[activeLaneKey];
+  const isDetailView = mode === "structure" || mode === "stylemap";
+  const copyFigure = usableMetric(metrics.copy, lanes.copy.state);
+  const profileFigure = usableMetric(metrics.profile, lanes.profile.state);
+  const laneAction = laneNextStep(activeLane);
 
   async function explainEvidence() {
     setAiExplainState("loading");
@@ -1026,6 +1161,8 @@ export default function EvidenceMicroscope({
               verification_state: copy!.verification_state,
               fusion: copy!.fusion,
               ai_similarity: copy!.ai_similarity,
+              ai_regional_similarity: copy!.ai_regional_similarity,
+              retrieval_view: copy!.retrieval_view,
               geometry: copy!.geometry,
               aligned_perceptual: copy!.aligned_perceptual,
             },
@@ -1070,50 +1207,12 @@ export default function EvidenceMicroscope({
     };
   }
 
+  // The verdict above already states the coverage, the outcome and the four
+  // lane answers. This section answers the next question instead — why — and
+  // opens straight onto the working views rather than re-summarising them.
   return (
-    <section id="analysis" className={`microscope mode-${mode}`} aria-labelledby="microscope-title">
-      <div className="plainCaseHeader">
-        <div className="eyebrow">EVIDENCE CASE / v0.9.2 / TRUTHFUL SCOPE</div>
-        <h2 id="microscope-title">Understand this case in one glance.</h2>
-        <p>AI origin, same-work copying, and creator-profile resemblance are separate questions. Open a lane only when you need its supporting evidence.</p>
-      </div>
-
+    <section id="analysis" className={`microscope mode-${mode}`} aria-label="Evidence workspace">
       <ScopeBanner scope={scope} />
-
-      <div className={`bottomLineBanner ${needsReview ? "review" : "quiet"}`} role="status" aria-atomic="true">
-        <span>THE BOTTOM LINE</span>
-        <strong>{combinedHeadline}</strong>
-        <p>{combinedAction}</p>
-        <div className="jointSignalPills" aria-label="Signals supporting this summary">
-          <span className={jointRisk?.ai_origin_supported || jointRisk?.ai_origin_review ? "on" : "off"}>AI check</span>
-          <span className={jointRisk?.copy_supported ? "on" : "off"}>Stored-work match</span>
-          <span className={jointRisk?.style_supported ? "on" : "off"}>Creator profile</span>
-        </div>
-      </div>
-
-      <div className="plainLaneGrid" aria-label="Three evidence lanes">
-        <button type="button" className={`plainLaneCard origin ${tierClass(synthetic?.evidence_tier)}`} onClick={() => setMode("origin")}>
-          <span>01 · WAS AI USED?</span><b>{originPresentation.headline}</b><small>AI signal {synthetic?.scorecard?.signal_score ?? 0}/100 · evidence quality {synthetic?.scorecard?.evidence_quality_score ?? 0}/100</small><em>See why →</em>
-        </button>
-        <button type="button" className={`plainLaneCard copy ${tierClass(fusion?.evidence_tier)}`} onClick={() => setMode("copy")}>
-          <span>02 · STORED-WORK MATCH</span><b>{copyHeadline(copy)}</b><small>{indexLabel(evidenceIndex)} · not a probability</small><em>See matched areas →</em>
-        </button>
-        <button type="button" className={`plainLaneCard style ${tierClass(styleDecision?.evidence_tier)}`} onClick={() => setMode("style")} disabled={!styleProfile}>
-          <span>03 · CREATOR PROFILE</span><b>{styleHeadline(style)}</b><small>{indexLabel(styleEvidenceIndex)} · not a legal conclusion</small><em>{styleProfile ? "See creator comparison →" : "Register multiple works first"}</em>
-        </button>
-      </div>
-
-      <details className="technicalDisclosure signalDisclosure">
-        <summary>Show advanced system details</summary>
-        <div className="signalMatrix" aria-label="Technical evidence signals">
-          <div className="signalCard originSignal"><i /><span>Independent AI checks</span><b>{synthetic?.evidence_family_count ?? 0} types</b><small>{synthetic?.classification ?? "unavailable"}</small></div>
-          <div className="signalCard retrievalSignal"><i /><span>SSCD retrieval</span><b>{metric(copy.ai_similarity, 3)}</b><small>{fusion?.signal_states?.retrieval ?? "retrieval signal"}</small></div>
-          <div className="signalCard geometrySignal"><i /><span>Local geometry</span><b>{geometryValidated ? metric(fusion?.geometry_quality, 3) : "rejected"}</b><small>{copy.geometry.inliers ?? 0}/{copy.geometry.tentative_matches ?? 0} verified inliers</small></div>
-          <div className="signalCard structureSignal"><i /><span>Aligned structure</span><b>{metric(aligned?.structure_consensus, 3)}</b><small>{fusion?.signal_states?.aligned_structure ?? aligned?.reason ?? "not measured"}</small></div>
-          <div className="signalCard styleSignal"><i /><span>Style evidence</span><b>{metric(styleEvidenceIndex, 3)}</b><small>{styleDecision?.evidence_tier ?? "unavailable"} · {styleProfile?.creator ?? "no profile"}</small></div>
-          <div className="signalCard proofSignal"><i /><span>Evidence receipt</span><b>{proof?.anchor_status ?? "NONE"}</b><small>{proofScope === "PUBLIC_EVM_ATTESTATION_PACKET_HASH_ONLY" ? "public EAS transaction" : "local transparency receipt"}</small></div>
-        </div>
-      </details>
 
       <div className="analysisWorkbench">
         <aside className="analysisSidebar" aria-label="Analysis navigation">
@@ -1156,10 +1255,12 @@ export default function EvidenceMicroscope({
         <div className="analysisStage">
           <div className="activeModeBanner">
             <span className="activeModeNumber">{activeMode.number}</span>
+            {/* The question. The panel underneath is the answer, so the
+                guidance paragraph that used to sit here has moved into the
+                panel's own summary rather than pre-empting it. */}
             <div>
-              <small>{activeMode.lane} / ACTIVE VIEW</small>
+              <small>{activeMode.lane}</small>
               <h3>{activeMode.label}</h3>
-              <p>{activeMode.guidance}</p>
             </div>
             <div className="modeAction">
               {mode === "copy" ? (
@@ -1181,57 +1282,30 @@ export default function EvidenceMicroscope({
             </div>
           </div>
 
-          {mode === "copy" && (
-            <div className="evidenceGuide copyGuide">
-              <b>How to read this:</b>
-              <span>Coloured envelopes contain verified feature support. Turn on numbered pairs, then hover or click a number to inspect one measured correspondence.</span>
-            </div>
-          )}
-
-          {mode === "origin" && (
-            <div className="evidenceGuide originGuide">
-              <b>Answer first, evidence second:</b>
-              <span>Read the plain conclusion and next step. Open technical evidence only when you need model, calibration, or robustness details.</span>
-            </div>
-          )}
-
-          {mode === "structure" && (
-            <div className="evidenceGuide structureGuide">
-              <b>How to read this:</b>
-              <span>These measurements run only after robust alignment. Structure matters more than colour, so retouching cannot veto otherwise strong preserved evidence.</span>
-            </div>
-          )}
-
-          {mode === "style" && (
-            <div className="evidenceGuide styleGuide">
-              <b>How to read this:</b>
-              <span>Compare the candidate against a multi-work creator profile. Treat the result as review evidence, not a copy location or legal conclusion.</span>
-            </div>
-          )}
-
-          {mode === "stylemap" && diagnostics && (
-            <div className="evidenceGuide styleGuide">
-              <b>How to read this:</b>
-              <span>Click a tile to inspect its closest cross-image palette, tone, edge, and texture partner. Tile positions do not represent correspondence.</span>
-            </div>
-          )}
-
           {mode === "origin" && (
             <div className="originWorkbench">
-              <OriginImageCard candidate={candidate} markerSignal={synthetic?.visible_marker_signal} />
               <OriginSummary
                 synthetic={synthetic}
                 presentation={originPresentation}
-                provenanceStatus={packet?.provenance?.status}
+                candidate={candidate}
                 policyMode={originPolicyMode}
+                state={lanes.origin.state}
               />
             </div>
           )}
 
-          {mode !== "origin" && (!canShowImages ? (
+          {mode !== "origin" && (
+          <div className={`lanePanel lane-${activeLaneKey}`} data-state={activeLane.state} role="status" aria-atomic="true">
+          <LaneVerdict
+            state={activeLane.state}
+            headline={activeLane.headline}
+            summary={isDetailView ? activeMode.guidance : activeLane.answer}
+          />
+
+          {(!canShowImages ? (
         <div className="microscopeEmpty">
-          <b>The comparison images could not be loaded.</b>
-          <span>The candidate is browser-local; registered references load through the authenticated media route.</span>
+          <b>Preparing the visual comparison.</b>
+          <span>Refresh the evidence view to load the candidate and registered reference images.</span>
         </div>
       ) : (
         <div className="evidenceCanvasWrap">
@@ -1241,7 +1315,7 @@ export default function EvidenceMicroscope({
             <text x="30" y="68" className="canvasFilename">{candidate?.name}</text>
             <text x="1470" y="68" textAnchor="end" className="canvasFilename">{reference?.name}</text>
             <text x="750" y="42" textAnchor="middle" className="canvasCenterLabel">
-              {styleMode ? "STYLE / NO GEOMETRY IMPLIED" : `RETRIEVAL #${copy.retrieval_rank ?? "?"} → VERIFICATION #${copy.verification_rank ?? 1}`}
+              {styleMode ? "STYLE / NO GEOMETRY IMPLIED" : `RETRIEVAL #${copy.retrieval_rank ?? "?"} (${copy.retrieval_view ?? "whole_image"}) → VERIFICATION #${copy.verification_rank ?? 1}`}
             </text>
             <rect className="imageFrame" x={queryRect.x} y={queryRect.y} width={queryRect.width} height={queryRect.height} rx="3" />
             <rect className="imageFrame" x={referenceRect.x} y={referenceRect.y} width={referenceRect.width} height={referenceRect.height} rx="3" />
@@ -1279,9 +1353,9 @@ export default function EvidenceMicroscope({
             {mode === "copy" && !geometryValidated && (
               <g>
                 <rect x="650" y="250" width="200" height="86" rx="5" className="overlayUnavailable" />
-                <text x="750" y="280" textAnchor="middle" className="overlayUnavailableTitle">NO RELIABLE MATCHED AREAS</text>
-                <text x="750" y="304" textAnchor="middle" className="overlayUnavailableText">The local alignment was not strong enough.</text>
-                <text x="750" y="322" textAnchor="middle" className="overlayUnavailableText">CreatorProof will not draw guessed points.</text>
+                <text x="750" y="280" textAnchor="middle" className="overlayUnavailableTitle">MATCHED-AREA VIEW READY WHEN EVIDENCE IS FOUND</text>
+                <text x="750" y="304" textAnchor="middle" className="overlayUnavailableText">No matched regions reached the visual-evidence threshold.</text>
+                <text x="750" y="322" textAnchor="middle" className="overlayUnavailableText">Explore the summary or another evidence lane.</text>
               </g>
             )}
 
@@ -1303,38 +1377,8 @@ export default function EvidenceMicroscope({
         </div>
           ))}
 
-          {mode === "overview" && (
-        <div className="modeExplanationGrid">
-          <div><span>01</span><b>Was AI likely used?</b><p>Models, visible AI labels, and signed source information are checked independently from the catalog.</p></div>
-          <div><span>02</span><b>Does it reuse a stored work?</b><p>The closest work is found first, then matching areas must pass strict checks before they are shown.</p></div>
-          <div><span>03</span><b>Does it resemble a creator?</b><p>Different content can be compared with patterns learned from several registered creator works.</p></div>
-          <div><span>04</span><b>Can the record be verified?</b><p>The result receives a tamper-evident receipt. Public blockchain proof is shown only when it is truly active.</p></div>
-        </div>
-          )}
-
-          {mode === "overview" && (
-            <div className={`proofReceiptPanel ${proofScope === "PUBLIC_EVM_ATTESTATION_PACKET_HASH_ONLY" ? "onchain" : "local"}`}>
-              <div>
-                <span>EVIDENCE COMMITMENT</span>
-                <strong>{proof?.anchor_status ?? "NOT REQUESTED"}</strong>
-                <small>{proof?.provider ?? "no proof provider"}</small>
-              </div>
-              <div>
-                <span>COMMITMENT HASH</span>
-                <code>{proof?.packet_hash_sha256 ?? "not available"}</code>
-                <small>{proof?.commitment_scope ?? "no commitment scope"}</small>
-              </div>
-              <div>
-                <span>VERIFICATION SCOPE</span>
-                <strong>{proofScope === "PUBLIC_EVM_ATTESTATION_PACKET_HASH_ONLY" ? "PUBLIC EAS / EVM" : "LOCAL MERKLE LOG"}</strong>
-                <small>{proofScope === "PUBLIC_EVM_ATTESTATION_PACKET_HASH_ONLY" ? "Mined transaction; media stays off-chain" : "Tamper-evident receipt; explicitly not blockchain"}</small>
-                {explorerUrl ? <a href={explorerUrl} target="_blank" rel="noreferrer">Open transaction explorer ↗</a> : null}
-              </div>
-            </div>
-          )}
-
           {mode === "structure" && (
-        <div className="structureMetrics">
+        <div className="laneReading structureMetrics">
           <div><span>Luminance correlation</span><b>{metric(aligned?.luminance_correlation, 4)}</b><p>Brightness-pattern agreement after alignment; largely insensitive to global colour shifts.</p></div>
           <div><span>Gradient correlation</span><b>{metric(aligned?.gradient_correlation, 4)}</b><p>Whether edge-strength patterns occur in corresponding places.</p></div>
           <div><span>Gradient magnitude similarity</span><b>{metric(aligned?.gradient_magnitude_similarity, 4)}</b><p>Direct agreement of local edge energy, useful across compression and retouching.</p></div>
@@ -1345,37 +1389,132 @@ export default function EvidenceMicroscope({
           )}
 
           {mode === "copy" && (
-        <div className="copyInspector">
-          {activeCorrespondence ? (
-            <>
-              <div><span>Selected pair</span><b>{activeCorrespondence.id}</b></div>
-              <div><span>Pattern difference</span><b>{activeCorrespondence.descriptor_distance}</b></div>
-              <div><span>Placement error</span><b>{metric(activeCorrespondence.transfer_error_px, 3)} px</b></div>
-              <p>Meaning: two small patterns look alike and move consistently when the images are aligned. One pair proves nothing; many well-spread pairs must agree.</p>
-            </>
-          ) : activeRegion ? (
-            <>
-              <div><span>Selected support envelope</span><b>{activeRegion.label}</b></div>
-              <div><span>Supporting points</span><b>{activeRegion.supporting_inliers}</b></div>
-              <div><span>Image area</span><b>{percent(activeRegion.query_coverage)}</b></div>
-              <p>Meaning: this box contains several matching points. It is a support area, not the outline of a copied object.</p>
-            </>
-          ) : (
-            <p>Hover a support envelope, or enable numbered feature pairs and inspect a number. The same number marks the measured location on both images; a connector appears only for the pair you inspect.</p>
+        <div className="laneReading">
+          <div className="laneFigures laneFiguresRow">
+            <LaneFigure
+              label="COPY EVIDENCE"
+              value={copyFigure.display}
+              meaning={tierPhrase(fusion?.evidence_tier)}
+              note={copyFigure.withheld ?? copyFigure.qualifier ?? "How strongly the two images agree once aligned."}
+            />
+            <LaneFigure
+              label="VERIFIED POINTS"
+              value={String(copy.geometry.inliers ?? 0)}
+              unit={`/${copy.geometry.tentative_matches ?? 0}`}
+              meaning={geometryValidated ? "Geometry verified" : "Geometry rejected"}
+              note="Candidate point pairs that survived the alignment test."
+            />
+            <LaneFigure
+              label="ALIGNED OVERLAP"
+              value={aligned?.available ? percent(aligned.overlap_ratio) : "—"}
+              meaning={
+                aligned?.available
+                  ? `${aligned.support_region_count ?? copy.visualization.regions.length} support ${(aligned.support_region_count ?? copy.visualization.regions.length) === 1 ? "region" : "regions"}`
+                  : "No alignment to measure"
+              }
+              note="How much of the reference the candidate covers once aligned."
+            />
+          </div>
+          <p className="laneInspector">
+            {activeCorrespondence ? (
+              <>
+                <b>Pair {activeCorrespondence.id}</b>
+                pattern difference {activeCorrespondence.descriptor_distance}, placement error {metric(activeCorrespondence.transfer_error_px, 3)} px.
+                Two small patterns look alike and move together when the images are aligned. One pair proves nothing; many well-spread pairs must agree.
+              </>
+            ) : activeRegion ? (
+              <>
+                <b>{activeRegion.label}</b>
+                {activeRegion.supporting_inliers} supporting points over {percent(activeRegion.query_coverage)} of the image.
+                This is a support area, not the outline of a copied object.
+              </>
+            ) : (
+              <>
+                <b>Inspect the evidence</b>
+                Hover a coloured envelope to see the points inside it, or turn on numbered pairs and hover a number — the same number marks the measured location in both images.
+              </>
+            )}
+          </p>
+        </div>
+          )}
+
+          {mode === "style" && styleProfile && (
+        <div className="laneReading styleReading">
+          <div className="laneFigures">
+            <LaneFigure
+              variant="name"
+              label="CLOSEST PROFILE"
+              value={styleProfile.creator}
+              meaning={`${styleProfile.sample_count} registered ${styleProfile.sample_count === 1 ? "work" : "works"} in the profile`}
+              note="A profile is built from several works, so one shared subject cannot carry it."
+            />
+            <LaneFigure
+              label="RESEMBLANCE"
+              value={profileFigure.display}
+              meaning={tierPhrase(styleDecision?.evidence_tier)}
+              note={profileFigure.withheld ?? profileFigure.qualifier ?? "Weighted across palette, tone, edge direction, and texture."}
+            />
+            <LaneFigure
+              label="INDEPENDENT SUPPORT"
+              value={String(styleDecision?.independent_support_count ?? 0)}
+              meaning={
+                styleDecision?.content_confound_state === "CONTENT_CONFOUND_PRESENT"
+                  ? "May reuse the same content"
+                  : "Different content, so style stands alone"
+              }
+              note="Separate checks that agreed before this lane would speak."
+            />
+          </div>
+          {diagnostics && (
+            <div className="styleVisuals">
+              <figure>
+                <figcaption>WHAT LOOKS VISUALLY SIMILAR</figcaption>
+                <FactorBars factors={diagnostics.factors} />
+              </figure>
+              <figure>
+                <figcaption>PALETTE</figcaption>
+                <div className="palettePair">
+                  <div><small>Candidate</small><Palette colors={diagnostics.query_palette} /></div>
+                  <div><small>Exemplar</small><Palette colors={diagnostics.reference_palette} /></div>
+                </div>
+                <p>Palette is read alongside tone, texture, and visual structure — never on its own.</p>
+              </figure>
+            </div>
           )}
         </div>
           )}
 
-          {mode === "style" && diagnostics && styleProfile && (
-        <div className="styleEvidencePanel">
-          <div className="styleProfileCard">
-            <span>CLOSEST CREATOR PROFILE</span>
-            <h3>{styleProfile.creator}</h3>
-            <div className="styleScoreRow"><b>{percent(styleEvidenceIndex)}</b><small>{styleDecision?.evidence_tier ?? "UNAVAILABLE"} resemblance evidence · not probability</small></div>
-            <p>Compared with {styleProfile.sample_count} registered works from this creator. This is resemblance evidence, not proof that a style was copied.</p>
-            <details className="technicalDisclosure styleTechnicalDisclosure">
+          {mode === "stylemap" && (
+        <div className="laneReading">
+          <p className="laneInspector">
+            {selectedStyleCell ? (
+              <>
+                <b>Tile {selectedStyleCell.row + 1}:{selectedStyleCell.column + 1}</b>
+                closest cross-image partner is tile {selectedStyleCell.best_partner.row + 1}:{selectedStyleCell.best_partner.column + 1} —
+                palette {metric(selectedStyleCell.factors.palette)}, tone {metric(selectedStyleCell.factors.tone)},
+                edge {metric(selectedStyleCell.factors.stroke_orientation)}, texture {metric(selectedStyleCell.factors.texture)}.
+              </>
+            ) : (
+              <>
+                <b>Inspect a tile</b>
+                Hover any tile to see which tile in the other image it most resembles, and which visual qualities drove that pairing.
+              </>
+            )}
+          </p>
+        </div>
+          )}
+
+          <LaneNextStep>{laneAction}</LaneNextStep>
+
+          {mode === "style" && styleProfile && (
+            <details className="technicalDisclosure">
               <summary>Show advanced creator-profile measurements</summary>
-              <dl>
+              <p className="technicalIntro">
+                Machine diagnostics. These are ranking quantities rather than probabilities, and
+                the engine gates its tiers on calibration and independent support rather than on
+                any single value here.
+              </p>
+              <dl className="laneMeasurements">
                 <div><dt>Raw style-model score</dt><dd>{metric(rawStyleScore, 3)}</dd></div>
                 <div><dt>Catalog rank score</dt><dd>{metric(styleProfile.csls_score, 3)}</dd></div>
                 <div><dt>Same-content control</dt><dd>{metric(styleProfile.content_similarity, 3)}</dd></div>
@@ -1384,60 +1523,47 @@ export default function EvidenceMicroscope({
                 <div><dt>Catalog rank</dt><dd>#{styleProfile.readout_rank ?? "?"} · {percent(styleProfile.catalog_percentile)}</dd></div>
                 <div><dt>False-match tail</dt><dd>{metric(styleDecision?.negative_tail_p, 4)}</dd></div>
                 <div><dt>Positive support</dt><dd>{percent(styleDecision?.positive_support_percentile)}</dd></div>
+                <div><dt>Raw evidence index</dt><dd>{metric(styleEvidenceIndex, 3)}</dd></div>
               </dl>
-              <small>{style.provider} · {style.calibration_state}</small>
+              <small>
+                {style?.provider} · {style?.calibration_state}
+                {styleDecision?.reason_codes?.length ? ` · ${styleDecision.reason_codes.join(" · ")}` : ""}
+              </small>
             </details>
-          </div>
-          <div className="diagnosticCard"><span>WHAT LOOKS SIMILAR · NOT PROOF OF COPYING</span><FactorBars factors={diagnostics.factors} /></div>
-          <div className="paletteCard">
-            <span>CANDIDATE PALETTE</span><Palette colors={diagnostics.query_palette} />
-            <span>EXEMPLAR PALETTE</span><Palette colors={diagnostics.reference_palette} />
-            <small>Matching colours alone cannot establish creator-profile resemblance.</small>
-          </div>
-        </div>
           )}
-
-          {mode === "style" && styleDecision && (
-        <div className={`styleDecisionStrip ${tierClass(styleDecision.evidence_tier)}`}>
-          <div><span>WHAT TO DO</span><b>{styleDecision.review_recommended ? "Ask a person to review this" : "No extra style review needed"}</b></div>
-          <div><span>SAME IMAGE OR NEW CONTENT?</span><b>{styleDecision.content_confound_state === "CONTENT_CONFOUND_PRESENT" ? "May reuse the same content" : "Appears to be different content"}</b></div>
-          <div><span>CHECKS THAT AGREED</span><b>{styleDecision.independent_support_count ?? 0} supporting checks</b></div>
-          <details className="styleReasonDetails"><summary>Show machine codes</summary><p>{styleDecision.reason_codes?.join(" · ") || "No style reason codes recorded."}</p></details>
-        </div>
-          )}
-
-          {mode === "stylemap" && selectedStyleCell && (
-        <div className="tileInspector">
-          <b>Tile {selectedStyleCell.row + 1}:{selectedStyleCell.column + 1}</b>
-          <span>best cross-image tile {selectedStyleCell.best_partner.row + 1}:{selectedStyleCell.best_partner.column + 1}</span>
-          <span>diagnostic {metric(selectedStyleCell.score)}</span>
-          <span>palette {metric(selectedStyleCell.factors.palette)}</span>
-          <span>tone {metric(selectedStyleCell.factors.tone)}</span>
-          <span>edge {metric(selectedStyleCell.factors.stroke_orientation)}</span>
-          <span>texture {metric(selectedStyleCell.factors.texture)}</span>
-        </div>
+          </div>
           )}
 
           <div className="evidenceFooter">
             <div>
-              <b>What this result can and cannot say</b>
-              <p>
-                A stored-work match means several checks agreed inside the selected catalog. It does not mean
-                “legally infringing.” AI-use and creator resemblance are separate review signals and cannot turn
-                themselves into a copy claim.
-              </p>
-              {fusion?.reason_codes?.length ? <small>{fusion.reason_codes.join(" · ")}</small> : null}
+              <b>Why the engine ruled this way</b>
+              {fusion?.reason_codes?.length
+                ? <small>{fusion.reason_codes.join(" · ")}</small>
+                : <p>This run recorded no fusion reason codes.</p>}
             </div>
             <div>
               <button type="button" className="aiExplainButton" onClick={explainEvidence} disabled={aiExplainState === "loading"}>
-                {aiExplainState === "loading" ? "Explaining evidence…" : "Explain this case with OpenRouter"}
+                {aiExplainState === "loading" ? "Preparing case explanation…" : "Explain this case in plain English"}
               </button>
-              <small>OpenRouter explains the recorded metrics only. It cannot change retrieval, verification, style ranking, or policy.</small>
             </div>
           </div>
           {aiExplanation && <div className={`aiExplanation ${aiExplainState === "error" ? "error" : ""}`}>{aiExplanation}</div>}
         </div>
       </div>
+
+      {/* Raw signals last. Anyone who wants the underlying numbers has read the
+          views by now; anyone who does not should never have been shown them. */}
+      <details className="technicalDisclosure signalDisclosure">
+        <summary>Show the raw signals behind these views</summary>
+        <div className="signalMatrix" aria-label="Technical evidence signals">
+          <div className="signalCard originSignal"><i /><span>Independent AI checks</span><b>{synthetic?.evidence_family_count ?? 0} types</b><small>{synthetic?.classification ?? "unavailable"}</small></div>
+          <div className="signalCard retrievalSignal"><i /><span>SSCD nomination</span><b>{metric(copy.retrieval_score ?? copy.ai_similarity, 3)}</b><small>{copy.retrieval_view ?? "whole_image"} · whole {metric(copy.ai_similarity, 3)} · regional {metric(copy.ai_regional_similarity, 3)}</small></div>
+          <div className="signalCard geometrySignal"><i /><span>Local geometry</span><b>{geometryValidated ? metric(fusion?.geometry_quality, 3) : "rejected"}</b><small>{copy.geometry.inliers ?? 0}/{copy.geometry.tentative_matches ?? 0} verified inliers</small></div>
+          <div className="signalCard structureSignal"><i /><span>Aligned structure</span><b>{metric(aligned?.structure_consensus, 3)}</b><small>{aligned?.evaluation_mask_policy ?? fusion?.signal_states?.aligned_structure ?? aligned?.reason ?? "not measured"} · {aligned?.support_region_count ?? 0} support regions</small></div>
+          <div className="signalCard styleSignal"><i /><span>Style evidence</span><b>{metric(styleEvidenceIndex, 3)}</b><small>{styleDecision?.evidence_tier ?? "unavailable"} · {styleProfile?.creator ?? "no profile"}</small></div>
+          <div className="signalCard proofSignal"><i /><span>Evidence receipt</span><b>{proof?.anchor_status ?? "NONE"}</b><small>{chainProof ? "public EAS transaction" : "local transparency receipt"}</small></div>
+        </div>
+      </details>
     </section>
   );
 }

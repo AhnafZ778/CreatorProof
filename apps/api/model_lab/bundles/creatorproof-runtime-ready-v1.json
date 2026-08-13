@@ -1,0 +1,186 @@
+{
+  "schema": "creatorproof.model_bundle.v1",
+  "bundle_id": "creatorproof-runtime-ready-evidence-v1",
+  "qualification_state": "RUNTIME_READY",
+  "application_revision": "creatorproof-source-tree-sha256:ba7e6c58983c5a8ca8d3509cc400a57448f7c3a5f1306d1d4991136484a2f248",
+  "runtime_lock_digest": "0c492a92766e77720547d68b22720cfc620585e45861ca3d5676355bd4c92d84",
+  "runtime_environment": {
+    "python_major_minor": "3.12",
+    "observed_python": "3.12.3",
+    "packages": {
+      "torch": "2.13.0",
+      "torchvision": "0.28.0",
+      "clip": "1.0",
+      "huggingface-hub": "1.27.0",
+      "safetensors": "0.8.0",
+      "numpy": "2.5.1",
+      "opencv-python-headless": "4.14.0.94",
+      "pillow": "12.3.0"
+    },
+    "requirement_file_digests": {
+      "requirements-ai.txt": "4cce6d663600a9020b5dd1cb959773b56d4b815eecdaa3b6ea959eabb2f5e9e9",
+      "requirements-synthetic.txt": "3333fd94f308fb9eaa0c01109f2aa31f975f5ed730b13b6e5810901f2d34b064",
+      "requirements-style-experimental.txt": "5028af4aa6e89de433264a281f2d628251c6089df8d0726aa1efd89432bf8fe6"
+    }
+  },
+  "domain_id": "CREATIVE_OPERATIONS_IMAGE_REVIEW_UNCALIBRATED",
+  "components": [
+    {
+      "component_id": "copy-retrieval-sscd",
+      "role": "COPY_CANDIDATE_RETRIEVAL",
+      "provider_id": "sscd-disc-mixup-torchscript",
+      "model_version": "official-disc-mixup-artifact+regional-query-v2",
+      "preprocessing_id": "SSCD_RGB_SHORTEST_SIDE_288_IMAGENET_NORMALIZATION_V1",
+      "qualification_state": "RUNTIME_READY",
+      "terms_state": "REVIEW_REQUIRED",
+      "source_revision": "https://dl.fbaipublicfiles.com/sscd-copy-detection/sscd_disc_mixup.torchscript.pt",
+      "artifact_required": true,
+      "artifact_sha256": "9f26bd4c848cc19b73d2ae92eea6e04886f61a7b764ceb7a13aeee62e6a6db56",
+      "required_for_demo": true,
+      "limitations": [
+        "The selected artifact and deterministic CPU probe passed; retrieval quality remains uncalibrated.",
+        "Similarity is retrieval evidence, not a copying or infringement probability.",
+        "The whole image and five overlapping regions nominate candidates; regional similarity cannot bypass geometric and structural verification."
+      ]
+    },
+    {
+      "component_id": "copy-geometry-opencv",
+      "role": "COPY_GEOMETRIC_VERIFICATION",
+      "provider_id": "mutual-orb-usac-magsac-v2",
+      "model_version": "opencv-runtime-bound",
+      "preprocessing_id": "OPENCV_GRAYSCALE_LOCAL_FEATURES_V2",
+      "qualification_state": "RUNTIME_READY",
+      "terms_state": "RESOLVED",
+      "source_revision": "opencv-python-headless>=4.11,<5",
+      "artifact_required": false,
+      "artifact_sha256": null,
+      "required_for_demo": true,
+      "limitations": [
+        "Prototype geometry thresholds require target-domain hard-negative evaluation."
+      ]
+    },
+    {
+      "component_id": "copy-aligned-structure",
+      "role": "COPY_ALIGNMENT_CORROBORATION",
+      "provider_id": "aligned-structure-ncc-gms-ssim-region-aware-v2",
+      "model_version": "creatorproof-v2",
+      "preprocessing_id": "VALIDATED_HOMOGRAPHY_WARP_PLUS_GEOMETRY_SUPPORT_MASK_V2",
+      "qualification_state": "RUNTIME_READY",
+      "terms_state": "NOT_APPLICABLE",
+      "source_revision": "creatorproof-0.10.0",
+      "artifact_required": false,
+      "artifact_sha256": null,
+      "required_for_demo": true,
+      "limitations": [
+        "Runs only after geometry validates and remains corroborative evidence.",
+        "Support-region envelopes are point-support evidence, not semantic segmentation or copied-area ground truth."
+      ]
+    },
+    {
+      "component_id": "origin-community-forensics",
+      "role": "PASSIVE_AI_ORIGIN_EVIDENCE",
+      "provider_id": "community-forensics-vit-small-384",
+      "model_version": "official-384-checkpoint",
+      "preprocessing_id": "COMMUNITY_FORENSICS_SHORT_SIDE_440_CENTER_CROP_384_V1",
+      "qualification_state": "RUNTIME_READY",
+      "terms_state": "REVIEW_REQUIRED",
+      "source_revision": "OwensLab/commfor-model-384@6076002bf0d9dd37537f965ee2f06f826c333b61",
+      "artifact_required": true,
+      "artifact_sha256": "b89f36275f3bf5e2b040eee36597a8f19db051bff9a473a9cf7b2466284fb387",
+      "required_for_demo": false,
+      "limitations": [
+        "Deployment-domain calibration and separate model/data terms review are required.",
+        "A quiet score cannot establish human origin."
+      ]
+    },
+    {
+      "component_id": "origin-sightengine-genai",
+      "role": "PASSIVE_AI_ORIGIN_EVIDENCE",
+      "provider_id": "sightengine-genai",
+      "model_version": "sightengine-genai-api-vendor-managed",
+      "preprocessing_id": "SIGHTENGINE_GENAI_ORIGINAL_MEDIA_UPLOAD_V1",
+      "qualification_state": "SOURCE_VERIFIED",
+      "terms_state": "REVIEW_REQUIRED",
+      "source_revision": "https://sightengine.com/docs/ai-generated-image-detection",
+      "artifact_required": false,
+      "artifact_sha256": null,
+      "required_for_demo": false,
+      "limitations": [
+        "The service model and deployment can change remotely and are not byte-pinned by CreatorProof.",
+        "The global and generator-category scores are vendor review signals, not CreatorProof-calibrated probabilities, provenance, or pixel-level explanations.",
+        "Authorized-domain evaluation, service terms review, network availability, and credential rotation remain operator responsibilities."
+      ]
+    },
+    {
+      "component_id": "origin-c2pa",
+      "role": "SIGNED_PROVENANCE_INSPECTION",
+      "provider_id": "c2patool-official",
+      "model_version": "operator-installed-binary",
+      "preprocessing_id": "ORIGINAL_CANDIDATE_BYTES_V1",
+      "qualification_state": "SOURCE_VERIFIED",
+      "terms_state": "RESOLVED",
+      "source_revision": "c2pa-rs/c2patool-version-must-be-recorded",
+      "artifact_required": false,
+      "artifact_sha256": null,
+      "required_for_demo": false,
+      "limitations": [
+        "Manifest validity, signature validity, signer trust, and AI assertions are distinct facts.",
+        "Manifest absence is unknown provenance."
+      ]
+    },
+    {
+      "component_id": "origin-visible-marker",
+      "role": "FORGEABLE_VISIBLE_LABEL_OBSERVATION",
+      "provider_id": "tesseract-visible-ai-marker-v1",
+      "model_version": "operator-installed-binary-and-language-data",
+      "preprocessing_id": "VISIBLE_MARKER_MULTIVIEW_GRAYSCALE_V1",
+      "qualification_state": "SOURCE_VERIFIED",
+      "terms_state": "RESOLVED",
+      "source_revision": "tesseract-runtime-version-must-be-recorded",
+      "artifact_required": false,
+      "artifact_sha256": null,
+      "required_for_demo": false,
+      "limitations": [
+        "Visible labels can be forged, removed, or misread and are not authenticated provenance."
+      ]
+    },
+    {
+      "component_id": "style-csd",
+      "role": "CREATOR_PROFILE_RESEMBLANCE",
+      "provider_id": "csd-vit-l-style-descriptor",
+      "model_version": "external-checkpoint",
+      "preprocessing_id": "UPSTREAM_CSD_TRANSFORMS_BRANCH0",
+      "qualification_state": "RUNTIME_READY",
+      "terms_state": "REVIEW_REQUIRED",
+      "source_revision": "learn2phoenix/CSD@3a9df32605b869eceb704897839be80977a9f1ea;tomg-group-umd/CSD-ViT-L@5bc26a6fb0487f3f00a2a7313135103a005b1b67",
+      "artifact_required": true,
+      "artifact_sha256": "40e92fad63a361b8136100cd234c42d401ef9b34ff1748234318929ebcc7e7a1",
+      "required_for_demo": false,
+      "limitations": [
+        "The upstream checkpoint discrepancy and profile-domain performance block promotion.",
+        "Creator-profile resemblance is advisory and is not authorship or copying."
+      ]
+    },
+    {
+      "component_id": "style-diagnostic",
+      "role": "DESCRIPTIVE_STYLE_DIAGNOSTICS",
+      "provider_id": "diagnostic-style-signature-v1",
+      "model_version": "creatorproof-v1",
+      "preprocessing_id": "PALETTE_TONE_EDGE_TEXTURE_TILE_MAP_V1",
+      "qualification_state": "RUNTIME_READY",
+      "terms_state": "NOT_APPLICABLE",
+      "source_revision": "creatorproof-0.10.0",
+      "artifact_required": false,
+      "artifact_sha256": null,
+      "required_for_demo": false,
+      "limitations": [
+        "Diagnostic factors cannot trigger creator attribution or policy enforcement."
+      ]
+    }
+  ],
+  "limitations": [
+    "Required copy components and selected external models pass deterministic local runtime probes; this does not claim deployment-domain accuracy.",
+    "Terms review, lawful held-out evaluation, profile consent, and demo rehearsal block DEMO_READY promotion.",
+    "No lane establishes legal infringement, ownership, authorship, or universal clearance."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "creatorproof.style_profile_manifest.v1",
+  "manifest_id": "creatorproof-demo-style-profiles-v1",
+  "profiles": [],
+  "limitations": [
+    "No creator profile is authorized by default.",
+    "Claimant names on registered works remain prototype grouping labels until a consent-backed profile manifest explicitly enrolls their work IDs."
+  ]
+}

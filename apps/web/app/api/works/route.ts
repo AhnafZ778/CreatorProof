@@ -1,22 +1,15 @@
-import { NextResponse } from "next/server";
+import { proxyJson } from "../../lib/backend";
 
-function backend() {
-  return process.env.CREATORPROOF_API_URL ?? "http://localhost:8000";
-}
-
-function apiKey() {
-  return process.env.CREATORPROOF_DEV_API_KEY ?? "change-me-before-sharing";
-}
+// Origin screening on enrollment can run OCR, C2PA, and the synthetic ensemble
+// before the API writes a row. The proxy has to wait at least as long as that
+// work, or the browser sees a timeout while the catalog is still being decided.
+export const maxDuration = 180;
 
 export async function POST(request: Request) {
   const form = await request.formData();
-  const response = await fetch(`${backend()}/v1/works`, {
+  return proxyJson("/v1/works", {
     method: "POST",
-    headers: { "X-API-Key": apiKey() },
     body: form,
-    cache: "no-store",
+    timeoutMs: 150_000,
   });
-  const body = await response.json();
-  return NextResponse.json(body, { status: response.status });
 }
-

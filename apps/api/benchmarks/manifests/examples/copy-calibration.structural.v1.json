@@ -1,0 +1,31 @@
+{
+  "schema": "creatorproof.corpus_manifest.v1",
+  "manifest_id": "copy-calibration-structural-example-v1",
+  "dataset_id": "structural-example-not-a-demo-corpus",
+  "lane": "COPY",
+  "partition": "CALIBRATION",
+  "domain_id": "STRUCTURAL_TEST_ONLY",
+  "items": [
+    {
+      "asset_id": "calibration-positive-placeholder",
+      "location": "external-authorized/calibration-positive-placeholder.png",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_lineage_id": "lineage-calibration-positive",
+      "rights": {"state": "AUTHORIZED", "reference": "TEST_FIXTURE_ONLY_NOT_DEMO_PERMISSION"},
+      "exposure_state": "CALIBRATION_SEEN",
+      "label": {"same_work": true},
+      "cohorts": ["TRANSFORMED_POSITIVE"]
+    },
+    {
+      "asset_id": "calibration-negative-placeholder",
+      "location": "external-authorized/calibration-negative-placeholder.png",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_lineage_id": "lineage-calibration-negative",
+      "rights": {"state": "AUTHORIZED", "reference": "TEST_FIXTURE_ONLY_NOT_DEMO_PERMISSION"},
+      "exposure_state": "CALIBRATION_SEEN",
+      "label": {"same_work": false},
+      "cohorts": ["HARD_NEGATIVE"]
+    }
+  ],
+  "limitations": ["Structural validator example only; no asset permission or benchmark result is supplied."]
+}

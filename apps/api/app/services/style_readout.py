@@ -135,6 +135,7 @@ def catalog_relative_empirical_support(
     min_profile_works: int,
     min_profiles: int,
     min_negatives: int,
+    selection_count: int | None = None,
 ) -> dict:
     """Estimate catalog-relative empirical support for one creator profile.
 
@@ -172,10 +173,16 @@ def catalog_relative_empirical_support(
             negative = normalize(vectors[item_id])
             negative_scores.append(float(np.mean(target_matrix @ negative)))
 
-    negative_tail_p = (
+    negative_tail_p_raw = (
         (1.0 + sum(score >= query_score for score in negative_scores))
         / (len(negative_scores) + 1.0)
         if negative_scores
+        else None
+    )
+    effective_selection_count = max(1, int(selection_count or len(groups)))
+    negative_tail_p = (
+        min(1.0, negative_tail_p_raw * effective_selection_count)
+        if negative_tail_p_raw is not None
         else None
     )
     positive_percentile = (
@@ -203,13 +210,18 @@ def catalog_relative_empirical_support(
         "target_reference_count": len(target_ids),
         "positive_calibration_count": len(positive_scores),
         "negative_calibration_count": len(negative_scores),
+        "negative_tail_p_raw": negative_tail_p_raw,
         "negative_tail_p": negative_tail_p,
+        "negative_tail_p_selection_adjusted": negative_tail_p,
+        "selection_count": effective_selection_count,
+        "selection_correction": "BONFERRONI_FAMILY_WISE_V1",
         "positive_support_percentile": positive_percentile,
         "reference_separation_auc": auc,
         "positive_score_median": (float(np.median(positive_scores)) if positive_scores else None),
         "negative_score_max": max(negative_scores) if negative_scores else None,
         "reason_codes": reasons,
         "semantics": (
-            "CATALOG_RELATIVE_EMPIRICAL_REFERENCE_COHORT_NOT_CONFORMAL_COVERAGE_OR_PROBABILITY"
+            "CATALOG_RELATIVE_SELECTION_ADJUSTED_EMPIRICAL_REFERENCE_COHORT_"
+            "NOT_CONFORMAL_COVERAGE_OR_PROBABILITY"
         ),
     }

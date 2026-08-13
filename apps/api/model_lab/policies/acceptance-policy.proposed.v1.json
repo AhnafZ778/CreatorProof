@@ -1,0 +1,89 @@
+{
+  "schema": "creatorproof.model_acceptance_policy.v1",
+  "policy_id": "creatorproof-image-review-proposed-acceptance-v1",
+  "domain_id": "CREATIVE_OPERATIONS_IMAGE_REVIEW_UNCALIBRATED",
+  "ratification_state": "DRAFT_NOT_RATIFIED",
+  "ratification_reference": null,
+  "model_bundle": {
+    "bundle_id": "creatorproof-runtime-ready-evidence-v1",
+    "manifest_digest_sha256": "7a330b9b4a3e61d95820dd20c84665fc463e191a0f7d8043b612e0c4f519f15b"
+  },
+  "intended_use": "Human-reviewed image rights and provenance triage in the declared CreatorProof domain.",
+  "prohibited_claims": [
+    "Universal copy detection",
+    "Proof that an image is human-made",
+    "Creator identity, authorship, ownership, training-data use, or infringement from style",
+    "Automatic legal determination"
+  ],
+  "final_test_lock": {
+    "required": true,
+    "rules": [
+      "Ratify this policy before opening final-test predictions.",
+      "Select models and readouts on development data only.",
+      "Select thresholds and calibration on CALIBRATION only.",
+      "Run the exact bundle once on lineage-disjoint TEST data.",
+      "Do not change a failed gate after seeing TEST results."
+    ]
+  },
+  "report_policies": [
+    {
+      "report_schema": "creatorproof.copy_retrieval_benchmark.v2",
+      "lane": "COPY_RETRIEVAL",
+      "gates": [
+        {"gate_id": "retrieval-uncertainty", "path": "uncertainty_gate_passed", "operator": "EQ", "value": true},
+        {"gate_id": "retrieval-r5-lower", "path": "lineage_clustered_confidence_intervals.regional_recall_at_5.lower", "operator": "GTE", "value": 0.85},
+        {"gate_id": "retrieval-top1", "path": "regional_candidate_retrieval.top1_accuracy", "operator": "GTE", "value": 0.75},
+        {"gate_id": "retrieval-negative-far-upper", "path": "lineage_clustered_confidence_intervals.regional_negative_false_alert_rate.upper", "operator": "LTE", "value": 0.05}
+      ]
+    },
+    {
+      "report_schema": "creatorproof.copy_benchmark.v2",
+      "lane": "COPY_VERIFICATION",
+      "gates": [
+        {"gate_id": "copy-uncertainty", "path": "uncertainty_gate_passed", "operator": "EQ", "value": true},
+        {"gate_id": "copy-recall-lower", "path": "lineage_clustered_confidence_intervals.recall.lower", "operator": "GTE", "value": 0.80},
+        {"gate_id": "copy-precision-lower", "path": "lineage_clustered_confidence_intervals.precision.lower", "operator": "GTE", "value": 0.90},
+        {"gate_id": "copy-fpr-upper", "path": "lineage_clustered_confidence_intervals.false_positive_rate.upper", "operator": "LTE", "value": 0.01},
+        {"gate_id": "copy-average-precision", "path": "evidence_index_average_precision", "operator": "GTE", "value": 0.85}
+      ]
+    },
+    {
+      "report_schema": "creatorproof.synthetic_benchmark.v2",
+      "lane": "AI_ORIGIN",
+      "gates": [
+        {"gate_id": "origin-uncertainty", "path": "uncertainty_gate_passed", "operator": "EQ", "value": true},
+        {"gate_id": "origin-auc-lower", "path": "lineage_clustered_confidence_intervals.roc_auc.lower", "operator": "GTE", "value": 0.80},
+        {"gate_id": "origin-average-precision", "path": "average_precision", "operator": "GTE", "value": 0.80},
+        {"gate_id": "origin-human-fpr-upper", "path": "lineage_clustered_confidence_intervals.decided_false_positive_rate.upper", "operator": "LTE", "value": 0.02},
+        {"gate_id": "origin-recall-lower", "path": "lineage_clustered_confidence_intervals.decided_recall.lower", "operator": "GTE", "value": 0.70},
+        {"gate_id": "origin-calibration", "path": "calibration_gate_passed", "operator": "EQ", "value": true}
+      ]
+    },
+    {
+      "report_schema": "creatorproof.style_benchmark.v3",
+      "lane": "CREATOR_PROFILE",
+      "gates": [
+        {"gate_id": "style-learned", "path": "learned", "operator": "EQ", "value": true},
+        {"gate_id": "style-open-set-locked", "path": "operating_configuration.open_set_policy_locked", "operator": "EQ", "value": true},
+        {"gate_id": "style-uncertainty", "path": "uncertainty_gate_passed", "operator": "EQ", "value": true},
+        {"gate_id": "style-top1-lower", "path": "creator_clustered_confidence_intervals.csls_top1_creator_accuracy.lower", "operator": "GTE", "value": 0.70},
+        {"gate_id": "style-r5-lower", "path": "creator_clustered_confidence_intervals.csls_recall_at_5.lower", "operator": "GTE", "value": 0.90},
+        {"gate_id": "style-unknown-rejection-lower", "path": "creator_clustered_confidence_intervals.open_set_unknown_rejection_rate.lower", "operator": "GTE", "value": 0.80},
+        {"gate_id": "style-verification-auc-lower", "path": "creator_clustered_confidence_intervals.csls_verification_roc_auc.lower", "operator": "GTE", "value": 0.75}
+      ]
+    }
+  ],
+  "required_external_gates": [
+    "DEPENDENCY_AND_CHECKPOINT_TERMS_APPROVED",
+    "AUTHORIZED_DATA_AND_CONSENT_AUDIT_APPROVED",
+    "FAILURE_MODE_AND_ERROR_GALLERY_REVIEWED",
+    "LATENCY_AND_DEMO_REHEARSAL_PASSED",
+    "HUMAN_PROMOTION_REVIEW_SIGNED"
+  ],
+  "automatic_promotion_allowed": false,
+  "limitations": [
+    "This is a proposed starting policy and is deliberately not ratified.",
+    "Thresholds must be approved before final-test access; changing them afterward requires a new policy and untouched test set.",
+    "Passing report metrics cannot satisfy legal, terms, consent, operational, or human-review gates."
+  ]
+}

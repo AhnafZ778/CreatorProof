@@ -1,0 +1,146 @@
+/**
+ * CreatorProof design tokens.
+ *
+ * Values are taken from the marketing homepage as measured in the browser, so
+ * the portals and `public/landing.html` can converge on one system rather than
+ * two. Both surfaces load the same self-hosted font files from `/fonts`, which
+ * also removes the last reason for either page to need a CDN at render time.
+ *
+ * Rules that go with these tokens:
+ *   - no font size below --cp-text-xs (12px), and nothing read as a sentence
+ *     below --cp-text-sm (14px);
+ *   - spacing and radius come off the ramps below, never ad hoc;
+ *   - --cp-pass / --cp-review / --cp-block carry decisions, and no other colour
+ *     is allowed to imply one.
+ */
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --cp-font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --cp-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Surface: a black canvas, with depth built from light rather than grey boxes. */
+  --cp-bg: #000000;
+  --cp-surface: rgba(255, 255, 255, 0.045);
+  --cp-surface-raised: rgba(255, 255, 255, 0.07);
+  --cp-line: rgba(255, 255, 255, 0.10);
+  --cp-line-strong: rgba(255, 255, 255, 0.18);
+
+  /* Text: one hue at five levels of presence. */
+  --cp-text: #ffffff;
+  --cp-text-secondary: rgba(255, 255, 255, 0.72);
+  --cp-text-muted: rgba(255, 255, 255, 0.52);
+  --cp-text-faint: rgba(255, 255, 255, 0.38);
+
+  /* Brand accent, inherited from the homepage hero and CTA treatments. */
+  --cp-accent: #3b82f6;
+  --cp-accent-soft: #60a5fa;
+  --cp-accent-indigo: #a5b4fc;
+  --cp-glow: rgba(56, 189, 248, 0.28);
+  --cp-gradient-text: linear-gradient(135deg, #60a5fa 0%, #a5b4fc 50%, #ffffff 100%);
+
+  /* Semantic. These three carry decisions; nothing else may. */
+  --cp-pass: #34d399;
+  --cp-review: #fbbf24;
+  --cp-block: #f87171;
+  --cp-pass-wash: rgba(52, 211, 153, 0.12);
+  --cp-review-wash: rgba(251, 191, 36, 0.12);
+  --cp-block-wash: rgba(248, 113, 113, 0.12);
+
+  /* Evidence lanes. One hue per lane, held constant everywhere the lane appears —
+     the portal cards, the microscope, and the pipeline diagram on the homepage —
+     so a colour is a lane identity and never a verdict. */
+  --cp-lane-copy: #37d4dc;
+  --cp-lane-origin: #f07ab7;
+  --cp-lane-profile: #ffbd59;
+
+  /* Claim states, which are records rather than decisions. Corroborated and
+     disputed borrow the pass/review hues because they genuinely are that reading
+     of the claim; asserted stays brand-blue so the common case reads as neutral. */
+  --cp-claim-asserted: #93c5fd;
+  --cp-claim-corroborated: var(--cp-pass);
+  --cp-claim-disputed: var(--cp-review);
+  --cp-claim-revoked: var(--cp-block);
+
+  /* Portal identity. Each desk carries one accent so you can tell at a glance
+     which one you are at. Neither may be a pass/review/block hue. */
+  --cp-portal-artist: #b9a6ff;
+  --cp-portal-artist-strong: #8b6cf6;
+  --cp-portal-user: #6cd8e6;
+  --cp-portal-user-strong: #22b8cf;
+
+  /* Type scale. */
+  --cp-text-xs: 12px;
+  --cp-text-sm: 14px;
+  --cp-text-base: 16px;
+  --cp-text-lg: 20px;
+  --cp-text-xl: 24px;
+  --cp-display-sm: 32px;
+  --cp-display: 44px;
+  --cp-display-lg: 60px;
+
+  --cp-tracking-display: -0.025em;
+  --cp-tracking-eyebrow: 0.12em;
+  --cp-weight-display: 300;
+  --cp-weight-body: 400;
+  --cp-weight-label: 600;
+
+  /* Space ramp, 4px base. */
+  --cp-1: 4px;
+  --cp-2: 8px;
+  --cp-3: 12px;
+  --cp-4: 16px;
+  --cp-6: 24px;
+  --cp-8: 32px;
+  --cp-12: 48px;
+  --cp-16: 64px;
+  --cp-24: 96px;
+
+  /* Radius ramp. */
+  --cp-r-sm: 8px;
+  --cp-r-md: 12px;
+  --cp-r-lg: 16px;
+  --cp-r-xl: 24px;
+  --cp-r-pill: 999px;
+
+  /* Layout. Matches the homepage container exactly. */
+  --cp-container: 1280px;
+  --cp-nav-height: 56px;
+  --cp-scroll-offset: 88px;
+
+  /* The three breakpoints the redesign uses; kept here so they stay quotable. */
+  --cp-bp-sm: 640px;
+  --cp-bp-md: 900px;
+  --cp-bp-lg: 1280px;
+}
+
+/* Anchor targets must clear the floating navigation bar. */
+[id] {
+  scroll-margin-top: var(--cp-scroll-offset);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

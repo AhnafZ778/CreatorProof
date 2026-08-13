@@ -1,0 +1,23 @@
+{
+  "schema": "creatorproof.synthetic_evidence_family_registry.v1",
+  "registry_id": "creatorproof-origin-family-governance-v1",
+  "entries": [
+    {
+      "provider": "community-forensics-vit-small-384",
+      "evidence_family": "SEMANTIC_GENERATOR_GENERALIZATION",
+      "lineage_id": "community-forensics-official-vit-small-384-training-lineage",
+      "model_version": "official-384-checkpoint",
+      "artifact_sha256": "b89f36275f3bf5e2b040eee36597a8f19db051bff9a473a9cf7b2466284fb387",
+      "preprocessing_identity": "COMMUNITY_FORENSICS_SHORT_SIDE_440_CENTER_CROP_384_V1",
+      "review_state": "APPROVED_FOR_FAMILY_COUNTING",
+      "limitations": [
+        "This approval establishes one declared detector lineage, not deployment accuracy.",
+        "A second detector is independent only after a separate lineage review and registry entry."
+      ]
+    }
+  ],
+  "limitations": [
+    "Family approval does not imply calibration, accuracy, legal suitability, or generator-universal coverage.",
+    "Unregistered external detector family labels remain visible but cannot satisfy independence gates."
+  ]
+}

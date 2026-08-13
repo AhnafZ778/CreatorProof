@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from PIL import Image
 
@@ -52,6 +52,10 @@ class AlignedPerceptualEvidence:
     structural_similarity: float | None = None
     color_similarity: float | None = None
     structure_consensus: float | None = None
+    evaluation_mask_policy: str = "FULL_VALIDATED_ALIGNMENT_V1"
+    support_region_count: int = 0
+    support_overlap_ratio: float = 0.0
+    support_fraction_of_aligned_overlap: float = 1.0
     reason: str | None = None
 
 
@@ -61,6 +65,7 @@ class ProvenanceEvidence:
     provider: str
     reason_codes: list[str]
     manifest_summary: dict | None = None
+    trust_details: dict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,8 +83,15 @@ class SyntheticDetectorScore:
     model_version: str | None = None
     source_scope: str = "UNKNOWN_GENERATORS"
     evidence_family: str = "UNSPECIFIED"
+    evidence_family_verified: bool = False
+    artifact_sha256: str | None = None
+    preprocessing_identity: str | None = None
     score_semantics: str = "RAW_DETECTOR_SCORE_NOT_PROBABILITY"
     warnings: tuple[str, ...] = ()
+    # Provider-supplied, deliberately allowlisted diagnostics. These are useful for
+    # review (for example Sightengine's generator-category scores), but never become
+    # provenance, a legal conclusion, or an explanation invented by CreatorProof.
+    details: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +127,7 @@ class AlignedPerceptualVerifierProtocol(Protocol):
         query: Image.Image,
         reference: Image.Image,
         homography_query_to_reference: tuple[tuple[float, ...], ...] | None,
+        support_regions: tuple[dict, ...] | list[dict] | None = None,
     ) -> AlignedPerceptualEvidence: ...
 
 

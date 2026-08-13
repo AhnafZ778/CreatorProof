@@ -7,7 +7,9 @@ from app.core.config import Settings
 from app.domain.enums import ProvenanceStatus
 from app.providers.contracts import ProvenanceEvidence, SyntheticDetectorScore
 from app.providers.synthetic_detection import (
+    ExternalJsonSyntheticDetector,
     SyntheticCalibrationRegistry,
+    SyntheticEvidenceFamilyRegistry,
     _community_forensics_crop,
 )
 from app.services.synthetic_analysis import analyze_synthetic_origin
@@ -31,19 +33,31 @@ class SequenceDetector:
             calibrated=self.calibrated,
             model_version="test-v1",
             evidence_family=self.evidence_family,
+            evidence_family_verified=True,
         )
 
 
 class Router:
     def __init__(self, detectors):
         self.detectors = detectors
+        self.calibrated_providers = {detector.name for detector in detectors if detector.calibrated}
 
-    def calibrate(self, provider, model_version, score):
-        del provider, model_version
+    def calibrate(
+        self,
+        provider,
+        model_version,
+        score,
+        artifact_sha256=None,
+        preprocessing_identity=None,
+    ):
+        del model_version, artifact_sha256, preprocessing_identity
+        applied = provider in self.calibrated_providers
         return score, {
-            "applied": False,
-            "state": "TEST_UNCALIBRATED",
-            "semantics": "RAW_DETECTOR_SCORE_NOT_PROBABILITY",
+            "applied": applied,
+            "state": "TEST_REGISTRY_CALIBRATED" if applied else "TEST_UNCALIBRATED",
+            "semantics": (
+                "TEST_HELD_OUT_CALIBRATION" if applied else "RAW_DETECTOR_SCORE_NOT_PROBABILITY"
+            ),
         }
 
 
@@ -95,7 +109,7 @@ def test_single_uncalibrated_low_score_abstains_instead_of_implying_human_origin
     assert result["presentation"]["domain_score"] is None
 
 
-def test_transform_instability_forces_abstention():
+def test_transform_instability_keeps_a_strong_original_signal_in_review():
     result = analyze_synthetic_origin(
         image=_image(),
         detector_router=Router([SequenceDetector([0.97, 0.04, 0.91, 0.08, 0.88])]),
@@ -103,9 +117,14 @@ def test_transform_instability_forces_abstention():
         settings=_settings(),
     )
 
-    assert result["classification"] == "INCONCLUSIVE_TRANSFORM_INSTABILITY"
-    assert result["evidence_tier"] == "INCONCLUSIVE"
-    assert "ABSTAINED" in result["reason_codes"]
+    # Delivery transformations now measure robustness but cannot average a strong
+    # original-image response down into a false quiet score. Instability still blocks
+    # any high-confidence claim and stays visibly review-only.
+    assert result["classification"] == "AI_ORIGIN_REVIEW_CANDIDATE"
+    assert result["evidence_tier"] == "REVIEW"
+    assert result["members"][0]["original_score"] == 0.97
+    assert result["members"][0]["aggregate_score"] == 0.97
+    assert "TRANSFORM_SENSITIVE_SIGNAL_RETAINS_REVIEW_ONLY" in result["reason_codes"]
 
 
 def test_trusted_c2pa_ai_assertion_overrides_missing_detector():
@@ -342,12 +361,18 @@ def test_calibration_registry_requires_support_and_model_version_match(tmp_path)
     path.write_text(
         json.dumps(
             {
-                "schema": "creatorproof.synthetic_calibration.v1",
+                "schema": "creatorproof.synthetic_calibration.v2",
                 "providers": {
                     "test-detector": {
                         "slope": 1.2,
                         "intercept": -0.4,
                         "model_version": "test-v1",
+                        "artifact_sha256": "a" * 64,
+                        "preprocessing_identity": "preprocess-v1",
+                        "domain_id": "domain-v1",
+                        "crop_policy_id": "crop-v1",
+                        "corpus_manifest_set_digest_sha256": "b" * 64,
+                        "model_bundle_manifest_digest_sha256": "c" * 64,
                         "sample_count": 200,
                         "positive_count": 100,
                         "negative_count": 100,
@@ -358,12 +383,150 @@ def test_calibration_registry_requires_support_and_model_version_match(tmp_path)
         ),
         encoding="utf-8",
     )
-    registry = SyntheticCalibrationRegistry(path, min_samples=100, min_class_samples=25)
+    registry = SyntheticCalibrationRegistry(
+        path,
+        min_samples=100,
+        min_class_samples=25,
+        expected_domain_id="domain-v1",
+        expected_crop_policy_id="crop-v1",
+        expected_model_bundle_manifest_digest="c" * 64,
+    )
 
-    calibrated, details = registry.apply("test-detector", "test-v1", 0.8)
-    unchanged, mismatch = registry.apply("test-detector", "different-version", 0.8)
+    calibrated, details = registry.apply("test-detector", "test-v1", 0.8, "a" * 64, "preprocess-v1")
+    unchanged, mismatch = registry.apply(
+        "test-detector", "different-version", 0.8, "a" * 64, "preprocess-v1"
+    )
 
     assert details["applied"] is True
     assert calibrated != 0.8
     assert mismatch["state"] == "MODEL_VERSION_MISMATCH"
     assert unchanged == 0.8
+
+
+def test_calibration_registry_rejects_artifact_or_domain_drift(tmp_path):
+    path = tmp_path / "calibration.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "creatorproof.synthetic_calibration.v2",
+                "providers": {
+                    "test-detector": {
+                        "slope": 1.2,
+                        "intercept": -0.4,
+                        "model_version": "test-v1",
+                        "artifact_sha256": "a" * 64,
+                        "preprocessing_identity": "preprocess-v1",
+                        "domain_id": "domain-v1",
+                        "crop_policy_id": "crop-v1",
+                        "dataset_id": "held-out-demo",
+                        "corpus_manifest_set_digest_sha256": "c" * 64,
+                        "model_bundle_manifest_digest_sha256": "d" * 64,
+                        "sample_count": 200,
+                        "positive_count": 100,
+                        "negative_count": 100,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    registry = SyntheticCalibrationRegistry(
+        path,
+        min_samples=100,
+        min_class_samples=25,
+        expected_domain_id="different-domain",
+        expected_crop_policy_id="crop-v1",
+        expected_model_bundle_manifest_digest="d" * 64,
+    )
+
+    score, details = registry.apply(
+        "test-detector",
+        "test-v1",
+        0.8,
+        artifact_sha256="b" * 64,
+        preprocessing_identity="preprocess-v1",
+    )
+
+    assert score == 0.8
+    assert details["applied"] is False
+    assert details["state"] == "CALIBRATION_CONTEXT_MISMATCH"
+    assert details["mismatched_fields"] == ["domain_id", "artifact_sha256"]
+
+
+def test_external_detector_cannot_self_declare_calibration():
+    detector = ExternalJsonSyntheticDetector(
+        {
+            "name": "external-test",
+            "command": "/bin/true {image}",
+            "allow_declared_calibration": True,
+            "evidence_family": "OPERATOR_ASSERTED_FAMILY",
+        }
+    )
+
+    score = detector._parse_score(
+        {
+            "score": 0.91,
+            "calibrated": True,
+            "version": "external-v1",
+            "artifact_sha256": "a" * 64,
+            "preprocessing_identity": "external-preprocess-v1",
+        }
+    )
+
+    assert score.calibrated is False
+    assert "EXTERNAL_PROVIDER_CALIBRATION_DECLARATION_IGNORED" in score.warnings
+
+
+def test_family_registry_rejects_unregistered_and_identity_drift(tmp_path):
+    path = tmp_path / "families.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema": "creatorproof.synthetic_evidence_family_registry.v1",
+                "entries": [
+                    {
+                        "provider": "registered",
+                        "evidence_family": "PIXEL_FORENSICS",
+                        "lineage_id": "lineage-v1",
+                        "model_version": "v1",
+                        "artifact_sha256": "a" * 64,
+                        "preprocessing_identity": "preprocess-v1",
+                        "review_state": "APPROVED_FOR_FAMILY_COUNTING",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    registry = SyntheticEvidenceFamilyRegistry(path)
+    base = SyntheticDetectorScore(
+        provider="registered",
+        score=0.8,
+        calibrated=False,
+        model_version="v1",
+        artifact_sha256="a" * 64,
+        preprocessing_identity="preprocess-v1",
+        evidence_family="OPERATOR_CHOSEN",
+    )
+
+    approved = registry.govern(base, object())
+    drifted = registry.govern(
+        SyntheticDetectorScore(
+            provider="registered",
+            score=0.8,
+            calibrated=False,
+            model_version="v1",
+            artifact_sha256="b" * 64,
+            preprocessing_identity="preprocess-v1",
+        ),
+        object(),
+    )
+    unregistered = registry.govern(
+        SyntheticDetectorScore(provider="unknown", score=0.8, calibrated=False),
+        object(),
+    )
+
+    assert approved.evidence_family == "PIXEL_FORENSICS"
+    assert approved.evidence_family_verified is True
+    assert drifted.evidence_family_verified is False
+    assert unregistered.evidence_family_verified is False

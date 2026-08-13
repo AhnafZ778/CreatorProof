@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 
 CSD_REPO = "https://github.com/learn2phoenix/CSD.git"
@@ -36,6 +38,8 @@ def main() -> int:
     parser.add_argument("--repo-path", type=Path, default=Path("vendor/CSD"))
     parser.add_argument("--model-dir", type=Path, default=Path("models/csd-vit-l"))
     parser.add_argument("--hf-revision", default="main")
+    parser.add_argument("--expected-sha256", default="")
+    parser.add_argument("--metadata-output", type=Path)
     args = parser.parse_args()
 
     if not (args.repo_path / ".git").is_dir():
@@ -44,7 +48,7 @@ def main() -> int:
     commit = _run("git", "rev-parse", "HEAD", cwd=args.repo_path)
 
     try:
-        from huggingface_hub import hf_hub_download
+        from huggingface_hub import HfApi, hf_hub_download
     except ImportError as exc:
         raise SystemExit(
             "Install requirements-style-experimental.txt before fetching the CSD checkpoint."
@@ -59,17 +63,40 @@ def main() -> int:
             local_dir=args.model_dir,
         )
     )
-    print(f"CSD repository commit: {commit}")
-    print(f"CSD checkpoint: {downloaded}")
     checkpoint_sha256 = _sha256(downloaded)
-    print(f"CSD checkpoint SHA-256: {checkpoint_sha256}")
-    print("If PyTorch rejects the legacy checkpoint, explicitly set:")
-    print("  CREATORPROOF_STYLE_ALLOW_LEGACY_PICKLE=true")
-    print(f"  CREATORPROOF_STYLE_CSD_EXPECTED_SHA256={checkpoint_sha256}")
-    print(
-        "WARNING: upstream CSD currently flags a model-weight discrepancy. "
-        "Run check_style_ai and benchmark_style_retrieval before claiming learned style accuracy."
-    )
+    expected_sha256 = args.expected_sha256.strip().lower()
+    if expected_sha256 and checkpoint_sha256 != expected_sha256:
+        raise SystemExit(
+            f"CSD checkpoint digest mismatch: expected {expected_sha256}, got {checkpoint_sha256}"
+        )
+    resolved_hf_revision = HfApi().model_info(HF_REPO, revision=args.hf_revision).sha
+    metadata = {
+        "schema": "creatorproof.fetched_model_artifact.v1",
+        "component_id": "style-csd",
+        "provider": "csd-vit-l-experimental",
+        "source_repository": CSD_REPO,
+        "source_commit": commit,
+        "checkpoint_repository": HF_REPO,
+        "checkpoint_requested_revision": args.hf_revision,
+        "checkpoint_resolved_revision": resolved_hf_revision,
+        "checkpoint": str(downloaded.resolve()),
+        "artifact_sha256": checkpoint_sha256,
+        "expected_sha256": expected_sha256 or None,
+        "digest_verified": bool(expected_sha256),
+        "fetched_at": datetime.now(UTC).isoformat(),
+        "unsafe_legacy_pickle_opt_in_required": True,
+        "promotion_warning": (
+            "Upstream reports a model-weight discrepancy; benchmark this exact checkpoint "
+            "before any learned-style accuracy claim."
+        ),
+    }
+    if args.metadata_output:
+        args.metadata_output.parent.mkdir(parents=True, exist_ok=True)
+        args.metadata_output.write_text(
+            json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    print(json.dumps(metadata, indent=2, sort_keys=True))
     return 0
 
 

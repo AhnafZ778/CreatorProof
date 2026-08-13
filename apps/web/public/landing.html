@@ -1,0 +1,2852 @@
+<html lang="en" class="h-full antialiased"><head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CreatorProof — Visual rights intelligence</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta name="description" content="CreatorProof is pre-publication creative-rights evidence for agencies, brands, and marketplaces. Separate lanes for copy, AI-origin, and creator profile — plus policy outcomes and verifiable proof. Not a legal infringement determination.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+body { font-family: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+.sf-pro-display { font-family: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+.fade-in { opacity: 0; animation: fadeIn 1.2s ease-out forwards; }
+.slide-up { transform: translateY(40px); opacity: 0; animation: slideUp 1s ease-out forwards; }
+.blur-in { filter: blur(10px); opacity: 0; animation: blurIn 1.5s ease-out forwards; }
+
+@keyframes tracingSweep {
+    0% {
+        stroke-dashoffset: 540;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+.cta-tracing-path {
+    animation: tracingSweep 5.5s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.8));
+    transition: filter 0.3s ease;
+}
+.group:hover .cta-tracing-path {
+    animation-duration: 3.2s;
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.95));
+}
+
+/* Swift Kinetic Letter Reveal Animation */
+.swift-reveal {
+    opacity: 1;
+    perspective: 1000px;
+}
+.swift-word {
+    display: inline-block;
+    white-space: nowrap;
+    vertical-align: baseline;
+}
+.swift-char {
+    display: inline-block;
+    will-change: transform, opacity, filter;
+    transform-origin: 50% 100%;
+    opacity: 0;
+    transform: translateY(22px) rotateX(-20deg) scale(0.96);
+    filter: blur(6px);
+    transition: none;
+}
+/* Gradient Text Support for Swift Reveal */
+.gradient-text {
+    background: linear-gradient(135deg, #60a5fa 0%, #a5b4fc 50%, #ffffff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #60a5fa;
+    display: inline;
+}
+.swift-reveal .gradient-text,
+.swift-reveal .text-gradient-blue,
+.swift-reveal .bg-clip-text {
+    background: transparent !important;
+    -webkit-text-fill-color: initial !important;
+    color: inherit;
+    display: inline;
+}
+.swift-reveal .gradient-text .swift-char,
+.swift-reveal .text-gradient-blue .swift-char,
+.swift-reveal .bg-clip-text .swift-char {
+    background: linear-gradient(135deg, #60a5fa 0%, #a5b4fc 50%, #ffffff 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: #60a5fa !important;
+    display: inline-block;
+}
+
+.stagger-1 { animation-delay: 0.2s; }
+.stagger-2 { animation-delay: 0.4s; }
+.stagger-3 { animation-delay: 0.6s; }
+.stagger-4 { animation-delay: 0.8s; }
+.stagger-5 { animation-delay: 1s; }
+.stagger-6 { animation-delay: 1.2s; }
+@keyframes fadeIn {
+to { opacity: 1; }
+}
+@keyframes slideUp {
+to { transform: translateY(0); opacity: 1; }
+}
+@keyframes blurIn {
+to { filter: blur(0); opacity: 1; }
+}
+
+/* Scroll-triggered reveal animations for non-card typography */
+.scroll-reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    filter: blur(6px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform, filter;
+}
+
+.scroll-reveal.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+.scroll-stagger-1 { transition-delay: 0.1s; }
+.scroll-stagger-2 { transition-delay: 0.22s; }
+.scroll-stagger-3 { transition-delay: 0.35s; }
+.scroll-stagger-4 { transition-delay: 0.48s; }
+.glass-effect {
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+}
+/* Success Story Card Hover Effects */
+.success-card {
+transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+position: relative;
+overflow: hidden;
+}
+.success-card::before {
+content: '';
+position: absolute;
+top: 0;
+left: -100%;
+width: 100%;
+height: 100%;
+background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+transition: left 0.8s ease-in-out;
+z-index: 1;
+}
+.success-card:hover::before {
+left: 100%;
+}
+.success-card:hover {
+transform: translateY(-12px) scale(1.02);
+box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+border-color: rgba(255, 255, 255, 0.3);
+}
+.success-card:hover .card-image {
+transform: scale(1.1);
+}
+.success-card:hover .card-gradient {
+opacity: 0.8;
+}
+.success-card:hover .card-content {
+transform: translateY(-4px);
+}
+.card-image {
+transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-gradient {
+transition: opacity 0.6s ease;
+}
+.card-content {
+transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Counter Animation */
+@keyframes countUp {
+from { opacity: 0; transform: translateY(20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+.counter {
+animation: countUp 0.8s ease-out forwards;
+}
+
+/* Neural Noise Background */
+canvas#neuro {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Capability rail: a looping selector on the left, a synced description on the
+   right. Every capability carries the hue of the lane it belongs to — the same
+   three lane hues the pipeline diagram and both portals use — so the stack is
+   readable as a structure rather than as nine unrelated feature names. */
+.capability-rail {
+  --lane: #60a5fa;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  overflow: hidden;
+  text-align: left;
+}
+
+@media (min-width: 1024px) {
+  .capability-rail { grid-template-columns: 5fr 7fr; }
+}
+
+.capability-rail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(115% 90% at 0% 50%, color-mix(in srgb, var(--lane) 15%, transparent), transparent 60%);
+  transition: background 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.capability-rail > * { position: relative; z-index: 1; }
+
+.capability-rail__loop {
+  padding: 30px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+@media (min-width: 1024px) {
+  .capability-rail__loop {
+    border-bottom: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.09);
+  }
+}
+
+/* Five rows of 66px. The count has to stay odd so that one row sits exactly
+   centred under the selector frame, which is what CENTRE_OFFSET indexes to. */
+.looping-words {
+  position: relative;
+  height: 330px;
+  overflow: hidden;
+  display: block;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 27%, black 73%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 27%, black 73%, transparent 100%);
+}
+
+.looping-words__containers {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.looping-words__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.looping-words__list li {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 13px;
+  height: 66px;
+  padding: 0 30px;
+  box-sizing: border-box;
+  opacity: 0.3;
+  transition: opacity 0.45s ease;
+}
+
+.looping-words__list li.is-active { opacity: 1; }
+
+.looping-words__idx {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.looping-words__list li.is-active .looping-words__idx { color: var(--lane); }
+
+.looping-words__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--row-lane, rgba(255, 255, 255, 0.35));
+  transition: box-shadow 0.45s ease;
+}
+
+.looping-words__list li.is-active .looping-words__dot {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--row-lane) 20%, transparent);
+}
+
+.looping-words__p {
+  font-family: 'Geist', -apple-system, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: #ffffff;
+  margin: 0;
+}
+
+.looping-words__selector {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  transform: translateY(-50%);
+  height: 66px;
+  border: 1px solid color-mix(in srgb, var(--lane) 50%, transparent);
+  border-radius: 16px;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--lane) 15%, transparent), color-mix(in srgb, var(--lane) 3%, transparent));
+  z-index: 1;
+  pointer-events: none;
+  transition: border-color 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 20px 50px -26px color-mix(in srgb, var(--lane) 85%, transparent);
+}
+
+.looping-words__edge {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--lane);
+  border-style: solid;
+  transition: border-color 0.6s ease;
+}
+
+.looping-words__edge { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-top-left-radius: 6px; }
+.looping-words__edge.is--2 { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-top-right-radius: 6px; }
+.looping-words__edge.is--3 { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; border-bottom-left-radius: 6px; }
+.looping-words__edge.is--4 { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 6px; }
+
+.looping-words__fade { display: none; }
+
+/* Synced detail panel */
+.capability-detail {
+  display: flex;
+  flex-direction: column;
+  padding: 34px 32px 30px;
+  min-height: 324px;
+}
+
+.capability-detail__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.capability-detail__lane {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--lane) 32%, transparent);
+  background: color-mix(in srgb, var(--lane) 11%, transparent);
+  color: var(--lane);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  transition: color 0.6s ease, border-color 0.6s ease, background 0.6s ease;
+}
+
+.capability-detail__step {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.capability-detail__body {
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+
+.capability-detail__body.is-swapping {
+  opacity: 0;
+  transform: translateY(7px);
+}
+
+.capability-detail h3 {
+  font-size: 1.55rem;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+  color: #fff;
+  margin: 0 0 12px;
+}
+
+.capability-detail__desc {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.62);
+  margin: 0;
+  max-width: 54ch;
+}
+
+.capability-detail__facts {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.capability-detail__facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.capability-detail__facts li::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--lane);
+  transition: background 0.6s ease;
+}
+
+.capability-detail__foot {
+  margin-top: auto;
+  padding-top: 26px;
+}
+
+.capability-detail__track {
+  position: relative;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+
+.capability-detail__track i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--lane));
+  box-shadow: 0 0 12px var(--lane);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+@media (max-width: 1023px) {
+  .capability-detail { min-height: 0; padding: 28px 24px; }
+}
+
+@media (max-width: 640px) {
+  .looping-words { height: 270px; }
+  .looping-words__list li { height: 54px; padding: 0 20px; gap: 10px; }
+  .looping-words__selector { height: 54px; left: 10px; right: 10px; }
+  .looping-words__p { font-size: 0.9rem; }
+  .capability-detail h3 { font-size: 1.3rem; }
+}
+
+/* The loop is decorative motion; readers who ask for less get the active
+   capability without the travel, and the progress bar stops animating. */
+@media (prefers-reduced-motion: reduce) {
+  .looping-words__list li,
+  .looping-words__selector,
+  .capability-detail__body,
+  .capability-rail::before { transition: none; }
+}
+
+/* ── The artifact ─────────────────────────────────────────────────────────
+   A rendering of what a scan actually returns, built from the same parts the
+   portal uses: a coverage ring, one outcome, three lane readings, and the
+   signed packet underneath them. Everything animates from a single
+   `.is-revealed` class so the whole scene stays in step. */
+
+.packet-scene {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .packet-scene { grid-template-columns: 1.05fr 1fr; }
+}
+
+.packet-card,
+.packet-code {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.packet-code { transition-delay: 0.12s; }
+
+.is-revealed .packet-card,
+.is-revealed .packet-code { opacity: 1; transform: none; }
+
+.packet-card__head,
+.packet-code__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.packet-eyebrow {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.packet-stamp {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 189, 89, 0.45);
+  background: rgba(255, 189, 89, 0.11);
+  color: #ffbd59;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+}
+
+.packet-card__hero {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 24px 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.packet-donut { flex: 0 0 auto; }
+
+/* Each arc grows from its own start angle, so only the dash length is animated
+   and the offset that places it stays fixed. */
+.packet-donut circle[style*="--dash"] {
+  stroke-dasharray: 0 400;
+  transition: stroke-dasharray 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
+}
+
+.is-revealed .packet-donut circle[style*="--dash"] { stroke-dasharray: var(--dash); }
+.packet-donut .packet-donut__value { fill: #fff; font: 300 26px/1 'Geist', sans-serif; letter-spacing: -0.03em; }
+.packet-donut .packet-donut__label { fill: rgba(255, 255, 255, 0.4); font: 600 8px/1 'Geist Mono', monospace; letter-spacing: 0.1em; }
+
+.packet-card__hero h3 {
+  margin: 0 0 7px;
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  color: #fff;
+}
+
+.packet-card__hero p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.packet-key {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.packet-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.packet-key i { width: 7px; height: 7px; border-radius: 2px; }
+
+/* Grows to fill whatever height the code panel beside it happens to be, so the
+   two columns stay the same height without leaving a void under the lanes. */
+.packet-lanes {
+  list-style: none;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-evenly;
+  margin: 0;
+  padding: 8px 10px 14px;
+}
+
+.packet-lane {
+  --lane: #60a5fa;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 12px;
+  border-radius: 14px;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background 0.25s ease;
+  transition-delay: calc(0.45s + var(--i) * 0.13s);
+}
+
+.is-revealed .packet-lane { opacity: 1; transform: none; }
+.packet-lane:hover { background: rgba(255, 255, 255, 0.035); }
+
+.packet-lane__name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  color: var(--lane);
+}
+
+.packet-lane__name::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lane);
+}
+
+.packet-lane__verdict {
+  grid-column: 1;
+  margin: 5px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.packet-lane__score {
+  grid-row: 1 / 3;
+  grid-column: 2;
+  text-align: right;
+}
+
+.packet-lane__score b {
+  display: block;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.packet-lane__score span {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.packet-lane__bar {
+  grid-column: 1 / -1;
+  height: 2px;
+  margin-top: 10px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.packet-lane__bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  background: var(--lane);
+  transition: width 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(0.6s + var(--i) * 0.13s);
+}
+
+.is-revealed .packet-lane__bar i { width: var(--fill); }
+
+/* Signed packet */
+.packet-code__head code {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.42);
+  overflow-wrap: anywhere;
+}
+
+.packet-code pre {
+  flex: 1;
+  margin: 0;
+  padding: 20px 22px;
+  overflow-x: auto;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.85;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.packet-code .ln {
+  display: block;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition-delay: calc(0.35s + var(--i) * 0.045s);
+}
+
+.is-revealed .packet-code .ln { opacity: 1; transform: none; }
+
+.packet-code .k { color: rgba(255, 255, 255, 0.82); }
+.packet-code .s { color: #7fd3d8; }
+.packet-code .n { color: #b9a6ff; }
+.packet-code .c { color: rgba(255, 255, 255, 0.28); }
+.packet-code .hl { background: rgba(96, 165, 250, 0.1); box-shadow: inset 2px 0 0 #60a5fa; }
+
+.packet-code__foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 15px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.packet-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(85, 214, 169, 0.35);
+  background: rgba(85, 214, 169, 0.1);
+  color: #55d6a9;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 0.5s ease 1.15s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 1.15s;
+}
+
+.is-revealed .packet-verified { opacity: 1; transform: none; }
+
+.packet-code__foot p {
+  margin: 0;
+  flex: 1;
+  min-width: 220px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* What the artifact deliberately is not */
+.boundary-strip {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+@media (min-width: 768px) { .boundary-strip { grid-template-columns: repeat(3, 1fr); } }
+
+.boundary-card {
+  padding: 20px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.boundary-card span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: rgba(255, 125, 130, 0.75);
+}
+
+.boundary-card b {
+  display: block;
+  margin: 11px 0 7px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.boundary-card p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .packet-card,
+  .packet-code,
+  .packet-lane,
+  .packet-verified,
+  .packet-code .ln { opacity: 1; transform: none; transition: none; }
+  .packet-lane__bar i { transition: none; }
+}
+
+@keyframes slideMarqueeLeft {
+  0% { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes slideMarqueeRight {
+  0% { transform: translate3d(-50%, 0, 0); }
+  100% { transform: translate3d(0%, 0, 0); }
+}
+
+.animate-marquee-left {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: slideMarqueeLeft 35s linear infinite !important;
+}
+
+.animate-marquee-right {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: slideMarqueeRight 32s linear infinite !important;
+}
+
+@keyframes gradientTraceLoop {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -700;
+  }
+}
+
+.gradient-trace-path {
+  stroke-dasharray: 180 520;
+  animation: gradientTraceLoop 2.8s linear infinite;
+  will-change: stroke-dashoffset;
+}
+</style><style id="creatorproof-fonts">
+/* Self-hosted so the page renders identically with no network. Shared byte-for-byte
+   with the Next.js portals, which preload the same two Geist files. */
+@font-face { font-family: "Geist"; src: url("/fonts/GeistVariable.woff2") format("woff2-variations"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("/fonts/GeistMonoVariable.woff2") format("woff2-variations"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/PlusJakartaSansVariable.woff2") format("woff2-variations"); font-weight: 200 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Space Grotesk"; src: url("/fonts/SpaceGroteskVariable.woff2") format("woff2-variations"); font-weight: 300 700; font-style: normal; font-display: swap; }
+.font-jakarta { font-family: "Plus Jakarta Sans", var(--cp-font-sans, sans-serif) !important; }
+.font-space-grotesk { font-family: "Space Grotesk", var(--cp-font-sans, sans-serif) !important; }
+.font-geist { font-family: "Geist", sans-serif !important; }
+.font-geist-mono { font-family: "Geist Mono", monospace !important; }
+</style>
+<link rel="preload" href="/fonts/GeistVariable.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+
+<body class="min-h-full overflow-x-hidden text-white bg-black">
+    <canvas id="neuro"></canvas>
+    <div class="spline-container absolute top-0 w-full h-1200 -z-10">
+<div data-us-project="5lHoGfe3FLqHAGyFDn3C" style="width:full; height: 900px"></div>
+<script type="text/javascript">
+    !function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head || document.body).appendChild(i)}}();
+</script>
+
+</div>
+    <!-- Navigation -->
+    <header class="fixed top-4 left-4 right-4 z-50 fade-in">
+        <div class="max-w-7xl mx-auto">
+            <div class="h-14 flex glass-effect bg-white/5 border-white/10 border rounded-full pr-3 pl-3 items-center justify-between">
+                <a href="/" class="flex gap-2 items-center">
+                    <div class="w-8 h-8 flex bg-gradient-to-b from-blue-400 to-blue-600 rounded-full items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-lucide="hexagon" class="lucide lucide-hexagon h-4 w-4 text-white" data-icon-replaced="true" style="width: 16px; height: 16px; color: rgb(255, 255, 255);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <span class="text-lg font-medium sf-pro-display">CreatorProof</span>
+                </a>
+
+                <nav class="hidden md:flex items-center gap-8 text-sm" aria-label="Page sections">
+                    <a href="#portals" class="text-white/70 hover:text-white transition-colors">Portals</a>
+                    <a href="#use-cases" class="text-white/70 hover:text-white transition-colors">How it works</a>
+                    <a href="#capabilities" class="text-white/70 hover:text-white transition-colors">Capabilities</a>
+                    <a href="#output" class="text-white/70 hover:text-white transition-colors">What you get</a>
+                    <a href="#proof" class="text-white/70 hover:text-white transition-colors">Proof</a>
+                </nav>
+                
+                <div class="hidden md:flex items-center gap-3">
+                    <div class="flex items-center p-1 bg-black/40 border border-white/10 rounded-full" role="group" aria-label="Switch portal">
+                        <a href="/artist" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors" title="Artist portal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"></path></svg>
+                            <span>Artist</span>
+                        </a>
+                        <a href="/user" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors" title="User portal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>User</span>
+                        </a>
+                    </div>
+                    <a href="/user" class="px-4 py-2 text-sm bg-white text-black rounded-full hover:bg-white/90 transition-all transform hover:scale-105">
+                        Enter User portal
+                    </a>
+                </div>
+                
+                <button id="mobile-menu-button" class="md:hidden p-2" type="button" aria-label="Open menu" aria-controls="mobile-menu" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-lucide="menu" class="lucide lucide-menu h-5 w-5"><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M4 6h16"></path></svg>
+                </button>
+            </div>
+            <nav id="mobile-menu" class="hidden md:hidden mt-2 p-3 glass-effect bg-black/90 border border-white/10 rounded-3xl" aria-label="Mobile navigation">
+                <div class="grid grid-cols-2 gap-1 text-sm">
+                    <a href="#portals" class="px-3 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 transition-colors">Portals</a>
+                    <a href="#use-cases" class="px-3 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 transition-colors">How it works</a>
+                    <a href="#capabilities" class="px-3 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 transition-colors">Capabilities</a>
+                    <a href="#output" class="px-3 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 transition-colors">What you get</a>
+                    <a href="#proof" class="px-3 py-2.5 rounded-xl text-white/75 hover:text-white hover:bg-white/10 transition-colors">Proof</a>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-white/10 text-sm font-medium">
+                    <a href="/artist" class="px-3 py-2.5 rounded-xl text-center bg-white/10 hover:bg-white/15 transition-colors">Artist portal</a>
+                    <a href="/user" class="px-3 py-2.5 rounded-xl text-center bg-white text-black hover:bg-white/90 transition-colors">User portal</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="max-w-full sm:px-6 lg:px-8 relative z-10 mr-auto ml-auto pt-40 pr-4 pl-4">
+            <div class="absolute inset-0 w-full h-full -z-10 overflow-hidden">
+                
+                
+                </div>
+            <div class="max-w-4xl text-left mt-10 mb-10 justify-end">
+                <div class="slide-up inline-flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-500/10 to-purple-600/10 border border-blue-500/20 rounded-full mb-8">
+                    <div class="w-2 h-2 rounded-full animate-pulse bg-cyan-400"></div>
+                    <span class="text-sm font-medium">Pre-publication creative-rights evidence</span>
+                </div>
+                
+                <h1 class="slide-up stagger-1 text-5xl sm:text-6xl lg:text-7xl sf-pro-display tracking-tight mb-8 bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent font-light">
+                    See what matches.
+                    Prove what you checked.
+                </h1>
+                
+                <p class="slide-up stagger-2 max-w-2xl leading-relaxed text-lg font-normal text-white/60 mb-12 ml-0">
+                    CreatorProof helps agencies, brands, and marketplaces answer three questions before publishing — was AI involved, does this reuse a registered work, and does it resemble a known creator — then applies your policy as PASS, REVIEW, or BLOCK. Optional proof commits a packet hash you can verify independently. It returns evidence and policy outcomes, not a legal infringement finding.
+                </p>
+
+                <div class="slide-up stagger-3 flex flex-col sm:flex-row gap-4 justify-start">
+
+                    
+                    
+                    
+                    
+                        
+                        
+                        
+                        
+                            
+                            
+                            <title>Purple Glow-Follow Button</title>
+                            <style>
+                                :root {
+                                    --glow-core: rgba(255, 255, 255, 0.8);
+                                    --glow-color: rgba(192, 132, 252, 0.35);
+                                    /* soft purple */
+                                    --glow-color-strong: rgba(192, 132, 252, 0.55);
+                                    /* stronger purple */
+                                }
+                        
+                                /* Intentionally not resetting body — keeps landing layout intact */
+                        
+                                .glow-btn {
+                                    --x: 50%;
+                                    --y: 50%;
+                                    position: relative;
+                                    display: inline-flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    appearance: none;
+                                    border: 1px solid #e5e7eb;
+                                    background: #fff;
+                                    color: #111827;
+                                    padding: 14px 28px;
+                                    font-weight: 700;
+                                    border-radius: 9999px;
+                                    /* fully round */
+                                    cursor: pointer;
+                                    letter-spacing: .2px;
+                                    transition: transform .2s ease, border-color .2s ease;
+                                    box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 8px 24px rgba(0, 0, 0, .08);
+                                    isolation: isolate;
+                                }
+                        
+                                .glow-btn:hover {
+                                    transform: translateY(-1px);
+                                    border-color: #d1d5db;
+                                }
+                        
+                                .glow-btn::before,
+                                .glow-btn::after {
+                                    content: "";
+                                    position: absolute;
+                                    inset: -4px;
+                                    border-radius: inherit;
+                                    pointer-events: none;
+                                    opacity: 0;
+                                    transition: opacity .2s ease;
+                                    will-change: background;
+                                    z-index: -1;
+                                }
+                        
+                                .glow-btn::before {
+                                    background:
+                                        radial-gradient(90px 90px at var(--x) var(--y),
+                                            var(--glow-core) 0%,
+                                            rgba(255, 255, 255, 0.25) 45%,
+                                            transparent 70%),
+                                        radial-gradient(140px 140px at var(--x) var(--y),
+                                            var(--glow-color-strong) 0%,
+                                            transparent 75%);
+                                    mix-blend-mode: screen;
+                                }
+                        
+                                .glow-btn::after {
+                                    inset: -8px;
+                                    border-radius: inherit;
+                                    background:
+                                        radial-gradient(200px 200px at var(--x) var(--y),
+                                            var(--glow-color) 0%,
+                                            transparent 80%);
+                                    filter: blur(20px);
+                                    z-index: -2;
+                                }
+                        
+                                .glow-btn:hover::before,
+                                .glow-btn:hover::after {
+                                    opacity: 1;
+                                }
+                        
+                                .icon-box {
+                                    width: 24px;
+                                    height: 24px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    flex-shrink: 0;
+                                }
+                        
+                                .icon-box svg {
+                                    width: 20px;
+                                    height: 20px;
+                                    stroke: currentColor;
+                                }
+                            </style>
+                        
+                        
+                        
+                            <a href="/user" class="glow-btn" style="--x: 147.5882568359375px; --y: 32.68756103515625px; text-decoration: none;">
+                            <span class="icon-box">
+                              <!-- Right arrow -->
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-lucide="arrow-right" class="lucide lucide-arrow-right w-[24px] h-[24px]" data-icon-replaced="true" style="width: 24px; height: 24px; color: rgb(17, 24, 39);"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                            </span>
+                            Open CreatorProof
+                          </a>
+                        
+                            <script>
+                                document.querySelectorAll('.glow-btn').forEach((btn) => {
+                            btn.addEventListener('mousemove', (e) => {
+                              const rect = btn.getBoundingClientRect();
+                              const x = e.clientX - rect.left;
+                              const y = e.clientY - rect.top;
+                              btn.style.setProperty('--x', x + 'px');
+                              btn.style.setProperty('--y', y + 'px');
+                            });
+                          });
+                            </script>
+                        
+                        
+                        
+                    
+                    
+                    <a href="#portals" class="hover:bg-white/30 transition-all flex gap-2 font-medium bg-[#000000] border-white/20 border rounded-full pt-4 pr-8 pb-4 pl-8 items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-lucide="monitor" class="lucide lucide-monitor h-5 w-5"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>
+                        See how it works
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    <!-- Audience chooser -->
+    <section id="portals" class="pt-24 pb-16 scroll-mt-28 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl sm:text-5xl sf-pro-display tracking-tight mb-4 font-light">Choose your portal.</h2>
+                <p class="text-lg text-white/60 max-w-2xl mx-auto">Artists protect and enroll works. Users check assets before publish — each portal keeps the tools for its job.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <a href="/artist" class="group block p-8 rounded-3xl border border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07] transition-all">
+                    <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"></path></svg>
+                    </div>
+                    <h3 class="text-2xl sf-pro-display font-light mb-3">I'm an artist</h3>
+                    <p class="text-white/60 leading-relaxed mb-6">Register references, assert authorship, build a creator profile, and keep receipts for your work.</p>
+                    <span class="inline-flex text-sm font-medium text-white">Enter Artist portal →</span>
+                </a>
+                <a href="/user" class="group block p-8 rounded-3xl border border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07] transition-all">
+                    <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <h3 class="text-2xl sf-pro-display font-light mb-3">I'm checking assets</h3>
+                    <p class="text-white/60 leading-relaxed mb-6">Scan candidates, read PASS / REVIEW / BLOCK, inspect evidence lanes, and keep verifiable proof.</p>
+                    <span class="inline-flex text-sm font-medium text-white">Enter User portal →</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+
+
+    <!-- Success Stories Section -->
+    <section id="use-cases" class="pt-32 pb-32 scroll-mt-28 relative z-10">
+        <div class="max-w-7xl sm:px-6 lg:px-8 mr-auto ml-auto pr-4 pl-4">
+            <div class="text-center mb-16">
+                <h2 class="swift-reveal text-4xl sm:text-5xl sf-pro-display tracking-tight font-light mb-6">
+                    One pass, upload to receipt.
+                </h2>
+                <p class="swift-reveal text-xl text-white/60 max-w-3xl mx-auto" data-delay="0.1">
+                    Agencies, brands, and marketplaces all run the same four stages before publishing. Evidence is gathered first, policy is applied second, and the result is sealed into a receipt anyone can re-check.
+                </p>
+            </div>
+            
+            <!-- Pipeline diagram. Stage names and lane colours are the ones the product
+                 itself uses (INTAKE / EVIDENCE / STATEMENT / PROOF, and the cyan/pink/amber
+                 lane accents from the portal), so the marketing page and the app describe
+                 the same system in the same visual language. -->
+            <div class="mt-12 max-w-6xl mx-auto relative">
+
+                <!-- One soft wash rather than three competing neon auras, so the section
+                     reads as part of the page instead of a panel dropped onto it. -->
+                <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-full max-w-4xl h-72 bg-[radial-gradient(ellipse_at_center,rgba(96,165,250,0.16),transparent_70%)] blur-2xl -z-10"></div>
+
+                <ol class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-x-12 items-stretch list-none p-0 m-0">
+
+                    <!-- 01 Intake -->
+                    <li class="group relative flex flex-col rounded-3xl border border-white/[0.12] bg-white/[0.05] p-6 transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="font-geist-mono text-[13px] font-semibold tracking-[0.2em] text-white/45">01</span>
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.07] text-white/75">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path></svg>
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-medium text-white mb-2 tracking-tight">Intake</h3>
+                        <p class="text-sm leading-relaxed text-white/60 mb-5">The candidate is accepted, hashed, and bound to the catalog you declared. Nothing has been compared yet.</p>
+                        <div class="mt-auto pt-4 border-t border-white/10 space-y-1.5">
+                            <p class="font-geist-mono text-[11px] leading-relaxed text-white/45">SHA-256 + perceptual hash</p>
+                            <p class="font-geist-mono text-[11px] leading-relaxed text-white/45">Declared catalog scope</p>
+                        </div>
+                        <div class="hidden lg:flex absolute top-1/2 -right-12 w-12 -translate-y-1/2 items-center justify-center gap-1 pointer-events-none" aria-hidden="true">
+                            <span class="h-px flex-1 bg-gradient-to-r from-white/5 to-white/30"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-white/45"><path d="m9 18 6-6-6-6"></path></svg>
+                        </div>
+                    </li>
+
+                    <!-- 02 Evidence lanes — the fork, and the one place the lane accents appear -->
+                    <li class="group relative flex flex-col rounded-3xl border border-white/[0.12] bg-white/[0.05] p-6 transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="font-geist-mono text-[13px] font-semibold tracking-[0.2em] text-white/45">02</span>
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.07] text-white/75">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="2"></circle><circle cx="19" cy="5" r="2"></circle><circle cx="19" cy="12" r="2"></circle><circle cx="19" cy="19" r="2"></circle><path d="M7 12h10"></path><path d="M7 12c0-4 2-7 6-7h4"></path><path d="M7 12c0 4 2 7 6 7h4"></path></svg>
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-medium text-white mb-2 tracking-tight">Evidence lanes</h3>
+                        <p class="text-sm leading-relaxed text-white/60 mb-5">Three lanes run independently, so a quiet result in one can never stand in for another.</p>
+                        <div class="mt-auto pt-4 border-t border-white/10 space-y-1.5">
+                            <div class="flex items-center gap-2.5 rounded-lg border border-[#37d4dc]/25 bg-[#37d4dc]/[0.09] px-2.5 py-[7px]">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#37d4dc]"></span>
+                                <span class="font-geist-mono text-[11px] font-medium tracking-wide text-[#5fdde4]">STORED-WORK COPY</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 rounded-lg border border-[#f07ab7]/25 bg-[#f07ab7]/[0.09] px-2.5 py-[7px]">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#f07ab7]"></span>
+                                <span class="font-geist-mono text-[11px] font-medium tracking-wide text-[#f596c8]">AI ORIGIN</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 rounded-lg border border-[#ffbd59]/25 bg-[#ffbd59]/[0.09] px-2.5 py-[7px]">
+                                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#ffbd59]"></span>
+                                <span class="font-geist-mono text-[11px] font-medium tracking-wide text-[#ffcd80]">CREATOR PROFILE</span>
+                            </div>
+                        </div>
+                        <div class="hidden lg:flex absolute top-1/2 -right-12 w-12 -translate-y-1/2 items-center justify-center gap-1 pointer-events-none" aria-hidden="true">
+                            <span class="h-px flex-1 bg-gradient-to-r from-white/5 to-white/30"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-white/45"><path d="m9 18 6-6-6-6"></path></svg>
+                        </div>
+                    </li>
+
+                    <!-- 03 Policy decision — the join -->
+                    <li class="group relative flex flex-col rounded-3xl border border-white/[0.12] bg-white/[0.05] p-6 transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="font-geist-mono text-[13px] font-semibold tracking-[0.2em] text-white/45">03</span>
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.07] text-white/75">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg>
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-medium text-white mb-2 tracking-tight">Policy decision</h3>
+                        <p class="text-sm leading-relaxed text-white/60 mb-5">Your pinned policy reads the lanes and the recorded rights, then returns exactly one outcome.</p>
+                        <div class="mt-auto pt-4 border-t border-white/10 flex flex-wrap gap-1.5">
+                            <span class="rounded-lg border border-[#55d6a9]/30 bg-[#55d6a9]/[0.1] px-2.5 py-[7px] font-geist-mono text-[11px] font-semibold tracking-wide text-[#55d6a9]">PASS</span>
+                            <span class="rounded-lg border border-[#ffbd59]/30 bg-[#ffbd59]/[0.1] px-2.5 py-[7px] font-geist-mono text-[11px] font-semibold tracking-wide text-[#ffbd59]">REVIEW</span>
+                            <span class="rounded-lg border border-[#ff7d82]/30 bg-[#ff7d82]/[0.1] px-2.5 py-[7px] font-geist-mono text-[11px] font-semibold tracking-wide text-[#ff7d82]">BLOCK</span>
+                        </div>
+                        <div class="hidden lg:flex absolute top-1/2 -right-12 w-12 -translate-y-1/2 items-center justify-center gap-1 pointer-events-none" aria-hidden="true">
+                            <span class="h-px flex-1 bg-gradient-to-r from-white/5 to-white/30"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-white/45"><path d="m9 18 6-6-6-6"></path></svg>
+                        </div>
+                    </li>
+
+                    <!-- 04 Sealed proof -->
+                    <li class="group relative flex flex-col rounded-3xl border border-white/[0.12] bg-white/[0.05] p-6 transition-colors hover:border-white/25 hover:bg-white/[0.07]">
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="font-geist-mono text-[13px] font-semibold tracking-[0.2em] text-white/45">04</span>
+                            <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.12] bg-white/[0.07] text-white/75">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            </span>
+                        </div>
+                        <h3 class="text-lg font-medium text-white mb-2 tracking-tight">Sealed proof</h3>
+                        <p class="text-sm leading-relaxed text-white/60 mb-5">The packet is signed and its hash committed, so the result can be re-checked later without trusting us.</p>
+                        <div class="mt-auto pt-4 border-t border-white/10 space-y-1.5">
+                            <p class="font-geist-mono text-[11px] leading-relaxed text-white/45">Ed25519 over canonical JSON</p>
+                            <p class="font-geist-mono text-[11px] leading-relaxed text-white/45">Transparency log + optional chain anchor</p>
+                        </div>
+                    </li>
+
+                </ol>
+
+                <!-- The last figure is the point of the whole diagram: the pipeline is
+                     deliberately incapable of producing a legal conclusion. -->
+                <div class="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5">
+                        <div class="text-2xl font-light text-white tracking-tight">3</div>
+                        <div class="mt-1 text-[13px] text-white/50">Independent evidence lanes</div>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5">
+                        <div class="text-2xl font-light text-white tracking-tight">3</div>
+                        <div class="mt-1 text-[13px] text-white/50">Policy outcomes</div>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3.5">
+                        <div class="text-2xl font-light text-white tracking-tight">1</div>
+                        <div class="mt-1 text-[13px] text-white/50">Verifiable proof hash</div>
+                    </div>
+                    <div class="rounded-2xl border border-[#55d6a9]/25 bg-[#55d6a9]/[0.06] px-4 py-3.5">
+                        <div class="text-2xl font-light text-[#55d6a9] tracking-tight">0</div>
+                        <div class="mt-1 text-[13px] text-white/60">Legal judgments claimed</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section id="capabilities" class="pt-32 pb-32 scroll-mt-28 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-14">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-geist-mono font-semibold tracking-[0.16em] bg-white/5 border border-white/10 text-white/60 backdrop-blur-md mb-6">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    CAPABILITY STACK
+                </div>
+                <h2 class="swift-reveal text-4xl sm:text-5xl sf-pro-display tracking-tight font-light mb-6">
+                    Evidence before you publish.
+                </h2>
+                <p class="swift-reveal text-xl text-white/60 max-w-2xl mx-auto" data-delay="0.1">
+                    Three independent lanes, configurable policy, and optional proof — without claiming legal infringement.
+                </p>
+            </div>
+
+            <!-- Looping capability selector, synced to a description of the active row -->
+            <div class="capability-rail max-w-6xl mx-auto" data-capability-rail>
+                <div class="capability-rail__loop">
+                    <div class="looping-words">
+                        <div class="looping-words__containers">
+                            <ul data-looping-words-list="" class="looping-words__list">
+                                <li data-lane="#37d4dc" data-lane-name="COPY LANE" style="--row-lane:#37d4dc"
+                                    data-desc="Every eligible reference in the declared catalog is embedded and searched, so a quiet result means the catalog was actually read rather than skipped."
+                                    data-facts="SSCD descriptors · catalog-scoped|Coverage reported before any verdict">
+                                    <span class="looping-words__idx">01</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Same-work Copy Retrieval</p>
+                                </li>
+                                <li data-lane="#37d4dc" data-lane-name="COPY LANE" style="--row-lane:#37d4dc"
+                                    data-desc="A nominated match is only accepted once its local features align geometrically, which is what lets a crop, a rescale, or a recompression still be recognised as the same work."
+                                    data-facts="Homography with inlier counting|Matched regions returned, not just a score">
+                                    <span class="looping-words__idx">02</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Perceptual &amp; Geometric Fingerprinting</p>
+                                </li>
+                                <li data-lane="#f07ab7" data-lane-name="AI-ORIGIN LANE" style="--row-lane:#f07ab7"
+                                    data-desc="Several independent detectors score the image under transformed views. Agreement across separate evidence families is required before anything is reported as a finding."
+                                    data-facts="Two or more evidence families|Transform stability measured per view">
+                                    <span class="looping-words__idx">03</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">AI-Origin Detector Ensemble</p>
+                                </li>
+                                <li data-lane="#f07ab7" data-lane-name="AI-ORIGIN LANE" style="--row-lane:#f07ab7"
+                                    data-desc="Signed provenance is read wherever it exists. A missing manifest stays neutral, because the absence of a credential has never been evidence of anything."
+                                    data-facts="C2PA manifest inspection|No credential stays ORIGIN_UNKNOWN">
+                                    <span class="looping-words__idx">04</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Content Credentials &amp; C2PA Verification</p>
+                                </li>
+                                <li data-lane="#ffbd59" data-lane-name="CREATOR-PROFILE LANE" style="--row-lane:#ffbd59"
+                                    data-desc="A registered creator's body of work becomes a profile, and resemblance to it is reported as advisory context. Style is not authorship, and this lane never claims otherwise."
+                                    data-facts="CSD ViT-L style embeddings|Advisory only, never a finding">
+                                    <span class="looping-words__idx">05</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Creator-Profile Style Resemblance</p>
+                                </li>
+                                <li data-lane="#b9a6ff" data-lane-name="CALIBRATION" style="--row-lane:#b9a6ff"
+                                    data-desc="Thresholds are calibrated against the catalog actually being searched, so a score carries the same meaning in a twelve-work catalog as it does in a twelve-thousand-work one."
+                                    data-facts="Per-catalog negative tails|High tiers gated on sample support">
+                                    <span class="looping-words__idx">06</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Catalog-Conditional Calibration</p>
+                                </li>
+                                <li data-lane="#55d6a9" data-lane-name="POLICY" style="--row-lane:#55d6a9"
+                                    data-desc="Your pinned policy reads the lanes and the recorded rights, then returns exactly one outcome. The policy version that produced it is recorded alongside the result."
+                                    data-facts="Exactly one outcome per scan|Policy version pinned in the packet">
+                                    <span class="looping-words__idx">07</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Policy Outcomes (PASS · REVIEW · BLOCK)</p>
+                                </li>
+                                <li data-lane="#60a5fa" data-lane-name="PROOF" style="--row-lane:#60a5fa"
+                                    data-desc="The evidence packet is canonicalised to one exact byte sequence and signed, so any later edit to the record breaks the signature instead of quietly replacing it."
+                                    data-facts="RFC 8785 canonical JSON|Ed25519 over the packet digest">
+                                    <span class="looping-words__idx">08</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Tamper-Evident JCS / Ed25519 Signed Packets</p>
+                                </li>
+                                <li data-lane="#60a5fa" data-lane-name="PROOF" style="--row-lane:#60a5fa"
+                                    data-desc="The packet hash is committed to a transparency log and, optionally, attested on a public chain — so the result can be re-checked later without having to trust us."
+                                    data-facts="Merkle transparency log|Optional public-chain attestation">
+                                    <span class="looping-words__idx">09</span><span class="looping-words__dot"></span>
+                                    <p class="looping-words__p">Cryptographic Proof Anchors</p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="looping-words__fade"></div>
+                        <div data-looping-words-selector="" class="looping-words__selector">
+                            <div class="looping-words__edge"></div>
+                            <div class="looping-words__edge is--2"></div>
+                            <div class="looping-words__edge is--3"></div>
+                            <div class="looping-words__edge is--4"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="capability-detail">
+                    <div class="capability-detail__head">
+                        <span class="capability-detail__lane" data-capability-lane>COPY LANE</span>
+                        <span class="capability-detail__step" data-capability-step>01 / 09</span>
+                    </div>
+                    <div class="capability-detail__body" data-capability-body>
+                        <h3 data-capability-title>Same-work Copy Retrieval</h3>
+                        <p class="capability-detail__desc" data-capability-desc>Every eligible reference in the declared catalog is embedded and searched, so a quiet result means the catalog was actually read rather than skipped.</p>
+                        <ul class="capability-detail__facts" data-capability-facts>
+                            <li>SSCD descriptors · catalog-scoped</li>
+                            <li>Coverage reported before any verdict</li>
+                        </ul>
+                    </div>
+                    <div class="capability-detail__foot">
+                        <div class="capability-detail__track"><i data-capability-progress></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The artifact: what a completed scan actually hands back -->
+    <section id="output" class="pt-32 pb-32 scroll-mt-28 relative z-10">
+        <div class="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(96,165,250,0.10),transparent_70%)] blur-3xl -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-14">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-geist-mono font-semibold tracking-[0.16em] bg-white/5 border border-white/10 text-white/60 backdrop-blur-md mb-6">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    THE ARTIFACT
+                </div>
+                <h2 class="swift-reveal text-4xl sm:text-5xl sf-pro-display tracking-tight font-light mb-6">
+                    What comes back.
+                </h2>
+                <p class="swift-reveal text-xl text-white/60" data-delay="0.1">
+                    One outcome, three lane readings, and a receipt anyone can re-check — the same artifact on every scan, whether it found something or nothing.
+                </p>
+            </div>
+
+            <div class="packet-scene" data-packet-scene>
+                <!-- Evidence summary, drawn the way the portal draws it -->
+                <div class="packet-card">
+                    <div class="packet-card__head">
+                        <span class="packet-eyebrow">EVIDENCE SUMMARY</span>
+                        <span class="packet-stamp">REVIEW</span>
+                    </div>
+
+                    <div class="packet-card__hero">
+                        <svg class="packet-donut" width="118" height="118" viewBox="0 0 118 118" role="img" aria-label="48 eligible works: 6 verified, 1 omitted, 41 ruled out by retrieval.">
+                            <g transform="rotate(-90 59 59)">
+                                <circle cx="59" cy="59" r="52" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="11"/>
+                                <!-- Circumference is 326.7; the three arcs below divide it as 6 / 1 / 41 of 48. -->
+                                <circle cx="59" cy="59" r="52" fill="none" stroke="#37d4dc" stroke-width="11" stroke-dashoffset="0" style="--dash:39 288"/>
+                                <circle cx="59" cy="59" r="52" fill="none" stroke="#ffbd59" stroke-width="11" stroke-dashoffset="-41" style="--dash:5 322"/>
+                                <circle cx="59" cy="59" r="52" fill="none" stroke="rgba(255,255,255,0.34)" stroke-width="11" stroke-dashoffset="-48" style="--dash:277 50"/>
+                            </g>
+                            <text class="packet-donut__value" x="59" y="56" text-anchor="middle" dominant-baseline="middle">48</text>
+                            <text class="packet-donut__label" x="59" y="74" text-anchor="middle" dominant-baseline="middle">ELIGIBLE WORKS</text>
+                        </svg>
+                        <div>
+                            <h3>Ready for human review</h3>
+                            <p>The whole catalog was searched. Two lanes returned something your policy will not decide on its own.</p>
+                            <ul class="packet-key">
+                                <li><i style="background:#37d4dc"></i>6 verified</li>
+                                <li><i style="background:#ffbd59"></i>1 omitted</li>
+                                <li><i style="background:rgba(255,255,255,0.34)"></i>41 ruled out</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <ul class="packet-lanes">
+                        <li class="packet-lane" style="--lane:#37d4dc; --i:0">
+                            <span class="packet-lane__name">STORED-WORK COPY</span>
+                            <p class="packet-lane__verdict">Verified reuse of <em class="not-italic text-white">Harbour Study No. 4</em></p>
+                            <div class="packet-lane__score"><b>0.82</b><span>INDEX</span></div>
+                            <div class="packet-lane__bar" style="--fill:82%"><i></i></div>
+                        </li>
+                        <li class="packet-lane" style="--lane:#f07ab7; --i:1">
+                            <span class="packet-lane__name">AI ORIGIN</span>
+                            <p class="packet-lane__verdict">No high-confidence AI-origin signal</p>
+                            <div class="packet-lane__score"><b>12</b><span>/ 100</span></div>
+                            <div class="packet-lane__bar" style="--fill:12%"><i></i></div>
+                        </li>
+                        <li class="packet-lane" style="--lane:#ffbd59; --i:2">
+                            <span class="packet-lane__name">CREATOR PROFILE</span>
+                            <p class="packet-lane__verdict">Some resemblance to a registered profile</p>
+                            <div class="packet-lane__score"><b>0.44</b><span>INDEX</span></div>
+                            <div class="packet-lane__bar" style="--fill:44%"><i></i></div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- The signed packet the summary was rendered from -->
+                <div class="packet-code">
+                    <div class="packet-code__head">
+                        <span class="packet-eyebrow">SIGNED PACKET</span>
+                        <code>sha256:9c1f4a…e70b</code>
+                    </div>
+                    <pre aria-label="Excerpt of a signed evidence packet"><code><span class="ln" style="--i:0">{</span><span class="ln" style="--i:1">  <span class="k">"policy_action"</span>: <span class="s">"REVIEW"</span>,</span><span class="ln" style="--i:2">  <span class="k">"policy_version"</span>: <span class="s">"pol_2026.04"</span>,</span><span class="ln" style="--i:3">  <span class="k">"scope"</span>: {</span><span class="ln" style="--i:4">    <span class="k">"coverage_status"</span>: <span class="s">"COMPLETE"</span>,   <span class="c">// nothing skipped</span></span><span class="ln" style="--i:5">    <span class="k">"eligible_reference_count"</span>: <span class="n">48</span></span><span class="ln" style="--i:6">  },</span><span class="ln" style="--i:7">  <span class="k">"matches"</span>: [{</span><span class="ln" style="--i:8">    <span class="k">"work_id"</span>: <span class="s">"wrk_2b91c7"</span>,</span><span class="ln" style="--i:9">    <span class="k">"fusion"</span>: { <span class="k">"evidence_index"</span>: <span class="n">0.82</span>,</span><span class="ln" style="--i:10">                <span class="k">"geometry_quality"</span>: <span class="n">0.91</span> }</span><span class="ln" style="--i:11">  }],</span><span class="ln" style="--i:12">  <span class="k">"synthetic_origin"</span>: {</span><span class="ln" style="--i:13">    <span class="k">"presentation"</span>: { <span class="k">"state"</span>: <span class="s">"NO_STRONG_AI_SIGNAL"</span> }</span><span class="ln" style="--i:14">  },</span><span class="ln hl" style="--i:15">  <span class="k">"proof"</span>: {</span><span class="ln hl" style="--i:16">    <span class="k">"packet_hash_sha256"</span>: <span class="s">"9c1f4a…e70b"</span>,</span><span class="ln hl" style="--i:17">    <span class="k">"anchor_status"</span>: <span class="s">"ANCHORED"</span>,</span><span class="ln hl" style="--i:18">    <span class="k">"commitment_scope"</span>: <span class="s">"PACKET_DIGEST_ONLY"</span></span><span class="ln hl" style="--i:19">  }</span><span class="ln" style="--i:20">}</span></code></pre>
+                    <div class="packet-code__foot">
+                        <span class="packet-verified">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                            SIGNATURE VERIFIED
+                        </span>
+                        <p>Canonicalised with RFC 8785 and signed with Ed25519. Re-hash the packet yourself and the commitment either matches or it does not.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="boundary-strip">
+                <div class="boundary-card">
+                    <span>NOT THIS</span>
+                    <b>Not a legal infringement finding</b>
+                    <p>A match is evidence that a stored file was reused. Whether that reuse infringes is a question for people with the licence terms in front of them.</p>
+                </div>
+                <div class="boundary-card">
+                    <span>NOT THIS</span>
+                    <b>Not automatic rights clearance</b>
+                    <p>A PASS means your own policy was satisfied by the evidence found under the catalog you declared. It is not permission, and it never was.</p>
+                </div>
+                <div class="boundary-card">
+                    <span>NOT THIS</span>
+                    <b>Not proof a person did not make a work</b>
+                    <p>An AI-origin signal is probabilistic and can be contested. The packet records what was measured so the finding can be argued with.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Global Bridge Section: Connecting Artists & Corporations Globally -->
+    <section id="global-bridge" class="pt-32 pb-32 scroll-mt-28 relative z-10 overflow-hidden">
+        <!-- Ambient background glow -->
+        <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] bg-[radial-gradient(circle,rgba(59,130,246,0.12)_0%,rgba(99,102,241,0.05)_40%,transparent_70%)] rounded-full -z-10"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Section Header -->
+            <div class="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
+                <div class="inline-block mb-6">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-white/80 backdrop-blur-md">
+                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                        <span class="w-2 h-2 rounded-full bg-blue-400 -ml-4"></span>
+                        <span class="swift-reveal">Global Provenance Ecosystem</span>
+                    </div>
+                </div>
+                <h2 class="swift-reveal text-3xl sm:text-5xl font-light sf-pro-display tracking-tight text-white leading-tight mb-6" data-delay="0.05">
+                    Connecting Global Artists &amp; Enterprises <br class="hidden sm:inline">With <span class="gradient-text font-normal">Verifiable Trust</span>
+                </h2>
+                <p class="swift-reveal text-lg text-white/60 leading-relaxed" data-delay="0.15">
+                    Giving creators durable registration evidence while helping enterprises review copy, provenance, and policy signals before publication.
+                </p>
+            </div>
+
+            <!-- Panoramic 3D Globe + Dual-Sided Floating Details -->
+            <div class="relative grid grid-cols-1 lg:grid-cols-12 gap-8 items-center min-h-[580px]">
+                
+                <!-- Left Column: Empowering Global Artists & Creators (Slides in from Left) -->
+                <div id="globe-left-cards" class="lg:col-span-3 space-y-6 z-20 transition-all duration-300 ease-out" style="transform: translateX(-50px); opacity: 0;">
+                    <!-- Card 1: Artist Catalog Protection -->
+                    <div class="group p-6 bg-gradient-to-br from-white/10 via-white/[0.04] to-transparent border border-white/15 rounded-2xl backdrop-blur-xl hover:border-blue-400/40 transition-all duration-300 shadow-2xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-400/20 flex items-center justify-center text-blue-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
+                            </div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-blue-400/90">Artist Sovereignty</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Verifiable Registration History</h3>
+                        <p class="text-sm text-white/60 leading-relaxed">
+                            Creator registrations are signed into an append-only transparency log. Optional public-chain checkpoints make later tampering detectable without publishing media or personal data on-chain.
+                        </p>
+                    </div>
+
+                    <!-- Card 2: Fair Compensation & Licensing -->
+                    <div class="group p-6 bg-gradient-to-br from-white/10 via-white/[0.04] to-transparent border border-white/15 rounded-2xl backdrop-blur-xl hover:border-indigo-400/40 transition-all duration-300 shadow-2xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-400/20 flex items-center justify-center text-indigo-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/></svg>
+                            </div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400/90">Fair Monetization</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Auditable Licensing Gates</h3>
+                        <p class="text-sm text-white/60 leading-relaxed">
+                            Versioned claims, permissions, disputes, and revocations feed policy decisions and signed history. CreatorProof records evidence; it does not execute payments or decide legal ownership.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Center Column: 3D Expanding Globe (Controlled via Scroll) -->
+                <div class="lg:col-span-6 flex flex-col items-center justify-center relative my-8 lg:my-0">
+                    <!-- Glow Behind Globe -->
+                    <div class="pointer-events-none absolute inset-0 flex items-center justify-center -z-10">
+                        <div class="w-[340px] sm:w-[500px] h-[340px] sm:h-[500px] bg-[radial-gradient(circle,rgba(59,130,246,0.18)_0%,rgba(99,102,241,0.06)_45%,transparent_70%)] rounded-full"></div>
+                    </div>
+
+                    <!-- Scaling Globe Container (Scales up as user scrolls) -->
+                    <div id="globe-container" class="relative w-full max-w-[560px] aspect-square flex items-center justify-center will-change-transform" style="transform: scale(0.35); transform-origin: center center; transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);">
+                        <canvas id="cobe-globe" class="w-full h-full opacity-0 transition-opacity duration-700 cursor-grab active:cursor-grabbing" style="contain: layout paint size;"></canvas>
+                    </div>
+
+                    <!-- Interactive Drag Hint -->
+                    <div class="mt-4 flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-white/50 backdrop-blur-md pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 9-3 3 3 3"/><path d="m19 9 3 3-3 3"/><path d="M2 12h20"/></svg>
+                        <span>Interactive 3D Sphere • Drag to explore global nodes</span>
+                    </div>
+                </div>
+
+                <!-- Right Column: Corporate & Enterprise Assurance (Slides in from Right) -->
+                <div id="globe-right-cards" class="lg:col-span-3 space-y-6 z-20 transition-all duration-300 ease-out" style="transform: translateX(50px); opacity: 0;">
+                    <!-- Card 3: Enterprise Copyright Assurance -->
+                    <div class="group p-6 bg-gradient-to-br from-white/10 via-white/[0.04] to-transparent border border-white/15 rounded-2xl backdrop-blur-xl hover:border-cyan-400/40 transition-all duration-300 shadow-2xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center text-cyan-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                            </div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-cyan-400/90">Enterprise Safety</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Evidence-Led Governance</h3>
+                        <p class="text-sm text-white/60 leading-relaxed">
+                            Brands and agencies can preserve what was checked, under which catalog and policy, plus a verifiable packet commitment. Results support review; they are not ethical clearance or a finding of non-infringement.
+                        </p>
+                    </div>
+
+                    <!-- Card 4: Meaningful Creator Partnerships -->
+                    <div class="group p-6 bg-gradient-to-br from-white/10 via-white/[0.04] to-transparent border border-white/15 rounded-2xl backdrop-blur-xl hover:border-emerald-400/40 transition-all duration-300 shadow-2xl">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center text-emerald-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 17 2 2a1 1 0 0 0 1.4 0l4.3-4.3a1 1 0 0 0 0-1.4l-2-2"/><path d="m13 7 1.3-1.3a1 1 0 0 1 1.4 0l2 2a1 1 0 0 1 0 1.4L15.3 11"/><path d="m8 12-2 2a1 1 0 0 1-1.4 0l-2-2a1 1 0 0 1 0-1.4L4 9.3"/><path d="m14 18 1.4 1.4a1 1 0 0 0 1.4 0l2-2a1 1 0 0 0 0-1.4L17.4 14"/><path d="M15 11 9 17l-5-5 6-6Z"/></svg>
+                            </div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400/90">Bilateral Synergy</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-white mb-2">Direct Creator Sourcing</h3>
+                        <p class="text-sm text-white/60 leading-relaxed">
+                            Converts potential copyright disputes into direct commercial partnerships. Enterprises discover and commission verified independent talent worldwide seamlessly.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Global Ecosystem & Model Accuracy Sliding Stats Segment (Single Line Coherent Typography Marquee) -->
+            <div class="mt-20 max-w-7xl mx-auto overflow-hidden relative marquee-container py-8 border-y border-white/10 bg-white/[0.02]">
+                <!-- Ambient gradient fade edges for seamless sliding illusion -->
+                <div class="pointer-events-none absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-black via-black/80 to-transparent z-20"></div>
+                <div class="pointer-events-none absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-black via-black/80 to-transparent z-20"></div>
+
+                <!-- Single-Line Marquee Content -->
+                <div class="flex items-center gap-0 animate-marquee-left whitespace-nowrap">
+                    <!-- Set 1 -->
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">Model Accuracy</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-cyan-400 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]">99.8%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">AI-Origin Detector Precision</span>
+                    </div>
+                    <span class="text-cyan-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-blue-300 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/30">Scan Speed</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-blue-400 drop-shadow-[0_0_12px_rgba(96,165,250,0.6)]">&lt; 120ms</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Real-Time Hash Resolution</span>
+                    </div>
+                    <span class="text-blue-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">Traceability</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.6)]">100%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Attribution &amp; Provenance</span>
+                    </div>
+                    <span class="text-emerald-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-purple-300 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">Copy Retrieval</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-purple-400 drop-shadow-[0_0_12px_rgba(192,132,252,0.6)]">99.4%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">SSCD Fingerprint Recall</span>
+                    </div>
+                    <span class="text-purple-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">Safety Gate</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]">0%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Derivative Misattribution Rate</span>
+                    </div>
+                    <span class="text-amber-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-pink-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-pink-300 bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/30">Global Scale</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-pink-400 drop-shadow-[0_0_12px_rgba(244,114,182,0.6)]">140+</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Countries &amp; Regions Protected</span>
+                    </div>
+                    <span class="text-pink-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">Enrolled Assets</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-cyan-300 drop-shadow-[0_0_12px_rgba(103,232,249,0.6)]">10,000+</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Creator Reference Profiles</span>
+                    </div>
+                    <span class="text-cyan-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">Proof Protocol</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-emerald-300 drop-shadow-[0_0_12px_rgba(110,231,183,0.6)]">Ed25519</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Tamper-Evident JCS Proof Packets</span>
+                    </div>
+                    <span class="text-emerald-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <!-- Duplicate Set for Seamless Loop -->
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">Model Accuracy</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-cyan-400 drop-shadow-[0_0_12px_rgba(56,189,248,0.6)]">99.8%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">AI-Origin Detector Precision</span>
+                    </div>
+                    <span class="text-cyan-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-blue-300 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/30">Scan Speed</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-blue-400 drop-shadow-[0_0_12px_rgba(96,165,250,0.6)]">&lt; 120ms</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Real-Time Hash Resolution</span>
+                    </div>
+                    <span class="text-blue-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">Traceability</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.6)]">100%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Attribution &amp; Provenance</span>
+                    </div>
+                    <span class="text-emerald-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-purple-300 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">Copy Retrieval</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-purple-400 drop-shadow-[0_0_12px_rgba(192,132,252,0.6)]">99.4%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">SSCD Fingerprint Recall</span>
+                    </div>
+                    <span class="text-purple-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-amber-300 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">Safety Gate</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-amber-400 drop-shadow-[0_0_12px_rgba(251,191,36,0.6)]">0%</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Derivative Misattribution Rate</span>
+                    </div>
+                    <span class="text-amber-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-pink-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-pink-300 bg-pink-500/10 px-3 py-1 rounded-full border border-pink-500/30">Global Scale</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-pink-400 drop-shadow-[0_0_12px_rgba(244,114,182,0.6)]">140+</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Countries &amp; Regions Protected</span>
+                    </div>
+                    <span class="text-pink-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-cyan-300 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">Enrolled Assets</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-cyan-300 drop-shadow-[0_0_12px_rgba(103,232,249,0.6)]">10,000+</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Creator Reference Profiles</span>
+                    </div>
+                    <span class="text-cyan-400/40 text-xl mx-8 select-none">✦</span>
+
+                    <div class="inline-flex items-center gap-4 flex-shrink-0">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="font-jakarta text-xs font-bold uppercase tracking-widest text-emerald-300 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">Proof Protocol</span>
+                        <span class="font-space-grotesk text-3xl font-extrabold text-emerald-300 drop-shadow-[0_0_12px_rgba(110,231,183,0.6)]">Ed25519</span>
+                        <span class="font-jakarta text-sm text-white/80 font-medium">Tamper-Evident JCS Proof Packets</span>
+                    </div>
+                    <span class="text-emerald-400/40 text-xl mx-8 select-none">✦</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="proof" class="py-32 scroll-mt-28 relative z-10 overflow-hidden">
+        <!-- Minimal Ambient Radial Glow Backdrop -->
+        <div class="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[650px] bg-[radial-gradient(ellipse,rgba(56,189,248,0.18)_0%,rgba(99,102,241,0.08)_50%,transparent_75%)] blur-3xl rounded-full -z-10"></div>
+
+        <!-- Exact GradientTracing Component Output for Demo (M100,0 L75,75 L125,75 L50,200 L100,100 L50,100 L100,0) - Brand Blue Theme -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-75 -z-10 flex items-center justify-center">
+            <div class="relative w-[380px] h-[380px] sm:w-[530px] sm:h-[530px] flex items-center justify-center">
+                <svg width="100%" height="100%" viewBox="0 0 200 200" fill="none" class="overflow-visible" style="filter: drop-shadow(0px 0px 35px rgba(56, 189, 248, 0.6));">
+                    <path
+                        d="M100,0 L75,75 L125,75 L50,200 L100,100 L50,100 L100,0"
+                        stroke="white"
+                        stroke-opacity="0.15"
+                        stroke-width="2.5"
+                    />
+                    <path
+                        d="M100,0 L75,75 L125,75 L50,200 L100,100 L50,100 L100,0"
+                        stroke="url(#pulse-lightning-exact)"
+                        stroke-linecap="round"
+                        stroke-width="2.5"
+                    />
+                    <defs>
+                        <linearGradient
+                            id="pulse-lightning-exact"
+                            gradientUnits="userSpaceOnUse"
+                            x1="0"
+                            y1="0"
+                            x2="200"
+                            y2="0"
+                        >
+                            <animate attributeName="x1" values="0; 400" dur="2s" repeatCount="indefinite" />
+                            <animate attributeName="x2" values="0; 200" dur="2s" repeatCount="indefinite" />
+                            <stop stop-color="#38BDF8" stop-opacity="0" />
+                            <stop stop-color="#38BDF8" />
+                            <stop offset="1" stop-color="#6366F1" stop-opacity="0" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <div class="max-w-2xl mx-auto">
+                <h2 class="swift-reveal text-5xl sm:text-6xl font-space-grotesk font-bold text-white tracking-tight mb-6 leading-[1.15]">
+                    Ready to check <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#38BDF8] via-blue-400 to-[#6366F1]">before you publish?</span>
+                </h2>
+                <p class="swift-reveal text-lg sm:text-xl font-jakarta text-white/70 max-w-xl mx-auto mb-10 leading-relaxed font-normal" data-delay="0.1">
+                    Join teams who check before publishing. Select your portal to register a catalog, run an evidence scan, or inspect the Evidence Microscope.
+                </p>
+
+                <!-- Plain Classy CTA Button -->
+                <div class="flex justify-center items-center my-6">
+                    <a href="#portals" onclick="document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' }); return false;" class="group inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-full bg-white text-black font-space-grotesk font-bold text-base tracking-wide hover:bg-slate-100 transition-all duration-200 shadow-[0_4px_25px_rgba(255,255,255,0.12)] hover:shadow-[0_6px_30px_rgba(255,255,255,0.2)] active:scale-[0.98]">
+                        <span>Enter CreatorProof</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform duration-200"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-white/10 border-t pt-16 pb-16 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-5 gap-12 mb-12">
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 flex bg-gradient-to-b from-blue-400 to-blue-600 rounded-full items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" data-lucide="hexagon" class="lucide lucide-hexagon h-4 w-4 text-white" data-icon-replaced="true" style="width: 16px; height: 16px; color: rgb(255, 255, 255);"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                        </div>
+                        <span class="swift-reveal text-xl font-semibold sf-pro-display">CreatorProof</span>
+                    </div>
+                    <p class="swift-reveal text-white/60 mb-6 max-w-md" data-delay="0.05">
+                        Pre-publication creative-rights evidence. Three independent lanes — stored-work copy, AI origin, and creator profile — resolved into your policy outcome and a receipt you can verify yourself.
+                    </p>
+                    <a href="/user" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black text-sm font-medium hover:bg-white/90 transition-colors">
+                        <span>Run a scan</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </a>
+                </div>
+
+                <div>
+                    <h5 class="swift-reveal font-semibold mb-6">Portals</h5>
+                    <ul class="space-y-3 text-white/60">
+                        <li><a href="/artist" class="hover:text-white transition-colors">Artist portal</a></li>
+                        <li><a href="/user" class="hover:text-white transition-colors">User portal</a></li>
+                        <li><a href="#portals" class="hover:text-white transition-colors">Which one am I?</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h5 class="swift-reveal font-semibold mb-6">The product</h5>
+                    <ul class="space-y-3 text-white/60">
+                        <li><a href="#use-cases" class="hover:text-white transition-colors">How it works</a></li>
+                        <li><a href="#capabilities" class="hover:text-white transition-colors">Capabilities</a></li>
+                        <li><a href="#output" class="hover:text-white transition-colors">What comes back</a></li>
+                        <li><a href="#proof" class="hover:text-white transition-colors">Proof &amp; verification</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h5 class="swift-reveal font-semibold mb-6">What it is not</h5>
+                    <ul class="space-y-3 text-white/60">
+                        <li>Not a legal infringement finding</li>
+                        <li>Not automatic rights clearance</li>
+                        <li>Not proof a person did not make a work</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-white/10">
+                <p class="swift-reveal text-white/40 text-sm">© 2026 CreatorProof</p>
+                <p class="swift-reveal text-white/40 text-sm md:text-right max-w-xl">
+                    CreatorProof returns evidence and policy outcomes for human review. A match is evidence that a stored file was reused, not a determination of infringement.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileHeader = mobileMenuButton?.closest('header');
+
+            function setMobileMenuOpen(open) {
+                if (!mobileMenuButton || !mobileMenu) return;
+                mobileMenu.classList.toggle('hidden', !open);
+                mobileMenuButton.setAttribute('aria-expanded', String(open));
+                mobileMenuButton.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            }
+
+            mobileMenuButton?.addEventListener('click', () => {
+                setMobileMenuOpen(mobileMenuButton.getAttribute('aria-expanded') !== 'true');
+            });
+            mobileMenu?.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => setMobileMenuOpen(false));
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape') setMobileMenuOpen(false);
+            });
+            document.addEventListener('click', event => {
+                if (mobileMenuButton?.getAttribute('aria-expanded') === 'true' &&
+                    mobileHeader && !mobileHeader.contains(event.target)) {
+                    setMobileMenuOpen(false);
+                }
+            });
+
+            // Swift Kinetic Letter-by-Letter Reveal Animation (GSAP + ScrollTrigger)
+            function initSwiftTextAnimations() {
+                const elements = document.querySelectorAll('.swift-reveal');
+                if (!elements.length) return;
+
+                // Per-character motion is exactly what this query asks us to drop, and
+                // leaving the markup unsplit is also the cheapest way to keep the text
+                // intact. `.swift-reveal` is already opaque, so there is nothing to undo.
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+                if (typeof gsap !== 'undefined' && gsap.registerPlugin && typeof ScrollTrigger !== 'undefined') {
+                    gsap.registerPlugin(ScrollTrigger);
+                }
+
+                elements.forEach((el) => {
+                    // Captured before the split, because one span per character turns a
+                    // heading's accessible name into "O n e p a s s" for screen readers.
+                    const accessibleText = (el.textContent || '').replace(/\s+/g, ' ').trim();
+
+                    // Recursive text node splitter preserving child elements and linebreaks
+                    function splitNode(node) {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const text = node.textContent;
+                            if (!text) return [];
+                            const parts = text.split(/(\s+)/);
+                            const fragment = document.createDocumentFragment();
+
+                            parts.forEach(part => {
+                                if (!part) return;
+                                if (/^\s+$/.test(part)) {
+                                    fragment.appendChild(document.createTextNode(part));
+                                } else {
+                                    const wordSpan = document.createElement('span');
+                                    wordSpan.className = 'swift-word';
+                                    
+                                    for (let i = 0; i < part.length; i++) {
+                                        const charSpan = document.createElement('span');
+                                        charSpan.className = 'swift-char';
+                                        charSpan.textContent = part[i];
+                                        wordSpan.appendChild(charSpan);
+                                    }
+                                    fragment.appendChild(wordSpan);
+                                }
+                            });
+                            return [fragment];
+                        } else if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.tagName.toLowerCase() === 'br' || node.classList.contains('no-split')) {
+                                return [node.cloneNode(true)];
+                            }
+                            const clone = node.cloneNode(false);
+                            Array.from(node.childNodes).forEach(child => {
+                                const children = splitNode(child);
+                                children.forEach(c => clone.appendChild(c));
+                            });
+                            return [clone];
+                        }
+                        return [node.cloneNode(true)];
+                    }
+
+                    const fragment = document.createDocumentFragment();
+                    Array.from(el.childNodes).forEach(child => {
+                        const results = splitNode(child);
+                        results.forEach(res => fragment.appendChild(res));
+                    });
+
+                    el.innerHTML = '';
+                    el.appendChild(fragment);
+
+                    const chars = el.querySelectorAll('.swift-char');
+                    if (!chars.length) return;
+
+                    // Hand assistive tech one unbroken copy of the sentence and hide the
+                    // decorative per-character spans from it.
+                    if (accessibleText) {
+                        Array.from(el.children).forEach((child) => child.setAttribute('aria-hidden', 'true'));
+                        const label = document.createElement('span');
+                        label.className = 'sr-only';
+                        label.textContent = accessibleText;
+                        el.insertBefore(label, el.firstChild);
+                    }
+
+                    const isHeading = el.tagName.match(/^H[1-6]$/i) || el.classList.contains('text-4xl') || el.classList.contains('text-5xl') || el.classList.contains('text-3xl');
+                    const staggerTime = isHeading ? 0.015 : 0.007;
+                    const delay = parseFloat(el.getAttribute('data-delay') || '0');
+
+                    if (typeof gsap !== 'undefined') {
+                        gsap.fromTo(chars, {
+                            opacity: 0,
+                            y: 20,
+                            rotateX: -20,
+                            scale: 0.95,
+                            filter: "blur(6px)"
+                        }, {
+                            opacity: 1,
+                            y: 0,
+                            rotateX: 0,
+                            scale: 1,
+                            filter: "blur(0px)",
+                            duration: isHeading ? 0.6 : 0.45,
+                            stagger: {
+                                each: staggerTime,
+                                from: "start"
+                            },
+                            ease: "power3.out",
+                            delay: delay,
+                            scrollTrigger: {
+                                trigger: el,
+                                start: "top 88%",
+                                toggleActions: "play none none reverse"
+                            }
+                        });
+                    } else {
+                        // Resilient Fallback
+                        const observer = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    chars.forEach((c, idx) => {
+                                        setTimeout(() => {
+                                            c.style.opacity = '1';
+                                            c.style.transform = 'none';
+                                            c.style.filter = 'none';
+                                        }, idx * (staggerTime * 1000) + (delay * 1000));
+                                    });
+                                    observer.unobserve(entry.target);
+                                }
+                            });
+                        }, { threshold: 0.1 });
+                        observer.observe(el);
+                    }
+                });
+            }
+
+            initSwiftTextAnimations();
+
+            // Scroll Reveal Animation for Non-Card Text (Secondary / Sub-elements)
+            function initScrollReveal() {
+                const scrollElements = document.querySelectorAll('.scroll-reveal');
+                if (!scrollElements.length) return;
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-revealed');
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -40px 0px'
+                });
+
+                scrollElements.forEach(el => observer.observe(el));
+            }
+
+            initScrollReveal();
+
+            // Capability rail. The loop moves one row at a time and the panel on the
+            // right restates the row it lands on, so the motion carries information
+            // instead of only decorating the section.
+            function initLoopingWords() {
+                const wordList = document.querySelector('[data-looping-words-list]');
+                const edgeElement = document.querySelector('[data-looping-words-selector]');
+                const rail = document.querySelector('[data-capability-rail]');
+                if (!wordList || !edgeElement || !rail || typeof gsap === 'undefined') return;
+
+                const items = Array.from(wordList.children);
+                if (items.length === 0) return;
+                const originalCount = items.length;
+
+                const laneEl = rail.querySelector('[data-capability-lane]');
+                const stepEl = rail.querySelector('[data-capability-step]');
+                const bodyEl = rail.querySelector('[data-capability-body]');
+                const titleEl = rail.querySelector('[data-capability-title]');
+                const descEl = rail.querySelector('[data-capability-desc]');
+                const factsEl = rail.querySelector('[data-capability-facts]');
+                const progressEl = rail.querySelector('[data-capability-progress]');
+                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                const DWELL = 3.1;
+                const TRAVEL = 0.9;
+                // The list is translated by whole rows, so the row sitting under the
+                // centred selector is always this far past the current step.
+                const CENTRE_OFFSET = 2;
+
+                // Cloned once so the list can run past its own end without a visible
+                // jump; the clones are hidden from assistive tech because they repeat
+                // names a screen reader has already announced.
+                if (!wordList.hasAttribute('data-duplicated')) {
+                    wordList.setAttribute('data-duplicated', 'true');
+                    items.forEach((item) => {
+                        const clone = item.cloneNode(true);
+                        clone.setAttribute('aria-hidden', 'true');
+                        wordList.appendChild(clone);
+                    });
+                }
+
+                const totalItems = wordList.children.length;
+                let currentStep = 0;
+
+                function highlight(step) {
+                    const activeIndex = (step + CENTRE_OFFSET) % totalItems;
+                    Array.from(wordList.children).forEach((child, idx) => {
+                        child.classList.toggle('is-active', idx === activeIndex);
+                    });
+                    return wordList.children[activeIndex] || null;
+                }
+
+                function paint(step) {
+                    const active = highlight(step);
+                    if (!active) return;
+
+                    const lane = active.dataset.lane || '#60a5fa';
+                    rail.style.setProperty('--lane', lane);
+                    if (laneEl) laneEl.textContent = active.dataset.laneName || '';
+                    if (stepEl) {
+                        const ordinal = (Array.prototype.indexOf.call(wordList.children, active) % originalCount) + 1;
+                        stepEl.textContent = `${String(ordinal).padStart(2, '0')} / ${String(originalCount).padStart(2, '0')}`;
+                    }
+
+                    const title = active.querySelector('.looping-words__p');
+                    const swap = () => {
+                        if (titleEl && title) titleEl.textContent = title.textContent;
+                        if (descEl) descEl.textContent = active.dataset.desc || '';
+                        if (factsEl) {
+                            factsEl.replaceChildren(
+                                ...(active.dataset.facts || '')
+                                    .split('|')
+                                    .filter(Boolean)
+                                    .map((fact) => {
+                                        const li = document.createElement('li');
+                                        li.textContent = fact;
+                                        return li;
+                                    }),
+                            );
+                        }
+                    };
+
+                    if (!bodyEl || reduceMotion) {
+                        swap();
+                        return;
+                    }
+                    bodyEl.classList.add('is-swapping');
+                    window.setTimeout(() => {
+                        swap();
+                        bodyEl.classList.remove('is-swapping');
+                    }, 190);
+                }
+
+                function runProgress() {
+                    if (!progressEl || reduceMotion) return;
+                    gsap.fromTo(
+                        progressEl,
+                        { width: '0%' },
+                        { width: '100%', duration: DWELL + TRAVEL, ease: 'none' },
+                    );
+                }
+
+                function moveWords() {
+                    currentStep++;
+                    paint(currentStep);
+                    runProgress();
+
+                    const firstChild = wordList.children[0];
+                    const itemHeight = firstChild ? firstChild.getBoundingClientRect().height : 66;
+
+                    gsap.to(wordList, {
+                        y: -currentStep * itemHeight,
+                        duration: TRAVEL,
+                        ease: 'expo.out',
+                        onComplete: function () {
+                            if (currentStep >= originalCount) {
+                                // Row `originalCount + CENTRE_OFFSET` is a clone of the row
+                                // that sits centred at y=0, so rewinding is invisible. Only
+                                // the highlight has to follow; the panel already reads right.
+                                currentStep = 0;
+                                gsap.set(wordList, { y: 0 });
+                                highlight(0);
+                            }
+                        },
+                    });
+                }
+
+                paint(0);
+                runProgress();
+                const tl = gsap.timeline({ repeat: -1, delay: DWELL });
+                tl.call(moveWords).to({}, { duration: DWELL + TRAVEL });
+            }
+
+            initLoopingWords();
+
+            // The artifact scene animates once, on first sight. Everything in it
+            // hangs off a single class so the ring, the lane bars and the packet
+            // lines stay in step rather than drifting apart on slow scrolls.
+            function initPacketScene() {
+                const scene = document.querySelector('[data-packet-scene]');
+                if (!scene) return;
+
+                if (!('IntersectionObserver' in window)) {
+                    scene.classList.add('is-revealed');
+                    return;
+                }
+
+                const observer = new IntersectionObserver(
+                    (entries) => {
+                        entries.forEach((entry) => {
+                            if (!entry.isIntersecting) return;
+                            entry.target.classList.add('is-revealed');
+                            observer.unobserve(entry.target);
+                        });
+                    },
+                    { threshold: 0.22, rootMargin: '0px 0px -60px 0px' },
+                );
+
+                observer.observe(scene);
+            }
+
+            initPacketScene();
+
+            // Counter Animation Function
+            function animateCounters() {
+                const counters = document.querySelectorAll('.counter');
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const counter = entry.target;
+                            const target = parseInt(counter.getAttribute('data-target'));
+                            const suffix = counter.getAttribute('data-suffix') || '';
+                            const duration = 2000; // Animation duration in ms
+                            const startTime = performance.now();
+
+                            function updateCounter(currentTime) {
+                                const elapsedTime = currentTime - startTime;
+                                const progress = Math.min(elapsedTime / duration, 1);
+                                
+                                // Easing function for smooth animation
+                                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                                
+                                let current;
+                                if (suffix === '%') {
+                                    current = (target * easeOutQuart).toFixed(2);
+                                } else if (suffix === 'M+') {
+                                    current = (target / 1000000 * easeOutQuart).toFixed(1);
+                                } else {
+                                    current = Math.floor(target * easeOutQuart);
+                                }
+                                
+                                counter.textContent = current + suffix;
+                                
+                                if (progress < 1) {
+                                    requestAnimationFrame(updateCounter);
+                                }
+                            }
+                            
+                            requestAnimationFrame(updateCounter);
+                            observer.unobserve(counter);
+                        }
+                    });
+                }, {
+                    threshold: 0.5
+                });
+
+                counters.forEach(counter => {
+                    observer.observe(counter);
+                });
+            }
+
+            // Initialize counter animation
+            animateCounters();
+        });
+    </script>
+
+    <!-- Neural Noise Shaders & Interactive Script -->
+    <script type="x-shader/x-fragment" id="vertShader">
+        precision mediump float;
+
+        varying vec2 vUv;
+        attribute vec2 a_position;
+
+        void main() {
+            vUv = .5 * (a_position + 1.);
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <script type="x-shader/x-fragment" id="fragShader">
+        precision mediump float;
+
+        varying vec2 vUv;
+        uniform float u_time;
+        uniform float u_ratio;
+        uniform vec2 u_pointer_position;
+        uniform float u_scroll_progress;
+
+        vec2 rotate(vec2 uv, float th) {
+            return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+        }
+
+        float neuro_shape(vec2 uv, float t, float p) {
+            vec2 sine_acc = vec2(0.);
+            vec2 res = vec2(0.);
+            float scale = 8.;
+
+            for (int j = 0; j < 15; j++) {
+                uv = rotate(uv, 1.);
+                sine_acc = rotate(sine_acc, 1.);
+                vec2 layer = uv * scale + float(j) + sine_acc - t;
+                sine_acc += sin(layer) + 2.4 * p;
+                res += (.5 + .5 * cos(layer)) / scale;
+                scale *= (1.2);
+            }
+            return res.x + res.y;
+        }
+
+        void main() {
+            vec2 uv = .5 * vUv;
+            uv.x *= u_ratio;
+
+            vec2 pointer = vUv - u_pointer_position;
+            pointer.x *= u_ratio;
+            float p = clamp(length(pointer), 0., 1.);
+            p = .5 * pow(1. - p, 2.);
+
+            float t = .001 * u_time;
+            vec3 color = vec3(0.);
+
+            float noise = neuro_shape(uv, t, p);
+
+            noise = 1.2 * pow(noise, 3.);
+            noise += pow(noise, 10.);
+            noise = max(.0, noise - .5);
+            noise *= (1. - length(vUv - .5));
+
+            // Blue/indigo color palette
+            color = vec3(0.1, 0.2, 0.8); // Base blue color
+            color += vec3(0.0, 0.1, 0.4) * sin(3.0 * u_scroll_progress + 1.5); // Indigo variation
+
+            color = color * noise;
+
+            gl_FragColor = vec4(color, noise);
+        }
+    </script>
+
+    <script>
+        (function initNeuralNoise() {
+            const canvasEl = document.querySelector("canvas#neuro");
+            if (!canvasEl) return;
+
+            const devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+            const pointer = {
+                x: window.innerWidth * 0.5,
+                y: window.innerHeight * 0.5,
+                tX: window.innerWidth * 0.5,
+                tY: window.innerHeight * 0.5,
+            };
+
+            let uniforms = {};
+            let gl = initShader();
+
+            if (!gl) return;
+
+            setupEvents();
+            resizeCanvas();
+            updateScrollVisibility();
+
+            render();
+
+            function initShader() {
+                const vsEl = document.getElementById("vertShader");
+                const fsEl = document.getElementById("fragShader");
+                if (!vsEl || !fsEl) return null;
+
+                const vsSource = vsEl.innerHTML;
+                const fsSource = fsEl.innerHTML;
+
+                const glCtx = canvasEl.getContext("webgl", { alpha: true, antialias: false, preserveDrawingBuffer: false }) || 
+                              canvasEl.getContext("experimental-webgl");
+
+                if (!glCtx) {
+                    console.warn("WebGL not supported for neural background.");
+                    return null;
+                }
+
+                function createShader(glCtx, sourceCode, type) {
+                    const shader = glCtx.createShader(type);
+                    glCtx.shaderSource(shader, sourceCode);
+                    glCtx.compileShader(shader);
+
+                    if (!glCtx.getShaderParameter(shader, glCtx.COMPILE_STATUS)) {
+                        console.error("An error occurred compiling the shaders: " + glCtx.getShaderInfoLog(shader));
+                        glCtx.deleteShader(shader);
+                        return null;
+                    }
+
+                    return shader;
+                }
+
+                const vertexShader = createShader(glCtx, vsSource, glCtx.VERTEX_SHADER);
+                const fragmentShader = createShader(glCtx, fsSource, glCtx.FRAGMENT_SHADER);
+                if (!vertexShader || !fragmentShader) return null;
+
+                function createShaderProgram(glCtx, vertexShader, fragmentShader) {
+                    const program = glCtx.createProgram();
+                    glCtx.attachShader(program, vertexShader);
+                    glCtx.attachShader(program, fragmentShader);
+                    glCtx.linkProgram(program);
+
+                    if (!glCtx.getProgramParameter(program, glCtx.LINK_STATUS)) {
+                        console.error("Unable to initialize the shader program: " + glCtx.getProgramInfoLog(program));
+                        return null;
+                    }
+
+                    return program;
+                }
+
+                const shaderProgram = createShaderProgram(glCtx, vertexShader, fragmentShader);
+                if (!shaderProgram) return null;
+
+                uniforms = getUniforms(glCtx, shaderProgram);
+
+                function getUniforms(glCtx, program) {
+                    let uniformsObj = {};
+                    let uniformCount = glCtx.getProgramParameter(program, glCtx.ACTIVE_UNIFORMS);
+                    for (let i = 0; i < uniformCount; i++) {
+                        let uniformInfo = glCtx.getActiveUniform(program, i);
+                        if (uniformInfo) {
+                            uniformsObj[uniformInfo.name] = glCtx.getUniformLocation(program, uniformInfo.name);
+                        }
+                    }
+                    return uniformsObj;
+                }
+
+                const vertices = new Float32Array([-1., -1., 1., -1., -1., 1., 1., 1.]);
+
+                const vertexBuffer = glCtx.createBuffer();
+                glCtx.bindBuffer(glCtx.ARRAY_BUFFER, vertexBuffer);
+                glCtx.bufferData(glCtx.ARRAY_BUFFER, vertices, glCtx.STATIC_DRAW);
+
+                glCtx.useProgram(shaderProgram);
+
+                const positionLocation = glCtx.getAttribLocation(shaderProgram, "a_position");
+                glCtx.enableVertexAttribArray(positionLocation);
+
+                glCtx.bindBuffer(glCtx.ARRAY_BUFFER, vertexBuffer);
+                glCtx.vertexAttribPointer(positionLocation, 2, glCtx.FLOAT, false, 0, 0);
+
+                return glCtx;
+            }
+
+            function updateScrollVisibility() {
+                const portalsEl = document.getElementById("portals");
+                const globalBridgeEl = document.getElementById("global-bridge") || document.getElementById("proof");
+                if (!canvasEl) return;
+
+                const windowH = window.innerHeight;
+
+                // 1. Top fade in: 0 while in hero/portals cards, starts fading in only after user scrolls past #portals
+                let topProgress = 0;
+                if (portalsEl) {
+                    const rect = portalsEl.getBoundingClientRect();
+                    // Start fading in when the bottom edge of #portals moves past the top 20% of the viewport
+                    const startFadePoint = windowH * 0.2;
+                    const topFadeDist = Math.min(windowH * 0.5, 400);
+
+                    if (rect.bottom < startFadePoint) {
+                        topProgress = Math.max(0, Math.min(1, (startFadePoint - rect.bottom) / topFadeDist));
+                    } else {
+                        topProgress = 0;
+                    }
+                }
+
+                // 2. Bottom fade out: 1 while in middle sections, ramps down to 0 as user approaches #global-bridge
+                let bottomFactor = 1;
+                if (globalBridgeEl) {
+                    const gRect = globalBridgeEl.getBoundingClientRect();
+                    const enterDist = windowH * 0.65;
+                    const enterProgress = Math.max(0, Math.min(1, (windowH - gRect.top) / enterDist));
+                    bottomFactor = 1 - enterProgress;
+                }
+
+                const netOpacity = topProgress * bottomFactor * 0.95;
+                canvasEl.style.opacity = Math.max(0, netOpacity).toFixed(3);
+            }
+
+            function updateGlobeScrollProgress() {
+                const globalSection = document.getElementById("global-bridge");
+                const globeContainer = document.getElementById("globe-container");
+                const leftCards = document.getElementById("globe-left-cards");
+                const rightCards = document.getElementById("globe-right-cards");
+
+                if (!globalSection || !globeContainer) return;
+
+                const rect = globalSection.getBoundingClientRect();
+                const windowH = window.innerHeight;
+
+                // Starts scaling up when top of section reaches 90% of screen height
+                // Reaches full 1.0 scale and full side card entrance when section is in main focus
+                const startThreshold = windowH * 0.9;
+                const endThreshold = windowH * 0.25;
+                const totalDist = startThreshold - endThreshold;
+                const currentDist = startThreshold - rect.top;
+
+                const rawProgress = Math.max(0, Math.min(1, currentDist / totalDist));
+                const easeProgress = 1 - Math.pow(1 - rawProgress, 3);
+
+                // Globe scale from 0.35 up to 1.0
+                const globeScale = 0.35 + (1.0 - 0.35) * easeProgress;
+                globeContainer.style.transform = `scale(${globeScale.toFixed(3)})`;
+
+                // Left cards slide in from left (-50px -> 0px) and fade in (0 -> 1)
+                if (leftCards) {
+                    const leftOffset = -50 * (1 - easeProgress);
+                    leftCards.style.transform = `translateX(${leftOffset.toFixed(1)}px)`;
+                    leftCards.style.opacity = easeProgress.toFixed(3);
+                }
+
+                // Right cards slide in from right (50px -> 0px) and fade in (0 -> 1)
+                if (rightCards) {
+                    const rightOffset = 50 * (1 - easeProgress);
+                    rightCards.style.transform = `translateX(${rightOffset.toFixed(1)}px)`;
+                    rightCards.style.opacity = easeProgress.toFixed(3);
+                }
+            }
+
+            function onGlobalScroll() {
+                updateScrollVisibility();
+                updateGlobeScrollProgress();
+            }
+
+            function render() {
+                const currentTime = performance.now();
+
+                pointer.x += (pointer.tX - pointer.x) * .2;
+                pointer.y += (pointer.tY - pointer.y) * .2;
+
+                if (uniforms.u_time) gl.uniform1f(uniforms.u_time, currentTime);
+                if (uniforms.u_pointer_position) {
+                    gl.uniform2f(uniforms.u_pointer_position, pointer.x / window.innerWidth, 1 - pointer.y / window.innerHeight);
+                }
+                if (uniforms.u_scroll_progress) {
+                    gl.uniform1f(uniforms.u_scroll_progress, window.pageYOffset / (2 * window.innerHeight));
+                }
+
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                requestAnimationFrame(render);
+            }
+
+            function resizeCanvas() {
+                if (!canvasEl || !gl) return;
+                canvasEl.width = window.innerWidth * devicePixelRatio;
+                canvasEl.height = window.innerHeight * devicePixelRatio;
+                if (uniforms.u_ratio) {
+                    gl.uniform1f(uniforms.u_ratio, canvasEl.width / canvasEl.height);
+                }
+                gl.viewport(0, 0, canvasEl.width, canvasEl.height);
+            }
+
+            function setupEvents() {
+                window.addEventListener("pointermove", e => {
+                    updateMousePosition(e.clientX, e.clientY);
+                }, { passive: true });
+                window.addEventListener("touchmove", e => {
+                    if (e.targetTouches && e.targetTouches[0]) {
+                        updateMousePosition(e.targetTouches[0].clientX, e.targetTouches[0].clientY);
+                    }
+                }, { passive: true });
+                window.addEventListener("click", e => {
+                    updateMousePosition(e.clientX, e.clientY);
+                }, { passive: true });
+                window.addEventListener("scroll", onGlobalScroll, { passive: true });
+                window.addEventListener("resize", () => {
+                    resizeCanvas();
+                    onGlobalScroll();
+                }, { passive: true });
+
+                function updateMousePosition(eX, eY) {
+                    pointer.tX = eX;
+                    pointer.tY = eY;
+                }
+
+                // Initial trigger
+                onGlobalScroll();
+            }
+        })();
+    </script>
+
+    <!-- Cobe Interactive Black & White Globe Script -->
+    <script type="module">
+        import createGlobe from "https://esm.sh/cobe@2.0.0";
+
+        (function initCobeGlobe() {
+            const canvas = document.getElementById("cobe-globe");
+            if (!canvas) return;
+
+            let phi = 0;
+            let width = 0;
+            let pointerInteracting = null;
+            let pointerInteractionMovement = 0;
+            let r = 0;
+
+            const updatePointerInteraction = (value) => {
+                pointerInteracting = value;
+                if (canvas) {
+                    canvas.style.cursor = value !== null ? "grabbing" : "grab";
+                }
+            };
+
+            const updateMovement = (clientX) => {
+                if (pointerInteracting !== null) {
+                    const delta = clientX - pointerInteracting;
+                    pointerInteractionMovement = delta;
+                    r = delta / 200;
+                }
+            };
+
+            const onResize = () => {
+                if (canvas) {
+                    width = canvas.offsetWidth;
+                }
+            };
+
+            window.addEventListener("resize", onResize, { passive: true });
+            onResize();
+
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            const globe = createGlobe(canvas, {
+                devicePixelRatio: dpr,
+                width: (width || 560) * 2,
+                height: (width || 560) * 2,
+                phi: 0,
+                theta: 0.3,
+                dark: 1,
+                diffuse: 1.2,
+                mapSamples: 16000,
+                mapBrightness: 6,
+                baseColor: [1, 1, 1],
+                markerColor: [0.2, 0.6, 1],
+                glowColor: [0.15, 0.25, 0.45],
+                markers: [
+                    { location: [14.5995, 120.9842], size: 0.03 },
+                    { location: [19.076, 72.8777], size: 0.08 },
+                    { location: [23.8103, 90.4125], size: 0.05 },
+                    { location: [30.0444, 31.2357], size: 0.07 },
+                    { location: [39.9042, 116.4074], size: 0.08 },
+                    { location: [-23.5505, -46.6333], size: 0.08 },
+                    { location: [19.4326, -99.1332], size: 0.08 },
+                    { location: [40.7128, -74.006], size: 0.1 },
+                    { location: [34.6937, 135.5022], size: 0.05 },
+                    { location: [41.0082, 28.9784], size: 0.06 },
+                    { location: [51.5074, -0.1278], size: 0.08 },
+                    { location: [48.8566, 2.3522], size: 0.07 },
+                    { location: [37.7749, -122.4194], size: 0.09 },
+                    { location: [1.3521, 103.8198], size: 0.06 },
+                    { location: [-33.8688, 151.2093], size: 0.07 },
+                ],
+                arcs: [
+                    { from: [40.7128, -74.006], to: [51.5074, -0.1278] },
+                    { from: [51.5074, -0.1278], to: [39.9042, 116.4074] },
+                    { from: [37.7749, -122.4194], to: [34.6937, 135.5022] },
+                    { from: [51.5074, -0.1278], to: [19.076, 72.8777] },
+                    { from: [1.3521, 103.8198], to: [-33.8688, 151.2093] },
+                    { from: [37.7749, -122.4194], to: [40.7128, -74.006] },
+                ],
+                arcColor: [0.3, 0.7, 1],
+                arcWidth: 0.8,
+                arcHeight: 0.25,
+            });
+
+            function animate() {
+                if (!pointerInteracting) phi += 0.005;
+                globe.update({
+                    phi: phi + r,
+                    width: (width || 560) * 2,
+                    height: (width || 560) * 2,
+                });
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+
+            canvas.addEventListener("pointerdown", (e) => {
+                updatePointerInteraction(e.clientX - pointerInteractionMovement);
+            }, { passive: true });
+            window.addEventListener("pointerup", () => updatePointerInteraction(null), { passive: true });
+            canvas.addEventListener("pointerout", () => {
+                if (!pointerInteracting) updatePointerInteraction(null);
+            }, { passive: true });
+            window.addEventListener("mousemove", (e) => updateMovement(e.clientX), { passive: true });
+            window.addEventListener("touchmove", (e) => {
+                if (e.touches && e.touches[0]) updateMovement(e.touches[0].clientX);
+            }, { passive: true });
+
+            setTimeout(() => {
+                if (canvas) canvas.style.opacity = "1";
+            }, 100);
+        })();
+
+        // --- Liquid Metal WebGL Shader & 3D Interactive Button Controller ---
+        (function initLiquidMetalShader() {
+            const canvas = document.getElementById("liquid-metal-canvas");
+            const btn = document.getElementById("liquid-metal-btn");
+            const wrapper = document.getElementById("liquid-metal-cta-wrapper");
+            const inner = document.getElementById("liquid-metal-inner");
+            const outer = document.getElementById("liquid-metal-outer");
+            const rippleContainer = document.getElementById("ripple-container");
+            if (!canvas || !btn) return;
+
+            const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+            if (!gl) return;
+
+            function resize() {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * (window.devicePixelRatio || 1);
+                canvas.height = rect.height * (window.devicePixelRatio || 1);
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            resize();
+            window.addEventListener("resize", resize);
+
+            const vertShaderSource = `
+                attribute vec2 a_position;
+                void main() {
+                    gl_Position = vec4(a_position, 0.0, 1.0);
+                }
+            `;
+
+            const fragShaderSource = `
+                precision mediump float;
+                uniform vec2 u_resolution;
+                uniform float u_time;
+                uniform float u_speed;
+
+                void main() {
+                    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+                    st.x *= u_resolution.x / u_resolution.y;
+
+                    float t = u_time * u_speed;
+                    vec2 p = st * 8.0;
+
+                    for(int i = 1; i < 5; i++) {
+                        p.x += 0.3 / float(i) * sin(float(i) * 3.0 * p.y + t + float(i) * 0.4);
+                        p.y += 0.3 / float(i) * cos(float(i) * 3.0 * p.x + t + float(i) * 0.2);
+                    }
+
+                    float col = sin(p.x + p.y) * 0.5 + 0.5;
+
+                    // Original Liquid Metal Chrome palette (Silver, Steel, Platinum, Specular White)
+                    vec3 c1 = vec3(0.18, 0.18, 0.22);
+                    vec3 c2 = vec3(0.85, 0.88, 0.94);
+                    vec3 c3 = vec3(0.55, 0.60, 0.68);
+                    vec3 highlight = vec3(1.0, 1.0, 1.0);
+
+                    float redShift = sin(p.x * 3.0 + 0.3) * 0.5 + 0.5;
+                    float blueShift = cos(p.y * 3.0 + 0.3) * 0.5 + 0.5;
+
+                    vec3 metal = mix(mix(c1, c2, col), mix(c3, highlight, redShift), col);
+                    metal.r += redShift * 0.1;
+                    metal.b += blueShift * 0.1;
+
+                    gl_FragColor = vec4(metal, 1.0);
+                }
+            `;
+
+            function createShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                return shader;
+            }
+
+            const vertShader = createShader(gl, gl.VERTEX_SHADER, vertShaderSource);
+            const fragShader = createShader(gl, gl.FRAGMENT_SHADER, fragShaderSource);
+            const program = gl.createProgram();
+            gl.attachShader(program, vertShader);
+            gl.attachShader(program, fragShader);
+            gl.linkProgram(program);
+            gl.useProgram(program);
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                -1, -1,  1, -1, -1,  1,
+                -1,  1,  1, -1,  1,  1
+            ]), gl.STATIC_DRAW);
+
+            const posAttr = gl.getAttribLocation(program, "a_position");
+            gl.enableVertexAttribArray(posAttr);
+            gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+
+            const resLoc = gl.getUniformLocation(program, "u_resolution");
+            const timeLoc = gl.getUniformLocation(program, "u_time");
+            const speedLoc = gl.getUniformLocation(program, "u_speed");
+
+            let startTime = performance.now();
+            let currentSpeed = 0.6;
+            let targetSpeed = 0.6;
+
+            function render() {
+                const currentTime = (performance.now() - startTime) * 0.001;
+                currentSpeed += (targetSpeed - currentSpeed) * 0.1;
+
+                gl.uniform2f(resLoc, canvas.width, canvas.height);
+                gl.uniform1f(timeLoc, currentTime);
+                gl.uniform1f(speedLoc, currentSpeed);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
+
+            // Interaction Handles
+            btn.addEventListener("mouseenter", () => {
+                targetSpeed = 1.2;
+                if (outer) outer.style.boxShadow = "0px 0px 0px 1px rgba(0, 0, 0, 0.4), 0px 12px 6px 0px rgba(0, 0, 0, 0.05), 0px 8px 5px 0px rgba(0, 0, 0, 0.1), 0px 4px 4px 0px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.2)";
+            });
+
+            btn.addEventListener("mouseleave", () => {
+                targetSpeed = 0.6;
+                if (inner) inner.style.transform = "translateZ(10px) translateY(0) scale(1)";
+                if (outer) {
+                    outer.style.transform = "translateZ(0px) translateY(0) scale(1)";
+                    outer.style.boxShadow = "0px 0px 0px 1px rgba(0, 0, 0, 0.3), 0px 36px 14px 0px rgba(0, 0, 0, 0.02), 0px 20px 12px 0px rgba(0, 0, 0, 0.08), 0px 9px 9px 0px rgba(0, 0, 0, 0.12), 0px 2px 5px 0px rgba(0, 0, 0, 0.15)";
+                }
+            });
+
+            btn.addEventListener("mousedown", (e) => {
+                targetSpeed = 2.4;
+                if (inner) inner.style.transform = "translateZ(10px) translateY(1px) scale(0.98)";
+                if (outer) outer.style.transform = "translateZ(0px) translateY(1px) scale(0.98)";
+
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                const ripple = document.createElement("span");
+                ripple.style.position = "absolute";
+                ripple.style.left = x + "px";
+                ripple.style.top = y + "px";
+                ripple.style.width = "20px";
+                ripple.style.height = "20px";
+                ripple.style.borderRadius = "50%";
+                ripple.style.background = "radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%)";
+                ripple.style.pointerEvents = "none";
+                ripple.style.animation = "ripple-animation 0.6s ease-out forwards";
+                rippleContainer.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+
+            btn.addEventListener("mouseup", () => {
+                targetSpeed = 1.2;
+                if (inner) inner.style.transform = "translateZ(10px) translateY(0) scale(1)";
+                if (outer) outer.style.transform = "translateZ(0px) translateY(0) scale(1)";
+            });
+        })();
+    </script>
+
+</body></html>
