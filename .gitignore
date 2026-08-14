@@ -91,3 +91,5 @@ blockchain-local/.ganache/
 
 # Local manual-test images; keep potentially private/copyrighted samples out of Git..env.production
 deploy/azure/.vm-ip
+pitch-deck.html
+AI Ideathon 2026 Official Rules.md
