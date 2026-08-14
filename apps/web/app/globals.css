@@ -201,7 +201,7 @@ button:disabled { opacity: .45; cursor: wait; }
 .laneFigure > p { margin: var(--cp-1) 0 0; color: var(--cp-text-muted); font-size: var(--cp-text-sm); line-height: 1.5; }
 /* A name is not a measurement, so it does not get the numeric face. */
 .laneFigure.isName > b { font: 400 clamp(20px, 1.7vw, 26px)/1.2 var(--cp-font-sans); letter-spacing: var(--cp-tracking-display); overflow-wrap: anywhere; }
-/* Origin: two fixed rows beside a narrow field, so the pair sits on one line. */
+/* Origin reading: the image, then the AI signal. */
 .originReading .laneFigure { grid-template-columns: auto minmax(0, 1fr); column-gap: var(--cp-4); align-items: baseline; }
 .originReading .laneFigure > span { grid-column: 1 / -1; }
 .originReading .laneFigure > b { grid-row: 2; margin: 4px 0 0; font-size: clamp(30px, 2.4vw, 40px); }
@@ -221,11 +221,8 @@ button:disabled { opacity: .45; cursor: wait; }
 .laneMeasurements dt { color: var(--cp-text-muted); font-size: var(--cp-text-sm); }
 .laneMeasurements dd { margin: 0; color: var(--cp-text-secondary); font: 400 var(--cp-text-sm) var(--cp-font-mono); font-variant-numeric: tabular-nums; }
 
-/* Origin reading: the image, the two-axis field, then the two numbers it
-   plots. Three columns because the field is only legible next to its inputs. */
-.originReading { display: grid; grid-template-columns: minmax(0, 172px) minmax(0, 296px) minmax(0, 1fr); gap: var(--cp-4) var(--cp-6); align-items: start; }
-.originFieldWrap { margin: 0; }
-.originFieldWrap figcaption { margin-top: var(--cp-3); color: var(--cp-text-muted); font-size: var(--cp-text-xs); line-height: 1.6; }
+/* Origin reading: the image, then the AI signal. */
+.originReading { display: grid; grid-template-columns: minmax(0, 172px) minmax(0, 1fr); gap: var(--cp-4) var(--cp-6); align-items: start; }
 
 /* Creator-profile reading: who, how strong, what agreed — then the visual
    qualities behind it. */
@@ -432,26 +429,6 @@ button { min-height: 44px; font-size: 14px; }
 .technicalDisclosure > summary { padding: 16px 3px; font-size: 14px; }
 .technicalIntro { font-size: 13px; }
 
-/* The origin decision field. The mark is the only saturated thing in the plot,
-   so the eye lands on the reading before it reads a single label. */
-.cpOriginField { display: block; width: 100%; height: auto; }
-.cpOriginFrame { fill: none; stroke: var(--cp-line); }
-.cpOriginGrid line { stroke: rgba(255, 255, 255, .045); }
-.cpOriginZone { fill: var(--cp-text-faint); font: var(--cp-weight-label) 9px/1 var(--cp-font-mono); letter-spacing: .1em; }
-.cpOriginZone.isMuted { fill: rgba(255, 255, 255, .28); }
-.cpOriginMark line { stroke: color-mix(in oklab, var(--cp-lane-origin) 78%, transparent); stroke-width: 1.2; stroke-dasharray: 3 4; }
-.cpOriginDot { fill: var(--cp-lane-origin); stroke: #05070c; stroke-width: 2.5; }
-/* The mark lands after the field has drawn, so the eye is already on the plot
-   when the reading appears rather than having to hunt for it. */
-.cpOriginMark { animation: cpOriginFade .55s cubic-bezier(.16, 1, .3, 1) both; }
-.cpOriginMark line { animation: cpOriginFade .5s ease-out .28s both; }
-.cpOriginDot { animation: cpOriginPop .6s cubic-bezier(.34, 1.56, .64, 1) both; transform-box: fill-box; transform-origin: center; }
-@keyframes cpOriginFade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes cpOriginPop { from { transform: scale(0); } to { transform: scale(1); } }
-.cpOriginEmpty { fill: var(--cp-text-faint); font: var(--cp-weight-label) 10px/1 var(--cp-font-mono); letter-spacing: .12em; }
-.cpOriginAxis { fill: var(--cp-text-muted); font: var(--cp-weight-label) 9px/1 var(--cp-font-mono); letter-spacing: .12em; }
-.cpOriginTick { fill: var(--cp-text-faint); font: 500 9px/1 var(--cp-font-mono); }
-
 .originCluePanel { margin-top: var(--cp-3); padding: var(--cp-4); border: 1px solid color-mix(in oklab, var(--cp-lane-origin) 24%, transparent); border-radius: var(--cp-r-md); background: color-mix(in oklab, var(--cp-lane-origin) 6%, rgba(0, 0, 0, .28)); }
 .originCluePanel > div:first-child > span { color: var(--cp-lane-origin); font: var(--cp-weight-label) var(--cp-text-xs)/1.2 var(--cp-font-mono); letter-spacing: var(--cp-tracking-eyebrow); }
 .originCluePanel h5 { margin: var(--cp-1) 0 0; color: var(--cp-text); font-size: var(--cp-text-base); font-weight: 500; }
@@ -547,7 +524,6 @@ button { min-height: 44px; font-size: 14px; }
   .structureMetrics, .laneFiguresRow { grid-template-columns: 1fr; }
   .originMetricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .originReading { grid-template-columns: 1fr; }
-  .originFieldWrap { max-width: 340px; }
   .laneNextStep { grid-template-columns: 1fr; }
   .originReading .laneFigure { grid-template-columns: 1fr; }
   .originReading .laneFigure > strong { grid-row: 3; }
@@ -907,31 +883,6 @@ button { min-height: 44px; font-size: 14px; }
 .cpRing .cpRingValue { stroke: var(--lane-hue, var(--cp-accent-soft)); transition: stroke-dasharray .7s cubic-bezier(.16, 1, .3, 1); }
 .cpRing .cpRingText { fill: var(--cp-text); font: 500 15px/1 var(--cp-font-mono); letter-spacing: -.02em; }
 .cpRing.isEmpty .cpRingText { fill: var(--cp-text-faint); }
-
-.cpMetricBar { margin-top: var(--cp-2); }
-.cpMetricBarHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--cp-2);
-  margin-bottom: 5px;
-}
-.cpMetricBarHead span { color: var(--cp-text-faint); font-size: 10.5px; }
-.cpMetricBarHead b { color: var(--cp-text-muted); font: 600 10.5px/1.2 var(--cp-font-mono); }
-.cpMetricBarTrack {
-  position: relative;
-  height: 3px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, .08);
-  overflow: hidden;
-}
-.cpMetricBarTrack i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: 3px;
-  background: var(--lane-hue, var(--cp-accent-soft));
-  transition: width .7s cubic-bezier(.16, 1, .3, 1);
-}
 
 @media (max-width: 900px) {
   .verdictHero { grid-template-columns: 1fr; }

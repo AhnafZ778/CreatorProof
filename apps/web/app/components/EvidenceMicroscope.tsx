@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from "react";
 
-import { OriginField } from "@/app/components/EvidenceCharts";
 import { laneMetrics, usableMetric } from "@/app/lib/laneMetrics";
 import { laneStatuses, type LaneKey, type LaneState, type LaneStatus } from "@/app/lib/laneStatus";
 import { isPublicBlockchainProof } from "@/app/lib/verifyStatement";
@@ -465,7 +464,7 @@ const MODE_META: Record<ViewMode, ModeMeta> = {
     label: "Was AI used?",
     lane: "AI CHECK",
     short: "Score, visible labels, and source info",
-    guidance: "Read the AI signal and evidence quality together to understand the strength of the origin-analysis result.",
+    guidance: "Read the AI signal to understand the strength of the origin-analysis result.",
   },
   copy: {
     number: "03",
@@ -954,7 +953,6 @@ function OriginSummary({
   const signalScore =
     scorecard?.signal_score ??
     (synthetic?.fused_detector_score == null ? null : Math.round(synthetic.fused_detector_score * 100));
-  const qualityScore = scorecard?.evidence_quality_score ?? null;
 
   return (
     <div className="lanePanel lane-origin" data-state={state} role="status" aria-atomic="true">
@@ -963,22 +961,11 @@ function OriginSummary({
       <div className="laneReading originReading">
         <OriginImageCard candidate={candidate} markerSignal={synthetic?.visible_marker_signal} />
 
-        <figure className="originFieldWrap">
-          <OriginField signal={signalScore} quality={qualityScore} />
-          <figcaption>
-            A finding needs both: a signal the models can see, and evidence good
-            enough to trust it. Low on either axis is not a clearance.
-          </figcaption>
-        </figure>
-
         <div className="laneFigures">
           <LaneFigure
             label="AI SIGNAL"
             value={signalScore === null ? "—" : String(signalScore)}
             unit={signalScore === null ? undefined : "/100"}
-            // A low signal only means "no AI" when the evidence behind it is
-            // good. Where the lane could not conclude, the engine's own label
-            // would over-read the number, so the caveat replaces it.
             meaning={
               state === "unchecked"
                 ? "Not conclusive on its own"
@@ -986,16 +973,9 @@ function OriginSummary({
             }
             note={
               state === "unchecked"
-                ? "A reading this weak needs evidence quality behind it before it means anything."
+                ? "This reading is too weak to treat as a clearance or a finding."
                 : "How much the active models saw."
             }
-          />
-          <LaneFigure
-            label="EVIDENCE QUALITY"
-            value={qualityScore === null ? "—" : String(qualityScore)}
-            unit={qualityScore === null ? undefined : "/100"}
-            meaning={scorecard?.evidence_quality_label ? `${scorecard.evidence_quality_label} analysis quality` : "No reading returned"}
-            note="How far that reading can be trusted."
           />
         </div>
       </div>
