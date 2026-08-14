@@ -105,6 +105,15 @@ class Settings(BaseSettings):
     copy_regional_similarity_penalty: float = Field(default=0.02, ge=0.0, le=0.2)
     copy_exhaustive_verification_max_entries: int = Field(default=64, ge=0, le=512)
     copy_retrieval_requirement: CopyRetrievalRequirement = CopyRetrievalRequirement.LEARNED_REQUIRED
+    # Descriptor matching fails on two common kinds of honest reuse for reasons
+    # unrelated to whether the images match: a horizontal flip, which costs a
+    # reposter nothing and defeats a matcher outright, and flat or repetitive
+    # work, where the ratio test discards every repeated element. When the
+    # learned descriptor still puts a reference at or above this similarity but
+    # the pixels refuse to align, alignment is retried against a mirror and then
+    # under relaxed matching. Set to 1.0 to switch the extra passes off; the cost
+    # is up to two more verifications per candidate this similar and unaligned.
+    copy_alignment_escalation_similarity: float = Field(default=0.55, ge=0.0, le=1.0)
     candidate_retention_seconds: int = 0
     sscd_model_path: Path = Path("./models/sscd_disc_mixup.torchscript.pt")
     sscd_device: Literal["auto", "cpu", "cuda"] = "auto"
@@ -121,6 +130,14 @@ class Settings(BaseSettings):
     copy_sscd_very_strong_similarity: float = 0.86
     copy_structure_support_similarity: float = 0.62
     copy_phash_support_similarity: float = 0.78
+    # A small crop of a registered work is the case where the global descriptor
+    # is least useful — it is looking at a different picture — and where aligned
+    # pixels are most conclusive. When a strictly verified alignment has nearly
+    # every match agreeing with it and the overlapping pixels are effectively
+    # identical, that is a demonstration rather than a hypothesis, and it stands
+    # without a retrieval-side second opinion.
+    copy_conclusive_structure_similarity: float = Field(default=0.97, ge=0.0, le=1.0)
+    copy_conclusive_inlier_ratio: float = Field(default=0.90, ge=0.0, le=1.0)
     copy_global_review_similarity: float = 0.80
     copy_phash_review_similarity: float = 0.90
     style_provider: Literal["auto", "csd", "diagnostic"] = "auto"
@@ -188,6 +205,14 @@ class Settings(BaseSettings):
     # unavailable result: those are the absence of a finding, and treating them as
     # one would lock real artists out of their own catalog.
     registration_origin_gate: RegistrationOriginGate = RegistrationOriginGate.BLOCK
+
+    # How much AI signal refuses a registration. The gate is deliberately lenient
+    # below this line: a weak or contested indicator is not enough to turn an
+    # artist away from their own catalog, so only an ensemble score above it is
+    # treated as a finding. Signed provenance that asserts AI generation refuses
+    # regardless, because that is the file declaring its own origin rather than a
+    # detector guessing at it.
+    registration_origin_block_score: float = Field(default=0.50, ge=0.0, le=1.0)
 
     # Visible labels are a separate, forgeable review signal. They never count as
     # trusted provenance and their absence never counts as evidence of human origin.

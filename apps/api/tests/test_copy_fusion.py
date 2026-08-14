@@ -123,3 +123,160 @@ def test_verified_support_mask_recovers_partial_copy_from_unrelated_background()
     assert regional["support_fraction_of_aligned_overlap"] < 0.20
     assert regional["structure_consensus"] > 0.95
     assert regional["structure_consensus"] > full["structure_consensus"] + 0.20
+
+
+def _flat_repetitive_image() -> Image.Image:
+    """Flat vector-style art: no texture, and every element identical.
+
+    This is the shape of work the ratio test cannot handle, because each motif
+    has an equally good twin and every match is discarded as ambiguous.
+    """
+    image = Image.new("RGB", (620, 620), "#1d3461")
+    draw = ImageDraw.Draw(image)
+    for index in range(16):
+        x = 40 + index * 33
+        y = 40 + index * 30
+        draw.ellipse((x, y, x + 120, y + 120), outline="#e0a13a", width=6)
+    return image
+
+
+def _verified(query: Image.Image, reference: Image.Image, *, escalate: bool) -> tuple[dict, dict]:
+    geometry = asdict(
+        ORBGeometricVerifier().verify(query, reference, escalate=escalate)
+    )
+    alignment = (
+        geometry["homography_query_to_reference"]
+        if geometry["alignment_grade"] in {"STRICT", "CORROBORATION_REQUIRED"}
+        else None
+    )
+    aligned = asdict(
+        AlignedPerceptualVerifier().verify(
+            query,
+            reference,
+            alignment,
+            geometry["regions"] if alignment is not None else None,
+        )
+    )
+    return geometry, aligned
+
+
+def test_a_mirrored_repost_is_matched_and_reported_as_a_mirror():
+    reference = _structured_image()
+    query = reference.transpose(Image.FLIP_LEFT_RIGHT)
+
+    unescalated, _ = _verified(query, reference, escalate=False)
+    assert unescalated["validated"] is False, "a mirror should defeat plain descriptor matching"
+
+    geometry, aligned = _verified(query, reference, escalate=True)
+    assert geometry["validated"] is True
+    assert geometry["reflected"] is True
+    assert geometry["alignment_grade"] == "STRICT"
+
+    fusion = fuse_copy_evidence(
+        exact_sha256=False,
+        ai_similarity=0.95,
+        phash_similarity=0.5,
+        geometry=geometry,
+        aligned_perceptual=aligned,
+        settings=Settings(),
+    )
+    assert fusion.match_supported is True
+    assert "ALIGNMENT_IS_A_MIRROR_IMAGE" in fusion.reason_codes
+
+
+def test_a_mirrored_alignment_maps_back_onto_the_file_as_submitted():
+    """The mirror must not leak: the warp has to fit the unflipped query."""
+    reference = _structured_image()
+    query = reference.transpose(Image.FLIP_LEFT_RIGHT)
+    geometry, aligned = _verified(query, reference, escalate=True)
+
+    assert aligned["available"] is True
+    assert aligned["overlap_ratio"] > 0.98
+    assert aligned["structure_consensus"] > 0.98
+    for correspondence in geometry["correspondences"]:
+        x, y = correspondence["query"]
+        assert 0.0 <= x <= 1.0 and 0.0 <= y <= 1.0
+
+
+def test_flat_repetitive_art_is_recovered_only_when_aligned_pixels_agree():
+    reference = _flat_repetitive_image()
+    query = reference.resize((310, 310), Image.LANCZOS).rotate(
+        5, expand=True, resample=Image.BICUBIC
+    )
+
+    unescalated, _ = _verified(query, reference, escalate=False)
+    assert unescalated["validated"] is False, "the ratio test should starve on repeated motifs"
+
+    geometry, aligned = _verified(query, reference, escalate=True)
+    assert geometry["alignment_grade"] == "CORROBORATION_REQUIRED"
+    assert geometry["validated"] is False, "relaxed matching must never validate by itself"
+
+    fusion = fuse_copy_evidence(
+        exact_sha256=False,
+        ai_similarity=0.90,
+        phash_similarity=0.5,
+        geometry=geometry,
+        aligned_perceptual=aligned,
+        settings=Settings(),
+    )
+    assert fusion.match_supported is True
+    assert "RELAXED_ALIGNMENT_CONFIRMED_BY_ALIGNED_PIXELS" in fusion.reason_codes
+
+
+def test_a_relaxed_alignment_whose_pixels_disagree_is_not_a_match():
+    fusion = fuse_copy_evidence(
+        exact_sha256=False,
+        ai_similarity=0.90,
+        phash_similarity=0.70,
+        geometry={"validated": False, "alignment_grade": "CORROBORATION_REQUIRED"},
+        aligned_perceptual={"available": True, "structure_consensus": 0.77},
+        settings=Settings(),
+    )
+    assert fusion.match_supported is False
+    assert fusion.review_supported is True
+    assert "RELAXED_ALIGNMENT_NOT_CONFIRMED_BY_ALIGNED_PIXELS" in fusion.reason_codes
+
+
+def test_a_small_crop_matches_on_the_alignment_when_the_descriptor_cannot_see_it():
+    """A corner of a work is a different picture globally but the same pixels."""
+    fusion = fuse_copy_evidence(
+        exact_sha256=False,
+        ai_similarity=0.36,
+        phash_similarity=0.55,
+        geometry={
+            "validated": True,
+            "alignment_grade": "STRICT",
+            "inliers": 14,
+            "inlier_ratio": 1.0,
+            "query_coverage": 0.28,
+            "reference_coverage": 0.06,
+            "symmetric_reprojection_error": 0.0004,
+        },
+        aligned_perceptual={"available": True, "structure_consensus": 0.9999},
+        settings=Settings(),
+    )
+    assert fusion.match_supported is True
+    assert fusion.classification == "VERIFIED_PARTIAL_COPY_EVIDENCE"
+    assert "ALIGNED_PIXELS_EFFECTIVELY_IDENTICAL" in fusion.reason_codes
+
+
+def test_a_merely_similar_aligned_region_still_needs_a_second_opinion():
+    """The conclusive path must not fire on anything short of identical pixels."""
+    fusion = fuse_copy_evidence(
+        exact_sha256=False,
+        ai_similarity=0.36,
+        phash_similarity=0.55,
+        geometry={
+            "validated": True,
+            "alignment_grade": "STRICT",
+            "inliers": 14,
+            "inlier_ratio": 1.0,
+            "query_coverage": 0.28,
+            "reference_coverage": 0.06,
+            "symmetric_reprojection_error": 0.0004,
+        },
+        aligned_perceptual={"available": True, "structure_consensus": 0.80},
+        settings=Settings(),
+    )
+    assert fusion.match_supported is False
+    assert fusion.review_supported is True

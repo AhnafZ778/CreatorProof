@@ -722,10 +722,27 @@ def build_evidence_packet(
             with Image.open(__import__("io").BytesIO(reference_raw)) as opened:
                 reference_image = opened.convert("RGB")
                 reference_image.load()
-            raw_geometry = asdict(container.geometry.verify(query_image, reference_image))
+            # Working harder on alignment is only worth its cost where the
+            # descriptor already says this is likely the same work. Ranking a
+            # mirrored or flat-art repost is something SSCD does well; aligning
+            # one is what it cannot do.
+            nomination = item.ai_similarity if item.ai_similarity is not None else item.retrieval_score
+            raw_geometry = asdict(
+                container.geometry.verify(
+                    query_image,
+                    reference_image,
+                    escalate=(
+                        nomination is not None
+                        and nomination >= settings.copy_alignment_escalation_similarity
+                    ),
+                )
+            )
+            # A corroboration-required alignment is measured too, since the whole
+            # point of it is that the pixels get to settle what the keypoints
+            # could not.
             alignment = (
                 raw_geometry.get("homography_query_to_reference")
-                if raw_geometry.get("validated")
+                if raw_geometry.get("alignment_grade") in {"STRICT", "CORROBORATION_REQUIRED"}
                 else None
             )
             aligned_perceptual = asdict(
@@ -1097,7 +1114,11 @@ def build_evidence_packet(
             "Nearest registered candidate is a retrieval result, not proof of copying.",
             "Copy-fusion thresholds are prototype operating points; project-specific ROC/FPR "
             "calibration is required before production use.",
-            "Unvalidated geometry emits no correspondence or region annotations.",
+            "Geometry that aligned nothing emits no correspondence or region annotations.",
+            "Where strict descriptor matching fails on mirrored, flat, or repetitive work, "
+            "alignment is retried against a mirror and then under relaxed matching; a relaxed "
+            "alignment is never a match on its own and reports as a copy finding only when the "
+            "aligned pixels independently agree.",
             "The copy evidence index is an auditable ranking score, not a probability of copying "
             "or infringement.",
             "C2PA is checked only when the official c2patool runtime is available; absence "

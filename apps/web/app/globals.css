@@ -319,6 +319,9 @@ button:disabled { opacity: .45; cursor: wait; }
 .modeAction button:hover:not(:disabled), .modeAction button.active { background: color-mix(in srgb, var(--mode-accent) 24%, transparent); }
 .modeReady { display: flex; gap: var(--cp-2); align-items: center; justify-content: flex-end; color: var(--cp-text-faint); font: 600 10px/1 var(--cp-font-mono); letter-spacing: .09em; }
 .modeReady i { width: 7px; height: 7px; border-radius: 50%; background: var(--mode-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--mode-accent) 12%, transparent); }
+/* A lane that ran and found nothing to draw. Hollow rather than lit, so the
+   status reads as absence without borrowing a verdict colour. */
+.modeReady.isEmpty i { background: transparent; border: 1px solid var(--cp-text-faint); box-shadow: none; }
 .heatLegend { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .heatLegend i { width: 18px; height: 9px; display: inline-block; border: 1px solid #596a84; background: rgba(240,122,183,.12); }
 .heatLegend i:last-of-type { background: rgba(240,122,183,.62); }
@@ -1342,6 +1345,32 @@ button { min-height: 44px; font-size: 14px; }
   font-size: 12px;
   font-weight: 550;
   letter-spacing: .01em;
+}
+
+/* What the named catalog holds. Quiet when it holds something, because the
+   count is only reassurance then; raised when it is empty, because that is the
+   one state where running the scan cannot answer the question being asked.
+   Carried on the desk accent rather than amber: this sits above the verdict, and
+   a review-coloured panel there would read as a finding about the candidate. */
+.catalogSize {
+  display: block;
+  color: var(--cp-text-muted);
+  font-size: var(--cp-text-sm);
+  line-height: 1.45;
+}
+
+.catalogSize.isEmpty {
+  padding: 8px 10px;
+  border: 1px solid color-mix(in srgb, var(--portal-accent) 38%, transparent);
+  border-radius: var(--cp-r-sm);
+  background: color-mix(in srgb, var(--portal-accent) 9%, transparent);
+  color: var(--cp-text-secondary);
+}
+
+.catalogSize.isEmpty b {
+  color: var(--cp-text);
+  font-family: var(--cp-font-mono);
+  font-weight: 400;
 }
 
 .portalForm input,

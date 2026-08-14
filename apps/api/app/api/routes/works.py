@@ -77,6 +77,10 @@ def _register_bytes(
                 "origin_state": origin_gate.state,
                 "classification": origin_gate.classification,
                 "evidence_tier": origin_gate.evidence_tier,
+                # The measured signal and the line it crossed. Without both, a
+                # refusal cannot be argued with.
+                "score": origin_gate.score,
+                "threshold": origin_gate.threshold,
                 # The catalog declines to vouch for the file; it does not conclude
                 # anything about who made it. Say so where the refusal is read.
                 "boundary": (

@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — Submission Dossier</title>
+<link rel="stylesheet" href="../assets/doc.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="coverMark"><b>CreatorProof</b><span></span>Submission Dossier<span></span>BCOLBD 2026</div>
+
+  <div class="coverBody">
+    <h1 class="coverTitle">See what matches.<em>Prove what you checked.</em></h1>
+    <p class="coverLead">
+      Pre-publication creative-rights evidence. Three independent AI lanes answer three
+      different questions about an image, your policy turns them into one decision, and the
+      whole result is sealed into a receipt that anyone can verify without trusting us.
+    </p>
+  </div>
+
+  <div>
+    <div class="coverLanes">
+      <div class="coverLane laneCopy" style="--tone:#37d4dc">
+        <b>Lane 1 · Copy</b>
+        <span>Does this reuse a work someone already registered?</span>
+      </div>
+      <div class="coverLane laneOrigin" style="--tone:#f07ab7">
+        <b>Lane 2 · Origin</b>
+        <span>Was a generative model involved in making it?</span>
+      </div>
+      <div class="coverLane laneProfile" style="--tone:#ffbd59">
+        <b>Lane 3 · Profile</b>
+        <span>Does it resemble a specific creator's body of work?</span>
+      </div>
+    </div>
+
+    <div class="coverFoot">
+      <div>
+        <b>Project</b>CreatorProof v0.10.0
+        <br>Build MODEL-ACCURACY-HARDENING-2026.08.10
+      </div>
+      <div style="text-align:right">
+        <b>Document</b>Problem · Solution · Users · Technology · AI
+        <br>Prepared August 2026
+      </div>
+    </div>
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+<!-- ═══════════════════════════════════════════════════════════ AT A GLANCE -->
+<section class="flow">
+  <div class="sectionHead">
+    <span class="sectionNum">00</span>
+    <h1>At a glance</h1>
+  </div>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:38mm">Project name</td><td><strong>CreatorProof</strong> — visual rights intelligence</td></tr>
+      <tr><td>Team name</td><td class="muted">[TEAM NAME]</td></tr>
+      <tr><td>Members</td><td class="muted">[MEMBER 1 — role] · [MEMBER 2 — role] · [MEMBER 3 — role]</td></tr>
+      <tr><td>One line</td><td>Pre-publication creative-rights evidence for agencies, brands and marketplaces — plus a receipt you can verify yourself.</td></tr>
+      <tr><td>Category</td><td>Applied AI · Blockchain-anchored provenance · Creative-industry infrastructure</td></tr>
+      <tr><td>Stage</td><td>Working end-to-end prototype. Not a mockup, not a slide deck.</td></tr>
+      <tr><td>Demo</td><td class="mono muted">[DEMO URL] · Artist portal <code>/artist</code> · Checker portal <code>/user</code></td></tr>
+      <tr><td>Source</td><td class="mono muted">[GITHUB URL]</td></tr>
+      <tr><td>Video pitch</td><td class="mono muted">[VIDEO URL]</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What actually runs, in numbers</h2>
+
+  <div class="grid4">
+    <div class="stat accent"><b>3</b><span>independent AI evidence lanes that are never collapsed into one score</span></div>
+    <div class="stat"><b>3</b><span>neural models loaded and running locally on device</span></div>
+    <div class="stat pass"><b>400</b><span>automated tests across 47 suites, all passing</span></div>
+    <div class="stat"><b>~46k</b><span>lines of application, test and interface code</span></div>
+  </div>
+
+  <div class="grid4">
+    <div class="stat pass"><b>98.1<small style="font-size:11pt">%</small></b><span>match recall on a 364-case internal copy-detection benchmark</span></div>
+    <div class="stat pass"><b>0</b><span>false matches across 115 unrelated-image negative pairs</span></div>
+    <div class="stat accent"><b>32</b><span>bytes written on chain per attestation — a hash, never the artwork</span></div>
+    <div class="stat"><b>0</b><span>legal judgments claimed, by design</span></div>
+  </div>
+
+  <div class="note">
+    <h4>A note on the numbers above</h4>
+    <p>
+      The benchmark figures come from a harness we wrote and ran ourselves
+      (<code>scripts/copy_detection_bench.py</code>), against 26 real-world transformations applied
+      to 14 source images. They are honest measurements of our own pipeline, not results on a
+      public leaderboard dataset, and we describe them that way throughout this document.
+      Section 06 gives the full methodology and the cases we still fail.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 01 THE PROBLEM -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">01</span>
+    <h1>Problem statement</h1>
+  </div>
+
+  <p class="lead">
+    Every organisation that publishes images now has to answer three questions before it presses
+    publish — and the entire market sells them one answer.
+  </p>
+
+  <p>
+    A brand team receives a campaign image from an agency. A marketplace receives an upload from
+    a seller. A publisher receives a submission from a freelancer. Before that image goes out
+    under their name, somebody has to decide whether it is safe. Today that decision is made by a
+    person squinting at a picture, running a reverse image search, and hoping.
+  </p>
+
+  <p>The uncomfortable truth is that "is this safe to publish?" is not one question. It is three:</p>
+
+  <div class="grid3">
+    <div class="card lane laneCopy">
+      <h4>Reuse</h4>
+      <p><strong>Does this image reuse a work that someone has already registered?</strong></p>
+      <p class="small muted">Not "does it look similar" — does the actual content of a known work appear inside this file, possibly cropped, mirrored, re-compressed, screenshotted or pasted into a social post?</p>
+    </div>
+    <div class="card lane laneOrigin">
+      <h4>Origin</h4>
+      <p><strong>Was a generative model involved in producing it?</strong></p>
+      <p class="small muted">A question with real contractual and regulatory weight — many client contracts and platform policies now require disclosure — and one that no detector on earth answers with certainty.</p>
+    </div>
+    <div class="card lane laneProfile">
+      <h4>Resemblance</h4>
+      <p><strong>Does it resemble a specific living creator's body of work?</strong></p>
+      <p class="small muted">The style-mimicry question that generative models made urgent, and the one most likely to end in a public dispute even when no copying occurred.</p>
+    </div>
+  </div>
+
+  <h2>1.1 Why the single-number approach fails</h2>
+
+  <p>
+    The tools on the market answer one of these and imply the others. An "AI detector" returns
+    <em>87% AI</em> and a user reads it as a verdict. A reverse-image tool returns a similarity
+    percentage and a user reads it as infringement. A style-matching tool returns a creator name
+    and a user reads it as authorship. Each collapse is a different kind of harm:
+  </p>
+
+  <ul class="clean">
+    <li><strong>Collapsing origin into guilt</strong> punishes legitimate AI-assisted workflows and produces false accusations against human artists whose work happens to score high.</li>
+    <li><strong>Collapsing similarity into infringement</strong> produces legal claims that do not survive contact with a lawyer, and burns the relationship with the creator.</li>
+    <li><strong>Collapsing style into authorship</strong> is the most dangerous of the three: resemblance is not evidence of copying, and treating it as such defames the accused.</li>
+  </ul>
+
+  <p>
+    There is also a fourth failure that nobody talks about: <strong>silence read as safety.</strong>
+    When a tool searches an incomplete database and returns "no matches found", the user hears
+    "this image is clean". It is not. It means the tool did not look everywhere. That single
+    ambiguity is responsible for a large share of the false confidence in this market.
+  </p>
+
+  <h2>1.2 Who experiences this</h2>
+
+  <table>
+    <thead>
+      <tr><th style="width:42mm">Who</th><th>What it costs them today</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Brand and agency teams</td>
+        <td>Manual pre-publication review that does not scale, and no defensible record of having checked. When a claim arrives six months later, there is nothing in the file except a Slack thread.</td>
+      </tr>
+      <tr>
+        <td>Marketplaces and platforms</td>
+        <td>Takedown queues staffed by humans reviewing images with no structured evidence, no consistency between reviewers, and no audit trail for appeals.</td>
+      </tr>
+      <tr>
+        <td>Independent artists and illustrators</td>
+        <td>No practical mechanism to register a work, prove it existed at a point in time, and have that registration actually consulted by the platforms where reuse happens.</td>
+      </tr>
+      <tr>
+        <td>Publishers and newsrooms</td>
+        <td>Disclosure obligations around synthetic media with no reliable way to determine origin, and reputational exposure when they get it wrong in either direction.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>1.3 Why now</h2>
+
+  <p>
+    Three curves crossed in the last twenty-four months. Generative image models became good
+    enough that origin is genuinely ambiguous to the human eye. Content-provenance standards
+    (C2PA / Content Credentials) matured from a proposal into something shipped by cameras and
+    editing software. And transparency obligations around synthetic media moved from
+    "best practice" into regulation and platform policy.
+  </p>
+
+  <p>
+    That combination creates a demand that did not exist before: organisations now need a
+    <strong>structured, auditable, machine-produced record</strong> of what they checked before
+    publishing — not a verdict, a record. Verdicts belong to lawyers. Records belong to
+    infrastructure. Nobody is selling the record.
+  </p>
+
+  <div class="note good">
+    <h4>The problem, in one sentence</h4>
+    <p>
+      Publishers have to decide whether an image is safe to release, the question is really three
+      separate questions with three different kinds of evidence, and the available tools answer
+      them with a single number that is confident, unverifiable and frequently wrong.
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════ 02 THE SOLUTION -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">02</span>
+    <h1>Solution description</h1>
+  </div>
+
+  <p class="lead">
+    CreatorProof is a pre-publication creative-rights evidence API. It runs three independent
+    AI lanes over a candidate image, keeps their findings separate, applies the customer's own
+    policy to produce PASS, REVIEW or BLOCK, and seals the entire result into a signed evidence
+    packet whose hash is anchored on a public blockchain.
+  </p>
+
+  <h2>2.1 The pipeline, upload to receipt</h2>
+
+  <div class="pipeline">
+    <div class="pipeStep">
+      <i>01 · INTAKE</i>
+      <b>Submit</b>
+      <span>Candidate image posted to <code>/v1/scans</code> with a catalog, an intended use and an idempotency key. Returns immediately with a scan ID; detection runs asynchronously.</span>
+    </div>
+    <div class="pipeStep">
+      <i>02 · EVIDENCE</i>
+      <b>Three lanes</b>
+      <span>Copy, origin and profile run independently. Each produces typed findings, its own confidence, and an explicit statement of what it was able to look at.</span>
+    </div>
+    <div class="pipeStep">
+      <i>03 · POLICY</i>
+      <b>Your rules</b>
+      <span>A versioned policy converts findings into <span class="pill pass">PASS</span> <span class="pill review">REVIEW</span> <span class="pill block">BLOCK</span> with recorded reason codes and policy inputs.</span>
+    </div>
+    <div class="pipeStep">
+      <i>04 · PROOF</i>
+      <b>Sealed receipt</b>
+      <span>Canonical evidence packet, Ed25519 signature, append-only Merkle log, and a 32-byte commitment attested on chain via EAS.</span>
+    </div>
+  </div>
+
+  <h2>2.2 The three lanes, and why they stay separate</h2>
+
+  <p>
+    Lane separation is the core design decision of the product, and it is enforced in code rather
+    than in documentation. The lanes have different data sources, different failure modes and
+    different legal meanings, so they are computed independently, presented independently, and
+    are never averaged together into an "infringement percentage".
+  </p>
+
+  <div class="grid3">
+    <div class="card lane laneCopy">
+      <h4>Lane 1 — Stored-work copy</h4>
+      <p class="small">
+        A learned copy-detection descriptor nominates candidates from the customer's registered
+        catalog. Classical geometry then attempts to physically align the candidate onto the
+        reference. Aligned pixels are compared. A match requires agreement from
+        <strong>independent</strong> kinds of evidence, not a high similarity score.
+      </p>
+      <p class="small muted"><strong>Answers:</strong> which registered work is present, and where in the frame.</p>
+    </div>
+    <div class="card lane laneOrigin">
+      <h4>Lane 2 — AI origin</h4>
+      <p class="small">
+        Cryptographic provenance (C2PA) is checked first, because a signed manifest is worth more
+        than any detector. Then a detector ensemble runs the image under ten stress views. Visible
+        watermark text is read by OCR. Findings are fused into one score that is explicitly labelled
+        <strong>not a probability</strong>.
+      </p>
+      <p class="small muted"><strong>Answers:</strong> what evidence of generative involvement exists — and how strong it is.</p>
+    </div>
+    <div class="card lane laneProfile">
+      <h4>Lane 3 — Creator profile</h4>
+      <p class="small">
+        A style-specific embedding compares the candidate against enrolled creator profiles, ranked
+        with a density correction so that a "generically popular" profile cannot win by default. A
+        content control checks whether resemblance is really just the same subject matter.
+      </p>
+      <p class="small muted"><strong>Answers:</strong> does this resemble a creator's body of work — advisory only, never authorship.</p>
+    </div>
+  </div>
+
+  <h2>2.3 Coverage before verdict</h2>
+
+  <p>
+    Before any lane reports a finding, the scan reports <strong>what it was able to search.</strong>
+    Eligible references, nominated references, verified references, omitted references, failures, the
+    catalog version and a snapshot digest are all recorded. Only a scan whose coverage is
+    <code>COMPLETE</code> is permitted to return <code>NO_MATCH_IN_CHECKED_SOURCES</code>. Every
+    incomplete scan is visibly review-only.
+  </p>
+
+  <p>
+    This is a small rule with a large consequence: <strong>the system is structurally incapable of
+    telling you an image is clean when it did not finish looking.</strong> That single property is
+    what makes the output usable as evidence rather than as reassurance.
+  </p>
+
+  <h2>2.4 The proof layer</h2>
+
+  <p>
+    An evidence packet is only useful if a third party can check it without trusting the party who
+    produced it. CreatorProof provides four layers of verifiability, each independently checkable:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th style="width:40mm">Layer</th><th>Mechanism</th><th style="width:44mm">What it proves</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Canonicalisation</td>
+        <td class="m">Deterministic JSON serialisation (sorted keys, ASCII, no whitespace) → SHA-256. The proof object is excluded from its own hash.</td>
+        <td>Two parties hashing the same packet get the same 32 bytes.</td>
+      </tr>
+      <tr>
+        <td>Signature</td>
+        <td class="m">Ed25519 over an RFC 8785 JCS canonicalisation, wrapped in a COSE Sign1 envelope.</td>
+        <td>The packet came from this issuer and has not been edited.</td>
+      </tr>
+      <tr>
+        <td>Transparency log</td>
+        <td class="m">Append-only RFC 6962-style Merkle tree with signed tree heads and per-leaf inclusion proofs.</td>
+        <td>This packet was in the log at this tree size, and the log has not been rewritten.</td>
+      </tr>
+      <tr>
+        <td>Public anchor</td>
+        <td class="m">Ethereum Attestation Service <code>attest()</code> on Base Sepolia, committing a 32-byte hash.</td>
+        <td>The commitment existed no later than this block, witnessed by a chain nobody in the transaction controls.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Multi-party co-attestation</h3>
+
+  <p>
+    The feature we are proudest of architecturally. A verdict from a single vendor is still a
+    single vendor's word. Co-attestation lets a <strong>second, independent organisation</strong> —
+    the agency, the licensor, the marketplace's rights partner — bind its own EVM key to the same
+    evidence commitment.
+  </p>
+
+  <p>
+    The counterparty is served a canonical challenge body, signs it with EIP-712 typed data, and
+    the resulting attestation is written on chain with its <code>refUID</code> pointing at the
+    original platform attestation. Five gates are enforced before it is accepted: recovered signer
+    address must match the declared signer, the signer must be an active member of the on-chain
+    registry, the recomputed canonical digest must match, the on-chain data must match the body
+    hash, and the reference UID must point at the correct parent.
+  </p>
+
+  <p>
+    The result is a decision that is <strong>jointly witnessed</strong>. Neither party can later
+    deny it, and neither party had to trust the other's database.
+  </p>
+
+  <h2>2.5 What CreatorProof explicitly is not</h2>
+
+  <p>
+    The boundaries are stated in the product, in the API responses, and in the interface — not
+    buried in terms of service. This is a deliberate product decision, and we consider it a
+    feature rather than a disclaimer.
+  </p>
+
+  <div class="grid3">
+    <div class="card"><h4>Not a legal finding</h4><p class="small muted">It reports evidence of reuse. Whether that reuse is infringing is a legal question involving licences, fair dealing and jurisdiction that no image model can answer.</p></div>
+    <div class="card"><h4>Not rights clearance</h4><p class="small muted">A PASS means "our checks found nothing against your policy in the sources we searched". It is not permission to publish.</p></div>
+    <div class="card"><h4>Not proof of human origin</h4><p class="small muted">An absent C2PA manifest and a low detector score are not evidence that a person made the work. Absence of evidence is reported as absence of evidence.</p></div>
+  </div>
+
+  <h2>2.6 The two portals</h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Artist portal</h4>
+      <p class="small">
+        A creator registers a reference work, states an authorship claim, and receives a registration
+        receipt. Registration runs the AI-origin lane as a gate: works scoring above the configured
+        threshold are refused, with the score and threshold returned in the refusal so the decision
+        is contestable rather than opaque.
+      </p>
+      <p class="small muted">This is what makes the catalog worth searching — a registry of works that a human claims and that were screened at intake.</p>
+    </div>
+    <div class="card">
+      <h4>Checker portal</h4>
+      <p class="small">
+        Someone about to publish drops in a candidate. They get the bottom line first, then the three
+        lanes, then an evidence workspace that renders the actual geometric correspondences on the
+        pixels — the matched keypoints, the aligned region, the structural agreement.
+      </p>
+      <p class="small muted">The workspace exists so a reviewer can disagree with the machine on the basis of the same evidence the machine used.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════ 03 THE USERS -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">03</span>
+    <h1>Target users</h1>
+  </div>
+
+  <p class="lead">
+    CreatorProof is API-first and business-to-business. The buyer is an organisation with
+    publication risk; the beneficiary is the creator whose work is in the catalog.
+  </p>
+
+  <h2>3.1 Primary customers</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:34mm">Segment</th>
+        <th style="width:44mm">Who signs</th>
+        <th>The job they are hiring us for</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Creative agencies</td>
+        <td>Head of production, general counsel</td>
+        <td>Screen every deliverable before it reaches the client, and hand the client a proof packet with the invoice. Turns a liability conversation into a value-added deliverable.</td>
+      </tr>
+      <tr>
+        <td>Brand in-house studios</td>
+        <td>Brand ops lead, legal ops</td>
+        <td>Enforce a consistent pre-publication standard across dozens of agencies and freelancers, with an audit trail that survives an internal review.</td>
+      </tr>
+      <tr>
+        <td>Marketplaces &amp; UGC platforms</td>
+        <td>Head of trust &amp; safety</td>
+        <td>Triage uploads at scale so that human reviewers only see the ambiguous cases, and every takedown or reinstatement has structured evidence behind it.</td>
+      </tr>
+      <tr>
+        <td>Publishers &amp; newsrooms</td>
+        <td>Standards editor, picture desk</td>
+        <td>Meet synthetic-media disclosure obligations with a defensible record instead of an editor's judgement call.</td>
+      </tr>
+      <tr>
+        <td>Licensing &amp; stock platforms</td>
+        <td>Rights operations</td>
+        <td>Gate contributor intake, and co-attest licence decisions with the counterparty so both sides hold the same signed record.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>3.2 The beachhead</h2>
+
+  <div class="note">
+    <h4>Mid-size creative agencies, 20–200 people, running paid campaigns</h4>
+    <p>
+      We deliberately do not start with everyone. The agency is the right first customer because
+      it has all three properties a wedge needs: <strong>acute pain</strong> (a single infringement
+      claim on a campaign can exceed a year of software spend), <strong>a small buying
+      committee</strong> (a head of production can sign), and <strong>a natural expansion path</strong>
+      (the agency's proof packet is seen by every client it serves, which turns each customer into
+      a distribution channel into a brand).
+    </p>
+  </div>
+
+  <div class="grid2" style="margin-top:8mm">
+    <div class="card">
+      <h4>3.3 The creator side</h4>
+      <p class="small">
+        Creators are not the paying customer, and pretending otherwise would be dishonest —
+        independent artists are the least able to pay and the most in need. They are the
+        <strong>supply side of the network</strong>. Registration is free to the creator, funded by
+        the checking side.
+      </p>
+      <p class="small">
+        This is the structural insight that made content-ID systems work: the party who benefits
+        from a match being found is not the party who registered the work. The creator's incentive
+        is that their registry entry is actually consulted by the organisations most likely to reuse
+        their work, and that they hold a timestamped, independently verifiable record of having
+        registered it.
+      </p>
+    </div>
+    <div class="card">
+      <h4>3.4 Who this is not for</h4>
+      <p class="small">
+        Consumers looking for a free "is this AI?" button. Anyone wanting a legal opinion. Anyone
+        who needs a crawl of the open internet.
+      </p>
+      <p class="small">
+        CreatorProof searches declared catalogs, and says so on every result. Being explicit about
+        the boundary is precisely what keeps the output trustworthy inside it — a tool that claims
+        to have checked everywhere is a tool whose "no match" means nothing.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 04 TECHNOLOGY -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">04</span>
+    <h1>Technologies used</h1>
+  </div>
+
+  <h2>4.1 Architecture</h2>
+
+  <p>
+    A FastAPI backend holds all detection, policy and proof logic behind a provider-boundary
+    abstraction, so every model is a swappable implementation of an interface rather than a call
+    embedded in business logic. A Next.js front end never touches an API key: the browser talks to
+    Next.js route handlers, which talk to the API server-side.
+  </p>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:38mm">Layer</th><th>Technology</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API</td><td class="m">Python 3.12 · FastAPI · Pydantic v2 · SQLAlchemy · Alembic · uv (locked dependency graph)</td></tr>
+      <tr><td>Inference</td><td class="m">PyTorch 2.13 · TorchScript · timm · safetensors · OpenCV · Pillow · NumPy</td></tr>
+      <tr><td>Data</td><td class="m">PostgreSQL with row-level security for tenant isolation; SQLite for local development</td></tr>
+      <tr><td>Web</td><td class="m">Next.js (App Router) · React · TypeScript · hand-authored CSS on a single token system · self-hosted variable fonts</td></tr>
+      <tr><td>Chain</td><td class="m">Ethereum Attestation Service · Base Sepolia (chain 84532) · web3.py · eth-account · Solidity · local Ganache harness</td></tr>
+      <tr><td>Crypto</td><td class="m">Ed25519 · COSE Sign1 · RFC 8785 JCS canonicalisation · RFC 6962-style Merkle tree · EIP-712 typed signatures · SHA-256</td></tr>
+      <tr><td>Provenance</td><td class="m">C2PA via <code>c2patool</code> 0.27.7 (version and binary digest pinned) · Tesseract OCR 5.3.4</td></tr>
+      <tr><td>Operations</td><td class="m">Prometheus metrics · structured stage timelines · signed webhooks · idempotency keys · append-only usage meters</td></tr>
+      <tr><td>Clients</td><td class="m">First-party Python and TypeScript SDKs, dependency-free</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4.2 Production-shaped properties</h2>
+
+  <p>
+    These are not features a demo needs. They are in the codebase because the intent was always a
+    product, and they are the reason the prototype could be pointed at a real customer without a
+    rewrite:
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Multi-tenancy</h4>
+      <p class="small muted">API key resolves to a tenant and a scoped role. PostgreSQL row-level security policies deny access to any query that has not bound a tenant. Break-glass contexts exist for workers and are explicit.</p>
+    </div>
+    <div class="card">
+      <h4>Idempotency &amp; async</h4>
+      <p class="small muted">Scan creation returns immediately with a recoverable ID. Reusing an idempotency key with changed bytes, catalog or intended use returns a typed <code>409 IDEMPOTENCY_PAYLOAD_MISMATCH</code> rather than silently returning a stale result.</p>
+    </div>
+    <div class="card">
+      <h4>Metering</h4>
+      <p class="small muted">Append-only meters for scans, protected assets, storage bytes, GPU stage seconds, proof anchors and retention tier. Metering failures are logged and swallowed — billing never breaks a customer request.</p>
+    </div>
+    <div class="card">
+      <h4>Crash-safe chain writes</h4>
+      <p class="small muted">Transactions are signed and persisted with their hash <em>before</em> broadcast, so a process death mid-send is reconciled rather than duplicated or lost. A dispatcher thread leases jobs and retries.</p>
+    </div>
+  </div>
+
+  <h2>4.3 API surface</h2>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:36mm">Group</th><th>Endpoints</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Catalog</td><td class="m">POST/GET <code>/v1/works</code> · POST <code>/v1/works/bulk</code> · GET work media · DELETE work</td></tr>
+      <tr><td>Scans</td><td class="m">POST <code>/v1/scans</code> · GET scan · GET stages · POST cancel · GET statement · GET statement/verify · GET verification-package</td></tr>
+      <tr><td>Rights</td><td class="m">parties · claims · claim events · licences · licence events · work rights position</td></tr>
+      <tr><td>Policy</td><td class="m">POST/GET <code>/v1/policies</code> · POST <code>/v1/policies/dry-run</code></td></tr>
+      <tr><td>Review</td><td class="m">GET <code>/v1/review-cases</code> · GET case · POST reviewer actions</td></tr>
+      <tr><td>Proof</td><td class="m">status · integrity · preflight · attestation lookup · transparency checkpoint · consistency · trust-bundle</td></tr>
+      <tr><td>Network</td><td class="m">status · member registry · co-attestation challenge · co-attestations · withdraw</td></tr>
+      <tr><td>Platform</td><td class="m">credentials · webhook endpoints · webhook deliveries · usage</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ 05 AI -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">05</span>
+    <h1>AI tools and models</h1>
+  </div>
+
+  <p class="lead">
+    This is the section that matters most, so it is the longest. CreatorProof is not a product with
+    AI added to it. Every question the product answers is answered by a model, and the entire
+    architecture exists to constrain what those models are allowed to conclude.
+  </p>
+
+  <div class="note">
+    <h4>The design principle: AI nominates, deterministic methods verify</h4>
+    <p>
+      A neural network is superb at "these two images are probably related" and unreliable at
+      "and therefore this is a copy". So in CreatorProof a learned model is never permitted to
+      produce a match on its own. The model <strong>nominates</strong>; classical geometry
+      <strong>verifies</strong> by physically aligning one image onto the other; aligned pixels
+      <strong>corroborate</strong>. A finding requires agreement from independent kinds of evidence.
+      This is why the system can report zero false matches on our negative set while still recovering
+      mirrored, cropped and re-compressed reposts.
+    </p>
+  </div>
+
+  <h2>5.1 Model inventory</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:33mm">Model</th>
+        <th style="width:31mm">Architecture</th>
+        <th style="width:23mm">Runs</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>SSCD <span class="faint mono">disc_mixup</span></td>
+        <td class="m">ResNet-50 family, 512-d descriptor</td>
+        <td class="m">Local · 95 MB</td>
+        <td>Copy-detection retrieval. Nominates catalog works that may be present in the candidate.</td>
+      </tr>
+      <tr>
+        <td>CSD ViT-L</td>
+        <td class="m">Vision Transformer Large, 768-d style descriptor</td>
+        <td class="m">Local · 2.3 GB</td>
+        <td>Creator-profile resemblance. Encodes style independently of subject matter.</td>
+      </tr>
+      <tr>
+        <td>Community Forensics</td>
+        <td class="m">ViT-S/16 at 384px, binary head</td>
+        <td class="m">Local · 84 MB</td>
+        <td>Generalising synthetic-image detector. Trained across a very large set of generator families.</td>
+      </tr>
+      <tr>
+        <td>Sightengine <span class="faint mono">genai</span></td>
+        <td class="m">Vendor model</td>
+        <td class="m">Cloud · optional</td>
+        <td>Second opinion on AI origin when credentials are configured. The system runs fully without it.</td>
+      </tr>
+      <tr>
+        <td>Tesseract OCR</td>
+        <td class="m">LSTM text recognition</td>
+        <td class="m">Local · CLI</td>
+        <td>Reads visible "AI generated" watermark text that generators burn into the frame.</td>
+      </tr>
+      <tr>
+        <td><code>c2patool</code></td>
+        <td class="m">Standards implementation</td>
+        <td class="m">Local · CLI</td>
+        <td>Validates cryptographic content credentials and reads signed AI-generation assertions.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="small muted">
+    All three neural models are present on disk, verified against pinned SHA-256 digests in the
+    model bundle manifest, and confirmed to load and run. None of them is a placeholder.
+  </p>
+
+  <h2>5.2 Lane 1 — Copy detection</h2>
+
+  <h4>SSCD (Self-Supervised Copy Detection)</h4>
+
+  <p>
+    From Meta AI Research, trained specifically for the copy-detection task rather than for general
+    similarity. This distinction matters: a CLIP-style embedding will happily report that two
+    different photographs of a sunset are similar. SSCD is trained to be invariant to the
+    transformations that reposts actually apply — re-compression, rescaling, cropping, colour
+    shifts, overlays — while remaining discriminative between genuinely different works.
+  </p>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:38mm">Preprocessing</td><td class="m">RGB, shortest side resized to 288px bilinear, ImageNet normalisation</td></tr>
+      <tr><td>Output</td><td class="m">512-dimensional L2-normalised descriptor; similarity is a cosine dot product</td></tr>
+      <tr><td>Regional retrieval</td><td class="m">Whole image plus up to five overlapping crops at 0.64 area fraction, so a work occupying a corner of a collage is still nominated. Non-whole views carry a small score penalty.</td></tr>
+      <tr><td>Caching</td><td class="m">Content-addressed embedding cache keyed by provider identity digest and source SHA-256</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Geometric verification — the part that makes it evidence</h4>
+
+  <p>
+    Nomination is followed by SIFT keypoint detection (ORB as fallback), mutual nearest-neighbour
+    matching under a ratio test, and homography estimation with USAC_MAGSAC. If a homography is
+    found, the candidate can be <em>physically aligned</em> onto the reference, and the system knows
+    exactly which pixels correspond to which. Those correspondences are what the evidence workspace
+    draws on screen.
+  </p>
+
+  <p>
+    Two escalation paths were added after benchmarking exposed specific, reproducible failures:
+  </p>
+
+  <ul class="clean">
+    <li>
+      <strong>Mirror recovery.</strong> SIFT descriptors are not reflection-invariant, so a
+      horizontally flipped repost — one of the most common evasions — failed completely: 0 of 14
+      mirrored cases were detected, despite the descriptor scoring them as near-identical. The
+      verifier now retries with a mirrored query when descriptor similarity is high, and composes
+      the reflection into the homography so the alignment still maps back onto the file as it was
+      submitted. Result: <strong>14 of 14 recovered.</strong>
+    </li>
+    <li>
+      <strong>Corroboration-required alignment.</strong> Flat, repetitive artwork — logos, vector
+      illustration, graphic design — defeats the ratio test, because a repeated visual element has
+      many equally good matches and every one of them is discarded. A relaxed matching pass now
+      runs for these cases, but its output is graded <code>CORROBORATION_REQUIRED</code> and cannot
+      produce a match unless aligned-pixel structural agreement independently confirms it.
+    </li>
+  </ul>
+
+  <h4>Aligned perceptual agreement</h4>
+
+  <p>
+    Once aligned, the two images are compared where they overlap: luminance correlation, gradient
+    correlation, gradient-magnitude similarity, and SSIM, combined into a structure-consensus figure.
+    This is the pixel-level second opinion that makes the relaxed geometry path safe.
+  </p>
+
+  <h4>Fusion</h4>
+
+  <p>
+    A rule-based fusion layer takes descriptor similarity, perceptual hash distance, geometry grade
+    and aligned structure and decides between <code>MATCH_FOUND</code>,
+    <code>REVIEW</code> and <code>NO_MATCH_IN_CHECKED_SOURCES</code>, emitting typed reason codes
+    throughout. It is deliberately rule-based rather than a learned classifier, because the fusion
+    step is the one a customer will be asked to justify, and "the model said so" is not a
+    justification.
+  </p>
+
+  <h2>5.3 Lane 2 — AI origin</h2>
+
+  <p>
+    The hardest lane, and the one where honesty is a technical requirement rather than a
+    disclaimer. There is no universal AI-image detector. Anyone who claims otherwise is selling
+    something. The architecture is built around that constraint.
+  </p>
+
+  <h4>Evidence hierarchy</h4>
+
+  <ol>
+    <li><strong>Cryptographic provenance (C2PA).</strong> If the file carries a validly signed manifest asserting <code>trainedAlgorithmicMedia</code> from a trusted signer, that is the answer and no detector is needed. Signature validation, signer trust and the ingredient chain are all evaluated. Crucially, an <em>absent</em> manifest is reported as <code>NOT_PRESENT</code> — unknown, not human.</li>
+    <li><strong>Detector ensemble.</strong> Community Forensics locally, Sightengine in the cloud if configured. The two are never blended: a healthy cloud result is primary, and local detectors are the fallback, so a result is always attributable to a known source.</li>
+    <li><strong>Visible markers.</strong> Tesseract OCR across five crops reads burnt-in generator watermarks. Treated as a forgeable review signal, never as provenance.</li>
+    <li><strong>Spectral diagnostics.</strong> FFT frequency ratios, Laplacian variance, residual channel correlation. Descriptive context for a human reviewer; never permitted to decide origin.</li>
+  </ol>
+
+  <h4>Multi-view stress testing</h4>
+
+  <p>
+    A detector that changes its mind when an image is saved as JPEG is not measuring the image, it
+    is measuring the compression. Every local detector therefore evaluates ten views: the original,
+    four delivery transforms (JPEG q95, JPEG q75, 72% downscale-restore, light Gaussian blur), and
+    five spatial crops. The spread across those views becomes a <strong>transform-stability</strong>
+    figure that down-weights unstable detectors in the fusion, and the original's score is never
+    diluted by its own stress views.
+  </p>
+
+  <h4>The fused detector score</h4>
+
+  <p>
+    Detector outputs are grouped by <em>evidence family</em> — the kind of artefact they exploit —
+    and aggregated in logit space with reliability weights derived from calibration status and
+    transform stability. Families are then fused into a single <code>fused_detector_score</code>.
+    Its schema name is deliberately unlovely:
+  </p>
+
+  <pre><span class="c">// the label attached to every fused score the system emits</span>
+<span class="k">ORIGINAL_PRESERVING_QUALITY_WEIGHTED_ENSEMBLE_NOT_PROBABILITY</span></pre>
+
+  <p>
+    It is not a probability that the image is AI-generated, and the system will not let a caller
+    pretend it is. The highest-authority outcome, <code>LIKELY_AI_GENERATED</code>, additionally
+    requires two independently verified <em>and calibrated</em> evidence families to agree, with
+    stability across views. Today only one family is registered as verified, so the system
+    <strong>abstains from its own strongest claim</strong> — by design, and visibly, rather than
+    quietly rounding up.
+  </p>
+
+  <h4>Registration gate</h4>
+
+  <p>
+    In the Artist portal this score becomes an admission control. A work whose fused score exceeds
+    the configured threshold (default 0.50) is refused registration, and the refusal returns the
+    score and the threshold so the artist can see and contest the decision. Inconclusive findings
+    never block. The catalog is a registry of human-claimed work, and the gate is how it stays one.
+  </p>
+
+  <h2>5.4 Lane 3 — Creator profile</h2>
+
+  <p>
+    CSD (Contrastive Style Descriptors, University of Maryland) produces a 768-dimensional
+    embedding trained to capture artistic style while discarding subject matter — so two paintings
+    of completely different scenes by the same artist land near each other, which a general
+    embedding will not do.
+  </p>
+
+  <ul class="clean">
+    <li><strong>Profiles</strong> are built by averaging the CSD embeddings of works grouped by claimant, forming a creator anchor.</li>
+    <li><strong>Ranking uses CSLS</strong>, a local-density correction borrowed from cross-lingual word retrieval, which stops a profile that sits in a dense region of style space from winning every comparison by default — the hubness problem.</li>
+    <li><strong>A content control</strong> runs SSCD against the same works, so the system can distinguish "same style" from "same subject rendered similarly".</li>
+    <li><strong>Support is catalog-relative</strong> and empirical, computed with Bonferroni-adjusted tail probabilities against the actual catalog, and labelled as such rather than presented as a universal confidence.</li>
+    <li><strong>The lane is advisory.</strong> It is structurally prohibited from escalating a policy outcome on its own, because resemblance is not evidence of copying.</li>
+  </ul>
+
+  <h2>5.5 AI governance — the unusual part</h2>
+
+  <p>
+    Most projects ship models. This one ships a mechanism for being accountable about models,
+    which we think is the more interesting contribution:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th style="width:44mm">Mechanism</th><th>What it actually enforces</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Model bundle manifest</td>
+        <td>Every model artefact is pinned by SHA-256, alongside the Python version, the locked dependency digest, and a hash of the application source tree. Validated at container construction. A silently swapped weight file is a startup-time failure, not a mystery in production.</td>
+      </tr>
+      <tr>
+        <td>Qualification ladder</td>
+        <td>Bundles are graded <code>SOURCE_VERIFIED</code> → <code>RUNTIME_READY</code> → <code>SMOKE_TEST_ONLY</code> → <code>DEMO_READY</code> → <code>CALIBRATED_DOMAIN_READY</code> → <code>PRODUCTION_READY</code>. Ours self-reports as <strong>RUNTIME_READY</strong>. We did not promote it to flatter ourselves.</td>
+      </tr>
+      <tr>
+        <td>Evidence-family registry</td>
+        <td>A detector only counts toward independence requirements if its model version, artefact digest and preprocessing match a registered family. An unregistered detector still runs, but cannot be used to satisfy a "two independent families agree" gate.</td>
+      </tr>
+      <tr>
+        <td>Calibration registry</td>
+        <td>Platt-scaling parameters per domain, requiring minimum sample counts and matching digests. Currently absent, so every lane is marked <code>NOT_CALIBRATED_FOR_TARGET_DOMAIN</code> and high-authority outcomes are suppressed.</td>
+      </tr>
+      <tr>
+        <td>Acceptance policy</td>
+        <td>Benchmark gates a model must clear for promotion, with <code>automatic_promotion_allowed: false</code> — a human promotion record is required. The policy's own ratification state is <code>DRAFT_NOT_RATIFIED</code>, and it says so.</td>
+      </tr>
+      <tr>
+        <td>Drift monitoring</td>
+        <td>Compares live score distributions against recorded baselines and raises revalidation warnings on standardised shift.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note good">
+    <h4>Why this is the answer to "is AI used purposefully?"</h4>
+    <p>
+      Purposeful use of AI is not "we called a model". It is knowing precisely what each model can
+      and cannot support, encoding that knowledge as a constraint the code enforces, and being
+      willing to abstain when the evidence does not reach the bar. Every one of the mechanisms above
+      exists to make a model <em>less</em> able to overclaim. That is the opposite of bolting AI on.
+    </p>
+  </div>
+
+  <h2>5.6 AI tools used to build CreatorProof</h2>
+
+  <p>
+    Disclosed in full, because how a small team produced a system this size is part of the honest
+    answer:
+  </p>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:44mm">Tool</th><th>Used for</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Cursor (agentic coding)</td><td>Primary development environment. Implementation across the API, inference pipeline, chain integration and interface; large-scale refactors; test authoring.</td></tr>
+      <tr><td>Frontier LLMs via Cursor</td><td>Architecture review, adversarial critique of our own claims, threat modelling on the proof layer, and drafting of the honest-scope language that constrains the product.</td></tr>
+      <tr><td>AI-assisted benchmarking</td><td>Building the copy-detection benchmark harness, diagnosing the mirror and flat-artwork failures from its output, and validating the fixes.</td></tr>
+      <tr><td>ElevenLabs</td><td>Narration for the video pitch.</td></tr>
+      <tr><td>Generative video</td><td>Short conceptual b-roll clips in the pitch video, clearly used as illustration between real screen recordings.</td></tr>
+    </tbody>
+  </table>
+
+  <p class="small muted">
+    Every architectural decision, threshold, scope boundary and honesty constraint described in this
+    document was a human decision. AI accelerated the writing of the code; it did not choose what
+    the product refuses to claim.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 06 DOES IT WORK -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">06</span>
+    <h1>Evidence that it works</h1>
+  </div>
+
+  <h2>6.1 Copy-detection benchmark</h2>
+
+  <p>
+    We built a harness that takes 14 source images, applies 26 transformations that model how
+    images are actually reused in the wild, and runs each result through the complete production
+    pipeline — retrieval, geometry, aligned perceptual, fusion. Negatives are unrelated works and
+    hard crops against different works.
+  </p>
+
+  <div class="grid4">
+    <div class="stat"><b>364</b><span>positive cases across 26 transformations</span></div>
+    <div class="stat pass"><b>98.08<small style="font-size:11pt">%</small></b><span>returned <code>MATCH_FOUND</code></span></div>
+    <div class="stat pass"><b>99.45<small style="font-size:11pt">%</small></b><span>flagged as match or review</span></div>
+    <div class="stat pass"><b>0</b><span>false matches on 115 negatives</span></div>
+  </div>
+
+  <table class="compact">
+    <thead>
+      <tr><th>Transformation family</th><th class="num">Cases</th><th class="num">Match</th><th>Note</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Re-encoding — JPEG q80 / q55 / q35, identical re-encode</td><td class="num">56</td><td class="num">56</td><td class="small muted">Perfect</td></tr>
+      <tr><td>Rescaling — 30% / 50% / 150%</td><td class="num">42</td><td class="num">42</td><td class="small muted">Perfect</td></tr>
+      <tr><td>Colour — brightness, contrast, saturation, greyscale</td><td class="num">56</td><td class="num">56</td><td class="small muted">Perfect</td></tr>
+      <tr><td>Repost formats — caption bar, letterbox, screenshot, social repost</td><td class="num">56</td><td class="num">56</td><td class="small muted">Perfect</td></tr>
+      <tr><td>Mirroring — horizontal flip</td><td class="num">14</td><td class="num">14</td><td class="small" style="color:#34d399">Was 0/14 before the mirror-recovery fix</td></tr>
+      <tr><td>Rotation — 90°, 10°, 2°</td><td class="num">42</td><td class="num">40</td><td class="small muted">Two flat-artwork cases fall to review or miss</td></tr>
+      <tr><td>Cropping — 90% / 75% / 60% / 45%</td><td class="num">56</td><td class="num">53</td><td class="small muted">Aggressive crops of repetitive artwork are the residual weakness</td></tr>
+      <tr><td>Compound — crop+JPEG, scale+rotate, blur</td><td class="num">42</td><td class="num">40</td><td class="small muted">—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <h4>What we still fail, stated plainly</h4>
+    <p>
+      Two of 364 cases miss outright, and both are the same pathological source: a flat, highly
+      repetitive graphic with almost no distinctive keypoints, cropped to 60% or rotated 10°.
+      SIFT cannot find enough distinct features on it. We know exactly why it fails and could
+      raise recall by loosening thresholds — and chose not to, because the same loosening
+      introduces false-match risk, and a false match in this product is far more damaging than a
+      referral to human review. Five further cases return <em>review</em> rather than <em>match</em>,
+      which is the system behaving as intended: uncertain, and saying so.
+    </p>
+  </div>
+
+  <h2>6.2 Test suite</h2>
+
+  <div class="grid3">
+    <div class="stat pass"><b>400</b><span>automated tests, all passing</span></div>
+    <div class="stat"><b>47</b><span>test suites</span></div>
+    <div class="stat"><b>9.5k</b><span>lines of test code</span></div>
+  </div>
+
+  <p>
+    Coverage includes adversarial cases for the offline verifier, tamper and replay attacks on
+    co-attestation, crash-recovery for chain writes, Merkle inclusion and consistency proofs,
+    Ed25519 and COSE test vectors, idempotency conflict semantics, tenant isolation, and the
+    detection-fusion behaviours described above.
+  </p>
+
+  <h2>6.3 Blockchain status — stated precisely</h2>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:52mm">Capability</th><th style="width:30mm">State</th><th>Detail</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>EAS attestation pipeline</td><td><span class="pill pass">IMPLEMENTED</span></td><td class="small">Preflight, gas estimation, signing, crash-safe persist-before-broadcast, receipt parsing, confirmation depth, on-chain read-back verification.</td></tr>
+      <tr><td>Three attestation schemas</td><td><span class="pill pass">IMPLEMENTED</span></td><td class="small">Evidence packet, transparency checkpoint, counterparty attestation — each with its own revocability policy.</td></tr>
+      <tr><td>EIP-712 co-attestation</td><td><span class="pill pass">IMPLEMENTED</span></td><td class="small">Real secp256k1 signature verification with five acceptance gates; tested against tampering, replay and staleness.</td></tr>
+      <tr><td>Merkle transparency log</td><td><span class="pill pass">IMPLEMENTED</span></td><td class="small">Append-only, signed tree heads, inclusion and consistency proofs. Labelled <em>not blockchain</em> everywhere it appears.</td></tr>
+      <tr><td>Offline verification</td><td><span class="pill pass">IMPLEMENTED</span></td><td class="small">Standalone script verifies a statement with no network access, against an externally pinned issuer fingerprint.</td></tr>
+      <tr><td>Live Base Sepolia transactions</td><td><span class="pill review">REQUIRES SETUP</span></td><td class="small">Needs a funded key, registered schema UIDs and RPC configuration. Default development mode anchors to the local Merkle log and <strong>says so in the interface</strong> rather than implying a chain write.</td></tr>
+      <tr><td>Clearance-receipt token</td><td><span class="pill neutral">CONTRACT ONLY</span></td><td class="small">Solidity exists and deploys locally; no API pipeline mints it. Not claimed as a product feature.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════ 07 JUDGING ALIGNMENT -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">07</span>
+    <h1>Judging criteria alignment</h1>
+  </div>
+
+  <p class="kicker">
+    Our own assessment against the published criteria, including where we are weak. We would
+    rather a judge hear our weaknesses from us than find them.
+  </p>
+
+  <h2>Problem fit and real-world impact <span class="faint mono" style="font-size:9pt">25%</span></h2>
+  <p>
+    The problem is defined more precisely than the market defines it — we separate three questions
+    that competitors merge, and we can articulate the specific harm each conflation causes. It is
+    acutely felt by identifiable buyers with budget. Measurable value is credible (review hours
+    displaced, claims avoided, audit trail produced) but <strong>not yet measured</strong>: we have
+    no pilot data or letters of intent. That is the honest gap.
+  </p>
+
+  <h2>Innovation and idea quality <span class="faint mono" style="font-size:9pt">20%</span></h2>
+  <p>
+    The innovation is architectural rather than a single novel algorithm: separated evidence lanes,
+    coverage-before-verdict, AI-nominates-geometry-verifies, and multi-party co-attestation as a
+    trust primitive. AI use is unusually purposeful — the governance layer exists specifically to
+    stop models overclaiming, and the system visibly abstains from its own strongest classification
+    because the calibration evidence is not there.
+  </p>
+
+  <h2>Technical implementation <span class="faint mono" style="font-size:9pt">20%</span></h2>
+  <p>
+    A working system: 400 passing tests, three neural models running locally, a measured benchmark
+    with documented failures, a complete chain integration with crash-safe writes. Weaknesses we
+    accept: the benchmark is ours rather than a public dataset, detector calibration is absent, and
+    a live testnet transaction requires operator configuration rather than being pre-baked in the
+    repository.
+  </p>
+
+  <h2>Product potential and scalability <span class="faint mono" style="font-size:9pt">20%</span></h2>
+  <p>
+    Unusually productised for a hackathon build — multi-tenancy with row-level security, metering,
+    quotas, webhooks, idempotency, first-party SDKs. A named beachhead and a network-effect flywheel
+    on the catalog. Weakness: no customer discovery interviews and no validated pricing. The business
+    model is reasoned rather than tested.
+  </p>
+
+  <h2>Demo and presentation <span class="faint mono" style="font-size:9pt">15%</span></h2>
+  <p>
+    The demo shows the real product doing real work: register a work, scan a mirrored crop of it,
+    watch geometry recover the alignment, see the three lanes stay separate, open the receipt. The
+    risk we are managing is that our honesty — "this is not a legal finding" — can be misheard as
+    weakness. The pitch is written to make restraint read as credibility, which is what it is.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ 08 LIMITATIONS -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">08</span>
+    <h1>Limitations and honest scope</h1>
+  </div>
+
+  <p class="kicker">
+    Reproduced from the product's own documentation, because these constraints are enforced in the
+    code and shown in the interface, not tucked into a footer.
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>What it does</h4>
+      <ul class="small" style="margin-bottom:0">
+        <li>Searches a declared catalog and reports what matched</li>
+        <li>Reports evidence of generative involvement</li>
+        <li>Reports style resemblance as advisory context</li>
+        <li>Applies the customer's policy and records why</li>
+        <li>Proves a packet existed, unaltered, at a point in time</li>
+        <li>Reports coverage honestly, every time</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>What it does not do</h4>
+      <ul class="small" style="margin-bottom:0">
+        <li>Determine copyright infringement</li>
+        <li>Certify a work as human-made or AI-free</li>
+        <li>Establish authorship or ownership</li>
+        <li>Provide legal advice or clearance</li>
+        <li>Prove the contents of a packet are true</li>
+        <li>Search the open internet</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Technical limitations we disclose</h3>
+
+  <ul class="clean small">
+    <li><strong>No universal AI detection.</strong> Scores are labelled not-probability, high-authority outcomes require calibrated independent families, and the system abstains when they are unavailable.</li>
+    <li><strong>Absence of a C2PA manifest is not evidence of human origin.</strong> It is reported as unknown.</li>
+    <li><strong>Style resemblance is not attribution.</strong> The lane cannot escalate policy on its own.</li>
+    <li><strong>Thresholds are prototype operating points</strong>, chosen against our own benchmark, not ROC-calibrated against a customer corpus.</li>
+    <li><strong>Catalog truncation is real.</strong> Above the configured reference limit, a scan cannot claim complete no-match and is marked review-only.</li>
+    <li><strong>A local Merkle receipt is not a blockchain anchor</strong>, and is labelled as such. Only a mined, validated EAS receipt is presented as a public-chain anchor.</li>
+    <li><strong>The model bundle is <code>RUNTIME_READY</code>, not production-qualified.</strong> Promotion requires customer-corpus benchmarks and a human sign-off we have not manufactured.</li>
+  </ul>
+
+  <div class="note">
+    <h4>Why we are telling you this</h4>
+    <p>
+      Because a system that produces evidence has to be more careful than one that produces
+      opinions. Every limitation above is a place where a less careful product would have shipped a
+      confident number instead. The restraint <em>is</em> the product.
+    </p>
+  </div>
+
+  <div class="footNote">
+    CreatorProof v0.10.0 · MODEL-ACCURACY-HARDENING-2026.08.10 · BCOLBD 2026. Figures were measured
+    on the authors' hardware and are reproducible from the repository. CreatorProof produces review
+    evidence, not legal determinations.
+  </div>
+</section>
+
+</td></tr></tbody>
+</table>
+
+</body>
+</html>

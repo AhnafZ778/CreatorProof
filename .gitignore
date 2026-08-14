@@ -88,3 +88,5 @@ blockchain-local/.ganache/
 
 # Next.js-generated declarations.
 /apps/web/next-env.d.ts
+
+# Local manual-test images; keep potentially private/copyrighted samples out of Git.

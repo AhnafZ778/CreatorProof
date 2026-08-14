@@ -13,3 +13,14 @@ export async function POST(request: Request) {
     timeoutMs: 150_000,
   });
 }
+
+/**
+ * List what a catalog actually holds. A scan can only find what was registered,
+ * so the scan desk reads this before running to tell the operator whether the
+ * catalog they typed has anything in it to match against.
+ */
+export async function GET(request: Request) {
+  const catalogId = new URL(request.url).searchParams.get("catalog_id");
+  const query = catalogId ? `?catalog_id=${encodeURIComponent(catalogId)}` : "";
+  return proxyJson(`/v1/works${query}`);
+}

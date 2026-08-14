@@ -2581,7 +2581,9 @@ canvas#neuro {
 
     <!-- Cobe Interactive Black & White Globe Script -->
     <script type="module">
-        import createGlobe from "https://esm.sh/cobe@2.0.0";
+        // Served from public/ rather than a CDN: a module import that hangs blocks
+        // DOMContentLoaded, which leaves the whole page stuck loading.
+        import createGlobe from "/vendor/cobe.esm.js";
 
         (function initCobeGlobe() {
             const canvas = document.getElementById("cobe-globe");

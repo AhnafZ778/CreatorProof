@@ -5,6 +5,7 @@ import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 
 import PortalFileField from "@/app/components/PortalFileField";
 import PortalNav from "@/app/components/PortalNav";
+import { DEFAULT_CATALOG_ID } from "@/app/lib/catalog";
 import { readPortalSession } from "@/app/lib/portalSession";
 
 type RegisteredWork = {
@@ -131,7 +132,7 @@ function ArtistPortal() {
     setRefusal(null);
     const form = new FormData(formElement);
     if (!form.get("claimant")) form.set("claimant", name);
-    if (!form.get("catalog_id")) form.set("catalog_id", "artist-library");
+    if (!form.get("catalog_id")) form.set("catalog_id", DEFAULT_CATALOG_ID);
     if (!form.get("claim_state")) form.set("claim_state", "ASSERTED");
     try {
       const response = await fetch("/api/works", { method: "POST", body: form });
@@ -151,7 +152,7 @@ function ArtistPortal() {
         title: String(form.get("title") || "Untitled work"),
         claimant: String(form.get("claimant") || name),
         claimState: String(form.get("claim_state") || "ASSERTED"),
-        catalogId: String(form.get("catalog_id") || "artist-library"),
+        catalogId: String(form.get("catalog_id") || DEFAULT_CATALOG_ID),
         createdAt: new Date().toISOString(),
       };
       const next = [entry, ...library];
@@ -248,7 +249,7 @@ function ArtistPortal() {
             </label>
             <label className="portalField">
               <span className="portalFieldLabel">Catalog</span>
-              <input required name="catalog_id" defaultValue="artist-library" />
+              <input required name="catalog_id" defaultValue={DEFAULT_CATALOG_ID} />
             </label>
             <label className="portalField">
               <span className="portalFieldLabel">Claim state</span>

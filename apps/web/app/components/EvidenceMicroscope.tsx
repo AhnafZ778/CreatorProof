@@ -55,6 +55,8 @@ type GeometryMetrics = {
   symmetric_reprojection_error?: number | null;
   validated?: boolean;
   rejection_reasons?: string[];
+  reflected?: boolean;
+  alignment_grade?: "NONE" | "STRICT" | "CORROBORATION_REQUIRED";
 };
 
 type AlignedPerceptual = {
@@ -526,7 +528,8 @@ function evidencePacket(scan: Record<string, unknown>): EvidencePacket | null {
   return packet ? (packet as EvidencePacket) : null;
 }
 
-function fitImage(size: [number, number], box: typeof QUERY_BOX): ImageRect {
+function fitImage(size: [number, number] | undefined, box: typeof QUERY_BOX): ImageRect {
+  if (!size) return { ...box };
   const [naturalWidth, naturalHeight] = size;
   if (naturalWidth <= 0 || naturalHeight <= 0) return { ...box };
   const scale = Math.min(box.width / naturalWidth, box.height / naturalHeight);
@@ -814,6 +817,64 @@ function laneNextStep(lane: LaneStatus): string {
   return LANE_ACTION[lane.key][lane.state] ?? lane.note;
 }
 
+/**
+ * A lane that has no picture to show, saying why.
+ *
+ * There are two very different reasons a comparison is missing and they call
+ * for opposite responses, so they are never merged into one message: either the
+ * lane genuinely found nothing to draw, which is a result, or the plates have
+ * not arrived in this browser, which is a loading state. Reading the first as
+ * the second is what made an empty catalog look like a clean scan.
+ */
+function LaneEmpty({
+  laneKey,
+  hasEvidence,
+  scope,
+  candidateReady,
+}: {
+  laneKey: LaneKey;
+  hasEvidence: boolean;
+  scope: EvidenceScope | undefined;
+  candidateReady: boolean;
+}) {
+  if (hasEvidence) {
+    return (
+      <div className="microscopeEmpty">
+        <b>{candidateReady ? "Reference image not loaded" : "Images not loaded"}</b>
+        <span>
+          This lane has a result, but the pictures behind it are not in this browser session.
+          Re-run the scan to see the side-by-side comparison.
+        </span>
+      </div>
+    );
+  }
+
+  const eligible = scope?.eligible_reference_count ?? 0;
+  if (laneKey === "copy") {
+    return (
+      <div className="microscopeEmpty">
+        <b>Nothing to compare against</b>
+        <span>
+          {eligible === 0
+            ? "This catalog holds no eligible reference, so there was no stored work to line the candidate up against. Register work in the Artist portal under the same catalog name, then scan again."
+            : `${eligible} ${eligible === 1 ? "work was" : "works were"} searched and none matched closely enough to align, so there is no overlay to draw. The verdict above is the result.`}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="microscopeEmpty">
+      <b>No creator profile to compare against</b>
+      <span>
+        A profile is built from several works by one claimant. Register at least three works under
+        the same claimant to activate this lane; until then it has nothing to measure resemblance
+        against.
+      </span>
+    </div>
+  );
+}
+
 /** The engine's evidence tier, said the way a person would say it. */
 function tierPhrase(tier: string | undefined): string {
   switch ((tier ?? "").toUpperCase()) {
@@ -1095,39 +1156,37 @@ export default function EvidenceMicroscope({
     ?? jointRisk?.origin_policy_mode
     ?? "INFORMATIONAL";
 
-  // No overlay to compare, so this path is the origin lane on its own. The
-  // coverage, the outcome and the four lane answers are stated by the verdict
-  // above; repeating them here is what made the page read as two summaries
-  // arguing with each other.
-  if (!copy?.visualization) {
-    return (
-      <section id="analysis" className="microscope mode-origin originOnlyCase" aria-label="Origin evidence workspace">
-        <ScopeBanner scope={scope} />
-        <div className="originWorkbench originOnlyWorkbench">
-          <OriginSummary
-            synthetic={synthetic}
-            presentation={originPresentation}
-            candidate={candidate}
-            policyMode={originPolicyMode}
-            state={lanes.origin.state}
-          />
-        </div>
-      </section>
-    );
-  }
+  // A lane with nothing to draw is still a lane with a verdict. Every view stays
+  // reachable and states its own result, because collapsing the workspace to
+  // whichever lane happened to return imagery left the other two looking as
+  // though they had never been asked.
+  const visualization = copy?.visualization ?? null;
+  const hasCopyEvidence = Boolean(visualization);
+  const hasStyleEvidence = Boolean(styleProfile);
 
-  const fusion = copy.fusion;
-  const aligned = copy.aligned_perceptual;
+  const fusion = copy?.fusion;
+  const aligned = copy?.aligned_perceptual;
   const styleMode = mode === "style" || mode === "stylemap";
   const reference = styleMode ? styleReference : copyReference;
-  const querySize = styleMode && diagnostics ? diagnostics.query_size : copy.visualization.query_size;
-  const referenceSize = styleMode && diagnostics ? diagnostics.reference_size : copy.visualization.reference_size;
+  const querySize = styleMode && diagnostics ? diagnostics.query_size : visualization?.query_size;
+  const referenceSize = styleMode && diagnostics ? diagnostics.reference_size : visualization?.reference_size;
   const queryRect = fitImage(querySize, QUERY_BOX);
   const referenceRect = fitImage(referenceSize, REFERENCE_BOX);
-  const geometryValidated = Boolean(copy.geometry.validated || copy.exact_sha256);
-  const canShowImages = Boolean(candidate?.url && (mode === "origin" || reference?.url));
-  const activeCorrespondence = copy.visualization.correspondences.find((item) => item.id === activeEvidence);
-  const activeRegion = copy.visualization.regions.find((item) => item.id === activeEvidence);
+  const geometryValidated = Boolean(copy?.geometry.validated || copy?.exact_sha256);
+  // Flat and repetitive art can only be aligned under relaxed matching, which
+  // the pixel check then confirms. Reading that as "rejected" would contradict
+  // the match sitting next to it.
+  const geometryRecovered = copy?.geometry.alignment_grade === "CORROBORATION_REQUIRED";
+  const geometryMirrored = Boolean(copy?.geometry.reflected);
+  // A recovered alignment still produces matched points and support regions, so
+  // it has something to draw even though it did not verify on its own.
+  const geometryAligned = geometryValidated || geometryRecovered;
+  // The comparison needs both plates and a measured geometry to place them
+  // against. Style views substitute the tile map, so they carry their own test.
+  const laneHasEvidence = styleMode ? hasStyleEvidence : hasCopyEvidence;
+  const canShowImages = Boolean(candidate?.url && reference?.url && laneHasEvidence);
+  const activeCorrespondence = visualization?.correspondences.find((item) => item.id === activeEvidence);
+  const activeRegion = visualization?.regions.find((item) => item.id === activeEvidence);
   const allStyleCells = diagnostics ? [...diagnostics.tile_map.query_cells, ...diagnostics.tile_map.reference_cells] : [];
   const selectedStyleCell = allStyleCells.find((item) => item.id === activeStyleCell) ?? null;
   const styleDecision = style?.decision;
@@ -1156,16 +1215,18 @@ export default function EvidenceMicroscope({
         body: JSON.stringify({
           evidence: {
             source_scope: scope ?? null,
-            copy_lane: {
-              title: copy!.title,
-              verification_state: copy!.verification_state,
-              fusion: copy!.fusion,
-              ai_similarity: copy!.ai_similarity,
-              ai_regional_similarity: copy!.ai_regional_similarity,
-              retrieval_view: copy!.retrieval_view,
-              geometry: copy!.geometry,
-              aligned_perceptual: copy!.aligned_perceptual,
-            },
+            copy_lane: copy
+              ? {
+                  title: copy.title,
+                  verification_state: copy.verification_state,
+                  fusion: copy.fusion,
+                  ai_similarity: copy.ai_similarity,
+                  ai_regional_similarity: copy.ai_regional_similarity,
+                  retrieval_view: copy.retrieval_view,
+                  geometry: copy.geometry,
+                  aligned_perceptual: copy.aligned_perceptual,
+                }
+              : null,
             style_lane: style ? {
               provider: style.provider,
               learned_provider_active: style.learned_provider_active,
@@ -1222,15 +1283,16 @@ export default function EvidenceMicroscope({
             <p>Start with the summary. Detailed measurements stay inside their related view.</p>
           </div>
           <div className="modeRail" role="group" aria-label="Evidence visualization mode">
+            {/* Every lane stays open. A lane with no evidence still has a
+                verdict, and hiding the way in behind a disabled button left the
+                reader unable to check whether it had even been asked. */}
             {PRIMARY_MODES.map((item) => {
               const meta = MODE_META[item];
-              const disabled = (item === "style" || item === "stylemap") && !styleProfile;
               return (
                 <button
                   key={item}
                   type="button"
                   className={`modeButton modeButton-${item} ${mode === item ? "active" : ""}`}
-                  disabled={disabled}
                   aria-pressed={mode === item}
                   onClick={() => {
                     setMode(item);
@@ -1239,7 +1301,7 @@ export default function EvidenceMicroscope({
                   }}
                 >
                   <span className="modeNumber">{meta.number}</span>
-                  <span className="modeCopy"><small>{meta.lane}</small><b>{meta.label}</b><em>{disabled ? "Needs a creator profile" : meta.short}</em></span>
+                  <span className="modeCopy"><small>{meta.lane}</small><b>{meta.label}</b><em>{meta.short}</em></span>
                   <span className="modeArrow" aria-hidden="true">→</span>
                 </button>
               );
@@ -1263,9 +1325,12 @@ export default function EvidenceMicroscope({
               <h3>{activeMode.label}</h3>
             </div>
             <div className="modeAction">
-              {mode === "copy" ? (
+              {/* The detail views read the alignment, so they only exist once
+                  there is one. Offering them against an empty lane would open a
+                  screen of dashes. */}
+              {mode === "copy" && hasCopyEvidence ? (
                 <div className="modeActionButtons">
-                  <button type="button" className={showFeaturePairs ? "active" : ""} disabled={!geometryValidated} onClick={() => setShowFeaturePairs((current) => !current)}>
+                  <button type="button" className={showFeaturePairs ? "active" : ""} disabled={!geometryAligned} onClick={() => setShowFeaturePairs((current) => !current)}>
                     {showFeaturePairs ? "Hide matched points" : "Show matched points"}
                   </button>
                   <button type="button" onClick={() => setMode("structure")}>Detailed structure</button>
@@ -1276,6 +1341,8 @@ export default function EvidenceMicroscope({
                 <button type="button" onClick={() => setMode("stylemap")}>Detailed style map</button>
               ) : mode === "stylemap" && diagnostics ? (
                 <div className="modeActionButtons"><button type="button" onClick={() => setMode("style")}>← Back to creator profile</button><span className="heatLegend"><i /> lower <i /> higher</span></div>
+              ) : mode !== "overview" && mode !== "origin" && !laneHasEvidence ? (
+                <span className="modeReady isEmpty"><i /> NOTHING TO DRAW</span>
               ) : (
                 <span className="modeReady"><i /> VIEW READY</span>
               )}
@@ -1303,10 +1370,12 @@ export default function EvidenceMicroscope({
           />
 
           {(!canShowImages ? (
-        <div className="microscopeEmpty">
-          <b>Preparing the visual comparison.</b>
-          <span>Refresh the evidence view to load the candidate and registered reference images.</span>
-        </div>
+        <LaneEmpty
+          laneKey={activeLaneKey}
+          hasEvidence={laneHasEvidence}
+          scope={scope}
+          candidateReady={Boolean(candidate?.url)}
+        />
       ) : (
         <div className="evidenceCanvasWrap">
           <svg className="evidenceCanvas" viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} role="img" aria-label="Side-by-side CreatorProof evidence comparison">
@@ -1315,14 +1384,14 @@ export default function EvidenceMicroscope({
             <text x="30" y="68" className="canvasFilename">{candidate?.name}</text>
             <text x="1470" y="68" textAnchor="end" className="canvasFilename">{reference?.name}</text>
             <text x="750" y="42" textAnchor="middle" className="canvasCenterLabel">
-              {styleMode ? "STYLE / NO GEOMETRY IMPLIED" : `RETRIEVAL #${copy.retrieval_rank ?? "?"} (${copy.retrieval_view ?? "whole_image"}) → VERIFICATION #${copy.verification_rank ?? 1}`}
+              {styleMode ? "STYLE / NO GEOMETRY IMPLIED" : `RETRIEVAL #${copy?.retrieval_rank ?? "?"} (${copy?.retrieval_view ?? "whole_image"}) → VERIFICATION #${copy?.verification_rank ?? 1}`}
             </text>
             <rect className="imageFrame" x={queryRect.x} y={queryRect.y} width={queryRect.width} height={queryRect.height} rx="3" />
             <rect className="imageFrame" x={referenceRect.x} y={referenceRect.y} width={referenceRect.width} height={referenceRect.height} rx="3" />
             <image href={candidate?.url} x={queryRect.x} y={queryRect.y} width={queryRect.width} height={queryRect.height} preserveAspectRatio="none" />
             <image href={reference?.url} x={referenceRect.x} y={referenceRect.y} width={referenceRect.width} height={referenceRect.height} preserveAspectRatio="none" />
 
-            {mode === "copy" && geometryValidated && copy.visualization.regions.slice(0, 4).map((region, index) => {
+            {mode === "copy" && geometryAligned && visualization?.regions.slice(0, 4).map((region, index) => {
               const color = REGION_COLORS[index % REGION_COLORS.length];
               const active = activeEvidence === region.id;
               return (
@@ -1334,7 +1403,7 @@ export default function EvidenceMicroscope({
               );
             })}
 
-            {mode === "copy" && showFeaturePairs && geometryValidated && copy.visualization.correspondences.slice(0, 14).map((item, index) => {
+            {mode === "copy" && showFeaturePairs && geometryAligned && visualization?.correspondences.slice(0, 14).map((item, index) => {
               const queryPoint = mapPoint(queryRect, item.query);
               const referencePoint = mapPoint(referenceRect, item.reference);
               const active = activeEvidence === item.id;
@@ -1350,7 +1419,7 @@ export default function EvidenceMicroscope({
               );
             })}
 
-            {mode === "copy" && !geometryValidated && (
+            {mode === "copy" && !geometryAligned && (
               <g>
                 <rect x="650" y="250" width="200" height="86" rx="5" className="overlayUnavailable" />
                 <text x="750" y="280" textAnchor="middle" className="overlayUnavailableTitle">MATCHED-AREA VIEW READY WHEN EVIDENCE IS FOUND</text>
@@ -1388,7 +1457,10 @@ export default function EvidenceMicroscope({
         </div>
           )}
 
-          {mode === "copy" && (
+          {/* Measurements only where there was something to measure. With no
+              aligned candidate these read 0/0 and "geometry rejected", which
+              describes an alignment that was never attempted. */}
+          {mode === "copy" && hasCopyEvidence && (
         <div className="laneReading">
           <div className="laneFigures laneFiguresRow">
             <LaneFigure
@@ -1399,9 +1471,9 @@ export default function EvidenceMicroscope({
             />
             <LaneFigure
               label="VERIFIED POINTS"
-              value={String(copy.geometry.inliers ?? 0)}
-              unit={`/${copy.geometry.tentative_matches ?? 0}`}
-              meaning={geometryValidated ? "Geometry verified" : "Geometry rejected"}
+              value={String(copy?.geometry.inliers ?? 0)}
+              unit={`/${copy?.geometry.tentative_matches ?? 0}`}
+              meaning={geometryValidated ? "Geometry verified" : geometryRecovered ? "Alignment recovered" : "Geometry rejected"}
               note="Candidate point pairs that survived the alignment test."
             />
             <LaneFigure
@@ -1409,7 +1481,7 @@ export default function EvidenceMicroscope({
               value={aligned?.available ? percent(aligned.overlap_ratio) : "—"}
               meaning={
                 aligned?.available
-                  ? `${aligned.support_region_count ?? copy.visualization.regions.length} support ${(aligned.support_region_count ?? copy.visualization.regions.length) === 1 ? "region" : "regions"}`
+                  ? `${aligned.support_region_count ?? visualization?.regions.length ?? 0} support ${(aligned.support_region_count ?? visualization?.regions.length ?? 0) === 1 ? "region" : "regions"}`
                   : "No alignment to measure"
               }
               note="How much of the reference the candidate covers once aligned."
@@ -1557,8 +1629,8 @@ export default function EvidenceMicroscope({
         <summary>Show the raw signals behind these views</summary>
         <div className="signalMatrix" aria-label="Technical evidence signals">
           <div className="signalCard originSignal"><i /><span>Independent AI checks</span><b>{synthetic?.evidence_family_count ?? 0} types</b><small>{synthetic?.classification ?? "unavailable"}</small></div>
-          <div className="signalCard retrievalSignal"><i /><span>SSCD nomination</span><b>{metric(copy.retrieval_score ?? copy.ai_similarity, 3)}</b><small>{copy.retrieval_view ?? "whole_image"} · whole {metric(copy.ai_similarity, 3)} · regional {metric(copy.ai_regional_similarity, 3)}</small></div>
-          <div className="signalCard geometrySignal"><i /><span>Local geometry</span><b>{geometryValidated ? metric(fusion?.geometry_quality, 3) : "rejected"}</b><small>{copy.geometry.inliers ?? 0}/{copy.geometry.tentative_matches ?? 0} verified inliers</small></div>
+          <div className="signalCard retrievalSignal"><i /><span>SSCD nomination</span><b>{metric(copy?.retrieval_score ?? copy?.ai_similarity, 3)}</b><small>{copy?.retrieval_view ?? "whole_image"} · whole {metric(copy?.ai_similarity, 3)} · regional {metric(copy?.ai_regional_similarity, 3)}</small></div>
+          <div className="signalCard geometrySignal"><i /><span>Local geometry</span><b>{geometryValidated ? metric(fusion?.geometry_quality, 3) : geometryRecovered ? "recovered" : "rejected"}</b><small>{copy?.geometry.inliers ?? 0}/{copy?.geometry.tentative_matches ?? 0} verified inliers{geometryMirrored ? " · mirrored" : ""}{geometryRecovered ? " · confirmed by aligned pixels" : ""}</small></div>
           <div className="signalCard structureSignal"><i /><span>Aligned structure</span><b>{metric(aligned?.structure_consensus, 3)}</b><small>{aligned?.evaluation_mask_policy ?? fusion?.signal_states?.aligned_structure ?? aligned?.reason ?? "not measured"} · {aligned?.support_region_count ?? 0} support regions</small></div>
           <div className="signalCard styleSignal"><i /><span>Style evidence</span><b>{metric(styleEvidenceIndex, 3)}</b><small>{styleDecision?.evidence_tier ?? "unavailable"} · {styleProfile?.creator ?? "no profile"}</small></div>
           <div className="signalCard proofSignal"><i /><span>Evidence receipt</span><b>{proof?.anchor_status ?? "NONE"}</b><small>{chainProof ? "public EAS transaction" : "local transparency receipt"}</small></div>

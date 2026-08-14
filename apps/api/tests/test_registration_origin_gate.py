@@ -64,7 +64,11 @@ def _register(client: TestClient, api_key: str, *, title: str = "Harbour study")
 
 
 def _outcome(state: str, *, mode=RegistrationOriginGate.BLOCK) -> OriginGateOutcome:
-    """A screening result shaped like the real one, with only the state varied."""
+    """A screening result shaped like the real one, with only the state varied.
+
+    Scored well above the limit, because these cases exercise the route's
+    handling of a refusal rather than where the limit sits.
+    """
     blocking = state in {"AI_CONFIRMED", "AI_INDICATORS_FOUND", "AI_INDICATORS_NEED_REVIEW"}
     return OriginGateOutcome(
         mode=mode,
@@ -77,6 +81,8 @@ def _outcome(state: str, *, mode=RegistrationOriginGate.BLOCK) -> OriginGateOutc
         summary="",
         reason="Test reason." if blocking else "No AI-origin finding.",
         analysis={},
+        score=0.91 if blocking else 0.04,
+        threshold=0.50,
     )
 
 
@@ -170,6 +176,79 @@ def test_switching_the_gate_off_skips_the_check_entirely(tmp_path, api_key, monk
     assert calls == []
     # Off is not the same as screened-and-quiet, so nothing is recorded.
     assert response.json()["origin_assessment"] is None
+
+
+def _screened(tmp_path, api_key, monkeypatch, state: str, score: float | None):
+    """Run the real gate over a stubbed detector reading."""
+    monkeypatch.setattr(
+        registration_gate,
+        "analyze_synthetic_origin",
+        lambda **kwargs: {
+            "classification": "AI_ORIGIN_MARKER_FOUND",
+            "evidence_tier": "REVIEW",
+            "fused_detector_score": score,
+            "presentation": {"state": state, "headline": "Origin analysed", "summary": ""},
+        },
+    )
+    settings = _settings(tmp_path, api_key, RegistrationOriginGate.BLOCK)
+    container: Container = create_app(settings).state.container
+    return screen_registration_origin(
+        container,
+        raw=_image(),
+        image=Image.open(BytesIO(_image())),
+    )
+
+
+# The line the user asked for: a weak indicator is not enough to turn an artist
+# away, a strong one is. 0.50 exactly is admitted, so the boundary is inclusive
+# on the permissive side.
+@pytest.mark.parametrize(
+    ("score", "allowed"),
+    [(0.04, True), (0.32, True), (0.50, True), (0.51, False), (0.88, False)],
+)
+def test_only_an_ai_score_above_the_limit_refuses(tmp_path, api_key, monkeypatch, score, allowed):
+    outcome = _screened(tmp_path, api_key, monkeypatch, "AI_INDICATORS_FOUND", score)
+
+    assert outcome.allowed is allowed
+    assert outcome.score == score
+    assert outcome.threshold == 0.50
+
+
+def test_a_refusal_quotes_the_score_and_the_limit(tmp_path, api_key, monkeypatch):
+    # A refusal that cannot be argued with is not a refusal an artist can appeal.
+    outcome = _screened(tmp_path, api_key, monkeypatch, "AI_INDICATORS_FOUND", 0.77)
+
+    assert outcome.allowed is False
+    assert "77%" in outcome.reason
+    assert "50%" in outcome.reason
+
+
+def test_an_admitted_borderline_file_records_why_it_was_let_through(
+    tmp_path, api_key, monkeypatch
+):
+    outcome = _screened(tmp_path, api_key, monkeypatch, "AI_INDICATORS_NEED_REVIEW", 0.44)
+
+    assert outcome.allowed is True
+    assert "44%" in outcome.reason
+    assert outcome.record()["score"] == 0.44
+
+
+def test_signed_ai_provenance_refuses_whatever_the_score_says(tmp_path, api_key, monkeypatch):
+    # The file asserts its own origin through signed Content Credentials, so no
+    # pixel measurement gets to overrule it.
+    outcome = _screened(tmp_path, api_key, monkeypatch, "AI_CONFIRMED", 0.01)
+
+    assert outcome.allowed is False
+    assert "Content Credentials" in outcome.reason
+
+
+def test_a_missing_score_is_not_read_as_zero_or_as_a_finding(tmp_path, api_key, monkeypatch):
+    # No reading means nothing to measure, and an unmeasured file is admitted
+    # rather than refused on a state alone.
+    outcome = _screened(tmp_path, api_key, monkeypatch, "AI_INDICATORS_FOUND", None)
+
+    assert outcome.allowed is True
+    assert outcome.score is None
 
 
 def test_a_screening_failure_admits_the_file_rather_than_refusing_it(tmp_path, api_key):

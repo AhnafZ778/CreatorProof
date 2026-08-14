@@ -7,8 +7,13 @@ registered as a protected reference would let its registrant collect matches
 against other people's work.
 
 So the same origin lane the scan pipeline runs also runs here, and `BLOCK`
-refuses the file when it reports AI indicators. Two limits are deliberate:
+refuses the file when the AI signal is strong enough to stand on its own.
+Three limits are deliberate:
 
+  * The bar is a *score*, not a mood. Anything at or below
+    `registration_origin_block_score` is admitted even when a detector raised an
+    indicator, because a weak or contested signal is not grounds to turn an
+    artist away from their own catalog. Only a score above the line refuses.
   * Only a *finding* refuses. `ORIGIN_UNKNOWN` and `CHECK_UNAVAILABLE` mean the
     checks produced no answer, and treating the absence of a result as a result
     would lock real artists out of their own catalog — the exact harm this gate
@@ -16,6 +21,10 @@ refuses the file when it reports AI indicators. Two limits are deliberate:
   * A refusal is a statement about what this catalog will vouch for, never a
     finding about the person submitting. The message says what was observed and
     the full analysis is returned with it, so the claim can be contested.
+
+Signed provenance asserting AI generation is the one case that refuses without a
+score: there the file states its own origin, and no pixel measurement overrides
+that.
 """
 
 from __future__ import annotations
@@ -35,17 +44,15 @@ logger = logging.getLogger("creatorproof.registration_gate")
 
 REFUSAL_CODE = "WORK_REGISTRATION_REFUSED_AI_ORIGIN"
 
-# Presentation states that are an affirmative AI finding. Ordered strongest
-# first; anything absent from this set is either a quiet result or no result at
-# all, and neither may refuse a registration.
-_BLOCKING_STATES: dict[str, str] = {
-    "AI_CONFIRMED": ("The file carries signed Content Credentials that assert AI generation."),
-    "AI_INDICATORS_FOUND": ("More than one independent check agreed on AI-generation indicators."),
-    "AI_INDICATORS_NEED_REVIEW": (
-        "The image carries AI-generation indicators that a protected-work catalog "
-        "cannot accept without review."
-    ),
-}
+# Presentation states that carry an affirmative AI finding. Reaching one of
+# these is necessary to refuse but not sufficient: the score still has to clear
+# the configured line. Anything absent from this set is either a quiet result or
+# no result at all, and neither may refuse a registration.
+_SCORED_FINDING_STATES = frozenset({"AI_INDICATORS_FOUND", "AI_INDICATORS_NEED_REVIEW"})
+
+# Signed Content Credentials asserting AI generation. This is the file
+# describing itself, so it refuses on its own without reference to the score.
+_DECLARED_AI_STATE = "AI_CONFIRMED"
 
 
 @dataclass(frozen=True)
@@ -62,13 +69,17 @@ class OriginGateOutcome:
     summary: str
     reason: str
     analysis: dict
+    score: float | None = None
+    threshold: float | None = None
 
     def record(self) -> dict:
         """The compact verdict stored on the work.
 
         The full analysis is deliberately not persisted: it is large, it embeds
         provider runtimes that make rows non-comparable, and the durable claim
-        here is only what the gate concluded.
+        here is only what the gate concluded. The score and the line it was
+        measured against are kept, because a later reader cannot re-derive why
+        this work was admitted without them.
         """
         return {
             "schema": "creatorproof.registration_origin_gate.v1",
@@ -80,6 +91,8 @@ class OriginGateOutcome:
             "evidence_tier": self.evidence_tier,
             "headline": self.headline,
             "summary": self.summary,
+            "score": self.score,
+            "threshold": self.threshold,
         }
 
 
@@ -156,7 +169,9 @@ def screen_registration_origin(
 
     presentation = analysis.get("presentation") or {}
     state = str(presentation.get("state") or "ORIGIN_UNKNOWN").upper()
-    blocking_reason = _BLOCKING_STATES.get(state)
+    threshold = container.settings.registration_origin_block_score
+    score = _score(analysis)
+    blocking_reason = _refusal_reason(state, score, threshold)
     allowed = blocking_reason is None or mode != RegistrationOriginGate.BLOCK
 
     return OriginGateOutcome(
@@ -168,6 +183,44 @@ def screen_registration_origin(
         evidence_tier=str(analysis.get("evidence_tier") or "INCONCLUSIVE"),
         headline=str(presentation.get("headline") or "Origin analysis completed"),
         summary=str(presentation.get("summary") or ""),
-        reason=blocking_reason or "No AI-origin finding stood in the way of registration.",
+        reason=blocking_reason or _admission_reason(state, score, threshold),
+        score=score,
+        threshold=threshold,
         analysis=analysis,
     )
+
+
+def _score(analysis: dict) -> float | None:
+    """The ensemble AI signal, or None when no detector returned one.
+
+    A missing score is not a zero. No reading means the gate has nothing to
+    measure against the threshold, and an unmeasured file is admitted.
+    """
+    raw = analysis.get("fused_detector_score")
+    if isinstance(raw, bool) or not isinstance(raw, int | float):
+        return None
+    return float(raw)
+
+
+def _refusal_reason(state: str, score: float | None, threshold: float) -> str | None:
+    """Why this file may not enter the catalog, or None if it may."""
+    if state == _DECLARED_AI_STATE:
+        return "The file carries signed Content Credentials that assert AI generation."
+    if state not in _SCORED_FINDING_STATES or score is None:
+        return None
+    if score <= threshold:
+        return None
+    return (
+        f"AI-generation indicators scored {score:.0%}, above the "
+        f"{threshold:.0%} limit this catalog accepts."
+    )
+
+
+def _admission_reason(state: str, score: float | None, threshold: float) -> str:
+    """Why this file was allowed through, in the gate's own words."""
+    if state in _SCORED_FINDING_STATES and score is not None:
+        return (
+            f"AI-generation indicators scored {score:.0%}, at or below the "
+            f"{threshold:.0%} limit, so the work was admitted."
+        )
+    return "No AI-origin finding stood in the way of registration."

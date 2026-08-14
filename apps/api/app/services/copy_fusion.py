@@ -115,8 +115,41 @@ def fuse_copy_evidence(
         and structure is not None
         and structure >= settings.copy_structure_support_similarity
     )
+    # Flat and repetitive work cannot clear the strict alignment gates: the ratio
+    # test throws away every repeated element, so there is nothing left to fit.
+    # Where alignment was only recovered under relaxed matching the geometry
+    # counts for nothing on its own, and the finding rests entirely on the
+    # aligned pixels agreeing to the very-strong standard while the descriptor
+    # independently says the same. That keeps a loosely fitted homography from
+    # ever being the reason a match is reported.
+    corroboration_required = geometry.get("alignment_grade") == "CORROBORATION_REQUIRED"
+    corroborated_alignment_path = bool(
+        corroboration_required
+        and aligned_available
+        and structure is not None
+        and structure >= settings.copy_structure_very_strong_similarity
+        and (ai_support or phash_support)
+    )
+    # Cropping is where the retrieval requirement above works against the
+    # evidence: a corner of a work is a different picture globally, so the
+    # descriptor score collapses even though the overlapping pixels are the
+    # original. This path stands on the alignment alone, and only when it is
+    # strictly verified, nearly every match agrees with it, and the aligned
+    # pixels are effectively identical — a state different images do not reach,
+    # because reaching it would make them the same image.
+    conclusive_alignment_path = bool(
+        geometry_valid
+        and aligned_available
+        and structure is not None
+        and structure >= settings.copy_conclusive_structure_similarity
+        and float(geometry.get("inlier_ratio") or 0.0) >= settings.copy_conclusive_inlier_ratio
+    )
     match_supported = bool(
-        strong_structural_path or exceptionally_structural_path or very_strong_global_path
+        strong_structural_path
+        or exceptionally_structural_path
+        or very_strong_global_path
+        or corroborated_alignment_path
+        or conclusive_alignment_path
     )
 
     if match_supported:
@@ -135,7 +168,8 @@ def fuse_copy_evidence(
         or phash >= settings.copy_phash_review_similarity
     )
     review_supported = bool(
-        not match_supported and (geometry_valid or high_global_without_geometry)
+        not match_supported
+        and (geometry_valid or high_global_without_geometry or corroboration_required)
     )
     if review_supported:
         classification = "REVIEW_CANDIDATE"
@@ -175,7 +209,17 @@ def fuse_copy_evidence(
         reasons.append("SSCD_SUPPORTS_CANDIDATE")
     if phash_support:
         reasons.append("PHASH_SUPPORTS_CANDIDATE")
-    if not geometry_valid:
+    if conclusive_alignment_path:
+        reasons.append("ALIGNED_PIXELS_EFFECTIVELY_IDENTICAL")
+    if bool(geometry.get("reflected")):
+        reasons.append("ALIGNMENT_IS_A_MIRROR_IMAGE")
+    if corroboration_required:
+        reasons.append(
+            "RELAXED_ALIGNMENT_CONFIRMED_BY_ALIGNED_PIXELS"
+            if corroborated_alignment_path
+            else "RELAXED_ALIGNMENT_NOT_CONFIRMED_BY_ALIGNED_PIXELS"
+        )
+    elif not geometry_valid:
         reasons.append("NO_VERIFIED_LOCAL_GEOMETRY")
     if not reasons:
         reasons.append("NO_CORROBORATED_COPY_EVIDENCE")
@@ -184,7 +228,13 @@ def fuse_copy_evidence(
         "sha256": "DIFFERENT_BYTES",
         "retrieval": ("SUPPORT" if ai_support else "WEAK" if ai is not None else "UNAVAILABLE"),
         "phash": "SUPPORT" if phash_support else "WEAK",
-        "geometry": "VERIFIED" if geometry_valid else "REJECTED",
+        "geometry": (
+            "VERIFIED"
+            if geometry_valid
+            else "RECOVERED_PENDING_PIXEL_AGREEMENT"
+            if corroboration_required
+            else "REJECTED"
+        ),
         "aligned_structure": (
             "STRONG"
             if structure_strong

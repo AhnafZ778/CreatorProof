@@ -34,6 +34,17 @@ class GeometryEvidence:
     correspondences: tuple[dict, ...] = ()
     regions: tuple[dict, ...] = ()
     homography_query_to_reference: tuple[tuple[float, ...], ...] | None = None
+    # Whether the alignment that verified is a mirror image of the submitted
+    # file. Recorded because "the same work, flipped" is a materially different
+    # claim from "the same work", and a reader settling rights needs to see it.
+    reflected: bool = False
+    # How much the alignment is worth on its own:
+    #   NONE                   nothing usable was fitted
+    #   STRICT                 every gate passed; the alignment stands by itself
+    #   CORROBORATION_REQUIRED a plausible alignment recovered under relaxed
+    #                          descriptor matching, which is never a match until
+    #                          aligned pixels independently agree
+    alignment_grade: str = "NONE"
 
 
 @dataclass(frozen=True, slots=True)

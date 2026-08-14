@@ -7,6 +7,23 @@ from PIL import Image
 from app.providers.contracts import GeometryEvidence
 
 
+def _mirror_matrix(width: int) -> np.ndarray:
+    """Map a pixel in the submitted query onto the horizontally mirrored one."""
+    return np.array(
+        [[-1.0, 0.0, float(max(width - 1, 0))], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+        dtype=np.float64,
+    )
+
+
+def _mirror_polygon(polygon: list[list[float]]) -> list[list[float]]:
+    """Reflect a normalized polygon about the vertical centre line.
+
+    Reversing the vertex order keeps the winding direction intact, so a mirrored
+    support box is still drawn the same way round as an unmirrored one.
+    """
+    return [[round(1.0 - x, 6), y] for x, y in reversed(polygon)]
+
+
 class ORBGeometricVerifier:
     """Fail-closed CPU geometry verifier with SIFT primary and ORB fallback.
 
@@ -32,6 +49,9 @@ class ORBGeometricVerifier:
         min_coverage: float = 0.035,
         min_grid_cells: int = 3,
         max_symmetric_error_normalized: float = 0.0125,
+        relaxed_ratio_threshold: float = 0.95,
+        relaxed_min_mutual_matches: int = 4,
+        relaxed_min_inliers: int = 8,
     ) -> None:
         self.max_features = max_features
         self.visualization_limit = visualization_limit
@@ -42,6 +62,9 @@ class ORBGeometricVerifier:
         self.min_coverage = min_coverage
         self.min_grid_cells = min_grid_cells
         self.max_symmetric_error_normalized = max_symmetric_error_normalized
+        self.relaxed_ratio_threshold = relaxed_ratio_threshold
+        self.relaxed_min_mutual_matches = relaxed_min_mutual_matches
+        self.relaxed_min_inliers = relaxed_min_inliers
 
     @staticmethod
     def _gray(image: Image.Image) -> np.ndarray:
@@ -230,7 +253,66 @@ class ORBGeometricVerifier:
             reference_size=reference.size,
         )
 
-    def verify(self, query: Image.Image, reference: Image.Image) -> GeometryEvidence:
+    def verify(
+        self,
+        query: Image.Image,
+        reference: Image.Image,
+        *,
+        escalate: bool = False,
+    ) -> GeometryEvidence:
+        """Verify the candidate against the reference, trying harder on request.
+
+        The strict pass is deliberately hard to satisfy, and two common kinds of
+        honest reuse fail it for reasons that have nothing to do with whether the
+        images match.
+
+        A mirrored repost fails because descriptors are not reflection
+        invariant: a reflection is an ordinary homography, but the
+        correspondences never form, so the fit is rejected for want of inliers.
+        Flat and repetitive work — logos, vector illustration, graphic design —
+        fails because the ratio test discards every repeated element as
+        ambiguous, leaving too few matches to fit anything at all. Both are
+        failures of descriptor matching rather than of agreement between the
+        images, and both cover a lot of the material this pipeline exists to
+        protect.
+
+        So the escalation ladder is: the submitted orientation, then a mirror,
+        then relaxed descriptor matching. Only the first two can validate on
+        their own. The relaxed pass is returned as an alignment still needing
+        corroboration, because a homography fitted to loosely matched keypoints
+        is a hypothesis, not a finding — the caller has to confirm it by
+        checking that the aligned pixels agree.
+
+        Escalation is opt-in because each rung costs another detect-and-match
+        pass, and it is only worth spending where something independent already
+        suggests the two images are the same work.
+        """
+        direct = self._verify_oriented(query, reference, reflected=False)
+        if direct.validated or not escalate:
+            return direct
+
+        mirrored = self._verify_oriented(query, reference, reflected=True)
+        if mirrored.validated:
+            return mirrored
+
+        relaxed = self._verify_oriented(query, reference, reflected=False, relaxed=True)
+        if relaxed.alignment_grade == "CORROBORATION_REQUIRED":
+            return relaxed
+        # Nothing better was found, so report the rejection in the orientation
+        # the file was actually submitted in.
+        return direct
+
+    def _verify_oriented(
+        self,
+        query: Image.Image,
+        reference: Image.Image,
+        *,
+        reflected: bool,
+        relaxed: bool = False,
+    ) -> GeometryEvidence:
+        original_query = query
+        if reflected:
+            query = query.transpose(Image.FLIP_LEFT_RIGHT)
         q = self._gray(query)
         r = self._gray(reference)
         if hasattr(cv2, "SIFT_create"):
@@ -243,6 +325,11 @@ class ORBGeometricVerifier:
             norm_type = cv2.NORM_HAMMING
             ratio_threshold = self.ratio_threshold
             evidence_type = "ORB_USAC_MAGSAC_VERIFIED_INLIER"
+        min_mutual_matches = self.min_mutual_matches
+        if relaxed:
+            ratio_threshold = max(ratio_threshold, self.relaxed_ratio_threshold)
+            min_mutual_matches = self.relaxed_min_mutual_matches
+            evidence_type = f"{evidence_type}_CORROBORATION_REQUIRED"
         q_kp, q_desc = detector.detectAndCompute(q, None)
         r_kp, r_desc = detector.detectAndCompute(r, None)
         q_count = len(q_kp or [])
@@ -263,7 +350,7 @@ class ORBGeometricVerifier:
         mutual = [match for match in forward if (match.queryIdx, match.trainIdx) in reverse_pairs]
         mutual.sort(key=lambda match: (match.distance, match.queryIdx, match.trainIdx))
 
-        if len(mutual) < self.min_mutual_matches:
+        if len(mutual) < min_mutual_matches:
             return self._empty(
                 query,
                 reference,
@@ -349,11 +436,30 @@ class ORBGeometricVerifier:
             rejection_reasons.append("UNSTABLE_HOMOGRAPHY")
 
         validated = not rejection_reasons
+        # Sanity checks on the matrix itself are about whether the alignment can
+        # be used at all, so they bind the relaxed pass exactly as they bind the
+        # strict one. The remaining gates measure how convincing the match is,
+        # and on relaxed matching that is not geometry's question to answer.
+        matrix_unusable = {
+            "HOMOGRAPHY_SINGULAR",
+            "DEGENERATE_HOMOGRAPHY",
+            "UNSTABLE_HOMOGRAPHY",
+            "HIGH_SYMMETRIC_TRANSFER_ERROR",
+        }.intersection(rejection_reasons)
+        corroboration_required = (
+            relaxed
+            and not validated
+            and not matrix_unusable
+            and inliers >= self.relaxed_min_inliers
+        )
+        alignment_grade = (
+            "STRICT" if validated else "CORROBORATION_REQUIRED" if corroboration_required else "NONE"
+        )
         correspondences: tuple[dict, ...] = ()
         regions: tuple[dict, ...] = ()
         visible_homography = None
 
-        if validated:
+        if validated or corroboration_required:
             inlier_rows: list[tuple] = []
             error_index = 0
             for match, q_point, r_point, keep in zip(mutual, q_xy, r_xy, inlier_mask, strict=True):
@@ -384,6 +490,21 @@ class ORBGeometricVerifier:
                 for index, (match, q_point, r_point, transfer_error) in enumerate(displayed)
             )
             visible_homography = self._matrix(homography)
+            if reflected:
+                # Everything above was measured against the mirrored query, but
+                # every consumer — the overlay, the aligned-perceptual warp —
+                # works from the file as submitted. Fold the mirror into the
+                # outputs here so the reflection stays an implementation detail
+                # of matching rather than leaking into the evidence.
+                correspondences = tuple(
+                    {**row, "query": [round(1.0 - row["query"][0], 6), row["query"][1]]}
+                    for row in correspondences
+                )
+                regions = tuple(
+                    {**region, "query_polygon": _mirror_polygon(region["query_polygon"])}
+                    for region in regions
+                )
+                visible_homography = self._matrix(homography @ _mirror_matrix(original_query.width))
 
         return GeometryEvidence(
             keypoints_query=q_count,
@@ -409,4 +530,6 @@ class ORBGeometricVerifier:
             correspondences=correspondences,
             regions=regions,
             homography_query_to_reference=visible_homography,
+            reflected=reflected and validated,
+            alignment_grade=alignment_grade,
         )

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — Business Model &amp; Investment Case</title>
+<link rel="stylesheet" href="../assets/doc.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="coverMark"><b>CreatorProof</b><span></span>Business Model<span></span>Investment Case</div>
+
+  <div class="coverBody">
+    <h1 class="coverTitle">The internet lost<em>its receipts.</em></h1>
+    <p class="coverLead">
+      Every image published commercially now carries three unanswered questions and no paper
+      trail. CreatorProof is the evidence layer that answers them and hands you something you can
+      hold up in a room where nobody trusts anybody. This document is the business around that.
+    </p>
+  </div>
+
+  <div>
+    <div class="coverLanes">
+      <div class="coverLane" style="--tone:#60a5fa">
+        <b>The wedge</b>
+        <span>Mid-size creative agencies with acute liability and a single decision-maker</span>
+      </div>
+      <div class="coverLane" style="--tone:#34d399">
+        <b>The engine</b>
+        <span>Usage-metered API on a catalog that compounds with every registration</span>
+      </div>
+      <div class="coverLane" style="--tone:#a5b4fc">
+        <b>The moat</b>
+        <span>Portable evidence that stops being portable the moment two parties co-sign it</span>
+      </div>
+    </div>
+
+    <div class="coverFoot">
+      <div>
+        <b>Prepared for</b>BCOLBD 2026 judging panel
+        <br>CreatorProof v0.10.0
+      </div>
+      <div style="text-align:right">
+        <b>Contents</b>Market · Model · Unit economics · Moat · Ask
+        <br>August 2026
+      </div>
+    </div>
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+<!-- ═══════════════════════════════════════════════════════════ 01 THESIS -->
+<section class="flow">
+  <div class="sectionHead">
+    <span class="sectionNum">01</span>
+    <h1>The thesis</h1>
+  </div>
+
+  <p class="lead">
+    An illustrator in Dhaka spends three weeks on a commission. Four months later a friend sends
+    her a screenshot: her work, mirrored and recoloured, on a product listing in another country.
+    She has no registration, no timestamp, no leverage, and no lawyer. She posts about it. Nothing
+    happens.
+  </p>
+
+  <p>
+    On the other side of that transaction is a brand manager who never intended to steal anything.
+    An agency sent the asset. The agency got it from a freelancer. The freelancer found it. Nobody
+    in that chain checked, because there was no practical way to check — and now the brand is in a
+    dispute it cannot document its way out of, because nobody kept a record of what was verified
+    before publication.
+  </p>
+
+  <p>
+    <strong>Both of those people are our users, and neither of them is the villain.</strong> The
+    villain is a supply chain that moves images faster than it can account for them.
+  </p>
+
+  <h2>1.1 The insight</h2>
+
+  <div class="note">
+    <h4>The market is selling verdicts. The market needs records.</h4>
+    <p>
+      Every incumbent in this space returns a number: <em>87% AI</em>, <em>93% similar</em>,
+      <em>match found</em>. A number is an opinion with a decimal point. It cannot be audited, it
+      cannot be handed to a counterparty, and it evaporates the moment someone asks
+      "on what basis?" What organisations actually need before publishing is not a stronger
+      opinion. It is a <strong>structured, timestamped, independently verifiable record of what
+      was checked, what was found, and what was decided</strong> — the thing every other regulated
+      industry already has and this one does not.
+    </p>
+  </div>
+
+  <p>
+    Financial services has the audit trail. Pharmaceuticals has the batch record. Food has the
+    chain of custody. Creative publishing — an industry that moves hundreds of billions of dollars
+    of commercial value through images — has a Slack thread and a hope.
+  </p>
+
+  <h2>1.2 Why this becomes infrastructure rather than a tool</h2>
+
+  <p>
+    Tools get replaced when a better tool appears. Infrastructure gets embedded and outlives its
+    replacements, because the cost of removing it is not the price of the alternative — it is the
+    cost of invalidating everything built on top of it. Three properties move CreatorProof from
+    the first category to the second:
+  </p>
+
+  <ul class="clean">
+    <li><strong>The record accumulates.</strong> A customer's evidence history is only continuous if it stays with one issuer and one transparency log. Twelve months in, switching means starting the audit trail again.</li>
+    <li><strong>The catalog compounds.</strong> Every registered work makes every future scan more valuable to everyone, which is a supply-side network effect that a competitor cannot buy.</li>
+    <li><strong>Co-attestation makes it multilateral.</strong> The moment two organisations co-sign a decision on chain, neither can unilaterally leave the standard. This is how a vendor becomes a network.</li>
+  </ul>
+
+  <h2>1.3 Why now, precisely</h2>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:40mm">Force</th><th>What changed</th><th style="width:34mm">Consequence</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Generative capability</td><td>Image models crossed the threshold where origin is genuinely undecidable by eye, and style mimicry became a one-prompt operation.</td><td>Demand for evidence, not intuition.</td></tr>
+      <tr><td>Regulation</td><td>Transparency and disclosure obligations for synthetic media moved from voluntary guidance into binding requirements and platform policy.</td><td>Compliance budget appears.</td></tr>
+      <tr><td>Standards</td><td>C2PA / Content Credentials shipped in cameras, editors and major platforms — a real cryptographic substrate to build on.</td><td>An interoperable base layer now exists.</td></tr>
+      <tr><td>Cost of proof</td><td>L2 blockchains made a public, independent timestamp cost fractions of a cent, and attestation infrastructure became a primitive rather than a project.</td><td>Anchoring every decision is now economically trivial.</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    Any one of these alone produces a feature. All four at once produce a category. The window in
+    which a category can be defined by a new entrant is measured in quarters, not years.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 02 MARKET -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">02</span>
+    <h1>Market</h1>
+  </div>
+
+  <p class="kicker">
+    Sized bottom-up from addressable organisations rather than top-down from an analyst report,
+    because a top-down number is a rhetorical device and a bottom-up number is a plan.
+  </p>
+
+  <h2>2.1 Bottom-up TAM</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Segment</th>
+        <th class="num">Organisations</th>
+        <th class="num">Annual value</th>
+        <th class="num">Segment TAM</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Creative agencies, 20+ staff</td><td class="num">60,000</td><td class="num">$12,000</td><td class="num">$720M</td></tr>
+      <tr><td>Brand in-house studios</td><td class="num">25,000</td><td class="num">$30,000</td><td class="num">$750M</td></tr>
+      <tr><td>Marketplaces &amp; UGC platforms</td><td class="num">8,000</td><td class="num">$60,000</td><td class="num">$480M</td></tr>
+      <tr><td>Publishers &amp; media organisations</td><td class="num">20,000</td><td class="num">$15,000</td><td class="num">$300M</td></tr>
+      <tr><td>Stock &amp; licensing platforms</td><td class="num">2,000</td><td class="num">$80,000</td><td class="num">$160M</td></tr>
+      <tr><td><strong>Total addressable market</strong></td><td class="num">115,000</td><td class="num">—</td><td class="num"><strong>$2.41B</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="scoreRow">
+    <b>TAM <small>GLOBAL, ALL SEGMENTS</small></b>
+    <div class="scoreTrack"><div class="scoreFill" style="width:100%"></div></div>
+    <span class="scoreVal">$2.41B</span>
+  </div>
+  <div class="scoreRow">
+    <b>SAM <small>ENGLISH + EU MARKETS, 3 SEGMENTS</small></b>
+    <div class="scoreTrack"><div class="scoreFill" style="width:35%"></div></div>
+    <span class="scoreVal">$840M</span>
+  </div>
+  <div class="scoreRow">
+    <b>SOM <small>REALISTIC 3-YEAR CAPTURE</small></b>
+    <div class="scoreTrack"><div class="scoreFill" style="width:1.4%"></div></div>
+    <span class="scoreVal">$4.8M</span>
+  </div>
+
+  <p class="small muted" style="margin-top:4mm">
+    Organisation counts are triangulated from public industry census data; annual value per
+    organisation is our pricing model applied to expected usage at each segment's scale. These are
+    modelled figures and we present them as such. The number we would defend hardest is the SOM,
+    because it is a plan we can be held to rather than a market we are describing.
+  </p>
+
+  <h2>2.2 The Bangladesh wedge</h2>
+
+  <div class="note good">
+    <h4>The best first market for this company is the one it is being built in</h4>
+    <p>
+      Bangladesh is consistently ranked among the world's top two suppliers of online freelance
+      labour, and a large share of that supply is creative and design work delivered to clients in
+      the United States, the United Kingdom and the European Union. Those clients are precisely the
+      ones whose contracts have started to require AI-disclosure warranties and originality
+      representations.
+    </p>
+    <p>
+      That creates a very specific, very local, very urgent problem: <strong>a Bangladeshi studio
+      can lose a Western contract because it cannot produce evidence, not because it did anything
+      wrong.</strong> CreatorProof turns that from an existential risk into a competitive
+      advantage — a studio that attaches a verifiable evidence packet to every delivery is easier
+      to buy from than one that attaches a promise.
+    </p>
+  </div>
+
+  <p>
+    Strategically this is the ideal wedge: a domestic market we can reach without a sales team,
+    solving a problem created by international buyers, which means <strong>every customer we win
+    locally carries our artefact into a global enterprise</strong>. The proof packet is the
+    marketing.
+  </p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ 03 CUSTOMER -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">03</span>
+    <h1>Customer and value</h1>
+  </div>
+
+  <h2>3.1 Ideal customer profile</h2>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:44mm">Firmographic</td><td>Creative agency or production studio, 20–200 staff, running paid campaigns for clients who impose contractual originality and disclosure terms.</td></tr>
+      <tr><td>Economic buyer</td><td>Head of production or operations director. A single signature, no procurement committee, budget authority in the low tens of thousands.</td></tr>
+      <tr><td>Champion</td><td>Producer or traffic manager who currently performs the check manually and hates it.</td></tr>
+      <tr><td>Trigger event</td><td>A near-miss, a client questionnaire about AI usage, a new master services agreement, or an actual claim.</td></tr>
+      <tr><td>Disqualifiers</td><td>No client contracts imposing originality terms; volume below roughly 200 assets per month; expects a legal determination.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>3.2 The value equation</h2>
+
+  <p>
+    We sell against three quantifiable costs and one unquantifiable one. The unquantifiable one is
+    what actually closes the deal, and we say so openly in the sales conversation.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th style="width:44mm">Cost today</th><th>How it is incurred</th><th class="num" style="width:26mm">Annual</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Manual review labour</td>
+        <td>A producer spending an estimated 6 minutes per asset on reverse image search and judgement, across ~500 assets per month, at a loaded rate of $28/hour.</td>
+        <td class="num">$16,800</td>
+      </tr>
+      <tr>
+        <td>Rework and pulled campaigns</td>
+        <td>Assets withdrawn after publication because a problem surfaced late. Modelled at two incidents per year at $9,000 of re-shoot, re-buy and schedule cost.</td>
+        <td class="num">$18,000</td>
+      </tr>
+      <tr>
+        <td>Claim exposure</td>
+        <td>Expected value of settlements and legal fees, modelled at a 6% annual probability of a $75,000 event.</td>
+        <td class="num">$4,500</td>
+      </tr>
+      <tr>
+        <td><strong>Total addressable cost</strong></td><td></td><td class="num"><strong>$39,300</strong></td>
+      </tr>
+      <tr>
+        <td>Cost of CreatorProof</td>
+        <td>Studio tier at expected volume.</td>
+        <td class="num">$7,200</td>
+      </tr>
+      <tr>
+        <td><strong>Modelled net benefit</strong></td><td class="muted">A 5.5× return before counting the item below.</td><td class="num" style="color:#34d399"><strong>$32,100</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <h4>The fourth cost, which is the one that closes</h4>
+    <p>
+      The moment a client asks <em>"can you show me you checked?"</em>, the agency that can answer
+      keeps the account and the agency that cannot starts explaining. Nobody has a line item for
+      that. Everybody has a memory of it. Our proof packet is not sold as a cost saving; it is sold
+      as the thing you attach to the invoice so the question never gets asked in a tone you
+      don't like.
+    </p>
+  </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════ 04 THE MODEL -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">04</span>
+    <h1>Revenue model</h1>
+  </div>
+
+  <p class="lead">
+    A three-part tariff: a platform fee for access and audit retention, a catalog fee for what we
+    protect, and metered usage for what we check. Two of those three grow automatically as the
+    customer succeeds, which is the definition of a good value metric.
+  </p>
+
+  <h2>4.1 Pricing architecture</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:30mm">Tier</th>
+        <th class="num" style="width:24mm">Platform</th>
+        <th>Included</th>
+        <th class="num" style="width:22mm">Typical ACV</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Studio</td>
+        <td class="num">$299/mo</td>
+        <td class="small">5,000 protected references · 2,500 standard scans/mo · 90-day audit retention · both portals · webhook delivery</td>
+        <td class="num">$7,200</td>
+      </tr>
+      <tr>
+        <td>Growth</td>
+        <td class="num">$1,200/mo</td>
+        <td class="small">25,000 references · 15,000 scans/mo · forensic-tier scans · public-chain anchoring · policy versioning · review queue · SSO</td>
+        <td class="num">$21,600</td>
+      </tr>
+      <tr>
+        <td>Platform</td>
+        <td class="num">$4,500/mo</td>
+        <td class="small">Unlimited references · volume scan pricing · co-attestation network membership · dedicated calibration on customer corpus · SLA</td>
+        <td class="num">$78,000</td>
+      </tr>
+      <tr>
+        <td>Enterprise</td>
+        <td class="num">Custom</td>
+        <td class="small">Private deployment, data residency, bespoke policy engine, indemnity negotiation, procurement and security review</td>
+        <td class="num">$150k+</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Metered overages</h4>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:52mm">Standard scan</td><td class="num" style="width:24mm">$40</td><td>per 1,000 — retrieval, geometry, origin, policy</td></tr>
+      <tr><td>Forensic scan</td><td class="num">$180</td><td>per 1,000 — full stress-view ensemble, aligned perceptual, creator profile, GPU path</td></tr>
+      <tr><td>Protected reference</td><td class="num">$49</td><td>per 1,000 references per month</td></tr>
+      <tr><td>Public-chain anchor</td><td class="num">$0.02</td><td>per anchored decision, or included via batched checkpoints</td></tr>
+      <tr><td>Extended audit retention</td><td class="num">$180</td><td>per month for seven-year retention tier</td></tr>
+    </tbody>
+  </table>
+
+  <p class="small muted">
+    Every one of these meters already exists in the codebase as an append-only usage record.
+    Billing is not a future integration; the instrumentation shipped before the pricing page did.
+  </p>
+
+  <h2>4.2 Why this shape</h2>
+
+  <ul class="clean">
+    <li><strong>The platform fee buys predictability</strong> for us and budget-line simplicity for them, and it is what makes the audit trail continuous — the thing that creates switching cost.</li>
+    <li><strong>The catalog fee is the network fee.</strong> It is the only charge that scales with the asset that makes the whole system more valuable to every other customer, which is why it is priced gently and never metered aggressively.</li>
+    <li><strong>Scan metering aligns cost with value.</strong> A customer who scans more is publishing more, is earning more, and is exposed to more risk. Their bill should move with all three.</li>
+    <li><strong>Forensic tier is a margin instrument.</strong> It costs us GPU seconds and it is the tier customers reach for when something is actually at stake, which is exactly when price sensitivity collapses.</li>
+  </ul>
+</section>
+
+<!-- ═════════════════════════════════════════════════════ 05 UNIT ECONOMICS -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">05</span>
+    <h1>Unit economics</h1>
+  </div>
+
+  <div class="note warn">
+    <h4>These are modelled, not measured</h4>
+    <p>
+      We have not sold anything yet. Every figure below is derived from our measured infrastructure
+      costs and from comparable benchmarks in vertical B2B API businesses. We are presenting a model
+      we intend to be held to, not a result we are claiming.
+    </p>
+  </div>
+
+  <div class="grid4">
+    <div class="stat accent"><b>$8,400</b><span>blended ACV including expansion</span></div>
+    <div class="stat pass"><b>78%</b><span>gross margin at Studio-tier volume</span></div>
+    <div class="stat"><b>$4,500</b><span>modelled customer acquisition cost</span></div>
+    <div class="stat pass"><b>8.2<small style="font-size:11pt">mo</small></b><span>CAC payback period</span></div>
+  </div>
+
+  <h2>5.1 Cost to serve, one Studio customer</h2>
+
+  <table class="compact">
+    <thead>
+      <tr><th>Line</th><th class="num" style="width:24mm">Annual</th><th>Basis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Inference compute</td><td class="num">$684</td><td class="small">30,000 scans/yr across three lanes, GPU-hour amortised, measured on our own hardware</td></tr>
+      <tr><td>Storage and egress</td><td class="num">$312</td><td class="small">Reference media, derived embeddings, evidence packets, audit retention</td></tr>
+      <tr><td>Chain anchoring</td><td class="num">$26</td><td class="small">Batched checkpoint attestations on an L2 at prevailing gas</td></tr>
+      <tr><td>Support and success</td><td class="num">$826</td><td class="small">Blended human cost at target ratio of one CSM per 60 accounts</td></tr>
+      <tr><td><strong>Total cost to serve</strong></td><td class="num"><strong>$1,848</strong></td><td class="small muted">Against $8,400 ACV → 78% gross margin</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5.2 Retention and lifetime value</h2>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:52mm">Logo retention, target</td><td class="num" style="width:20mm">78%</td><td class="small">Conservative for early-stage vertical SaaS; switching cost should improve this materially after year one</td></tr>
+      <tr><td>Net revenue retention, target</td><td class="num">115%</td><td class="small">Expansion through reference growth and forensic-tier adoption, not price rises</td></tr>
+      <tr><td>Average customer lifetime</td><td class="num">4.5 yr</td><td class="small">Implied by the retention assumption above</td></tr>
+      <tr><td>Lifetime gross profit</td><td class="num">$29,500</td><td class="small">ACV × gross margin × lifetime, expansion included</td></tr>
+      <tr><td><strong>LTV : CAC</strong></td><td class="num" style="color:#34d399"><strong>6.6 : 1</strong></td><td class="small">Above the 3:1 threshold with room for the assumptions to be wrong</td></tr>
+    </tbody>
+  </table>
+
+  <h2>5.3 Path to $4.8M ARR</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Year</th>
+        <th class="num">Customers</th>
+        <th class="num">Blended ACV</th>
+        <th class="num">ARR</th>
+        <th>Focus</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Year 1</td><td class="num">25</td><td class="num">$7,200</td><td class="num">$180k</td><td class="small">Founder-led sales into the local agency market. Calibrate on real customer corpora. Publish the first third-party-verified benchmark.</td></tr>
+      <tr><td>Year 2</td><td class="num">120</td><td class="num">$9,600</td><td class="num">$1.15M</td><td class="small">Two platform logos. Self-serve Studio tier. First co-attestation network pairs go live between agency and client.</td></tr>
+      <tr><td>Year 3</td><td class="num">400</td><td class="num">$12,000</td><td class="num">$4.80M</td><td class="small">International expansion via the artefact. Marketplace integrations. Enterprise deployments with private hosting.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════ 06 GTM -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">06</span>
+    <h1>Go to market</h1>
+  </div>
+
+  <h2>6.1 The motion</h2>
+
+  <div class="pipeline">
+    <div class="pipeStep">
+      <i>01 · LAND</i>
+      <b>Free registry</b>
+      <span>Creators and studios register works at no cost. This builds the catalog — the asset that makes checking worth paying for — before we ask anyone for money.</span>
+    </div>
+    <div class="pipeStep">
+      <i>02 · CONVERT</i>
+      <b>Shadow pilot</b>
+      <span>A four-week pilot running alongside the customer's existing process. We prove displacement against their own assets, on their own numbers, with no switching risk.</span>
+    </div>
+    <div class="pipeStep">
+      <i>03 · EXPAND</i>
+      <b>Reference growth</b>
+      <span>Revenue grows with protected references and scan volume without a renegotiation. Forensic tier adopted when the stakes rise.</span>
+    </div>
+    <div class="pipeStep">
+      <i>04 · NETWORK</i>
+      <b>Co-attestation</b>
+      <span>The customer invites its client to co-sign decisions. The client is now inside the network and is the next account, acquired at near-zero cost.</span>
+    </div>
+  </div>
+
+  <h2>6.2 Distribution channels, ranked by cost</h2>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:44mm">Channel</th><th>Mechanism</th><th style="width:22mm" class="num">Modelled CAC</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Artefact-led referral</td><td class="small">The evidence packet carries our verification link into the client's inbox on every delivery. The customer's client becomes our lead.</td><td class="num">$400</td></tr>
+      <tr><td>Creator registry inbound</td><td class="small">Free registration attracts the supply side; registered creators pull their commissioning agencies in.</td><td class="num">$900</td></tr>
+      <tr><td>Founder-led outbound</td><td class="small">Direct approach to agency operations, opening with a specific named near-miss.</td><td class="num">$3,800</td></tr>
+      <tr><td>Association partnerships</td><td class="small">Industry bodies; compliance briefings as the wedge, not product demos.</td><td class="num">$2,100</td></tr>
+      <tr><td>Marketplace integration</td><td class="small">Embedded at upload in a platform partner. High effort, high leverage, a year-two motion.</td><td class="num">$11,000</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6.3 The shadow pilot, in detail</h2>
+
+  <p>
+    The single most important sales mechanic we have, because it removes the buyer's real
+    objection — which is never price, it is "what if it is wrong?"
+  </p>
+
+  <ul class="clean">
+    <li><strong>Week 1 — Fit.</strong> Define the customer's policy in their own words, register a starter catalog, agree what a false positive would cost them.</li>
+    <li><strong>Weeks 2–3 — Shadow.</strong> Every asset goes through CreatorProof <em>and</em> their existing process. We record both. We change nothing.</li>
+    <li><strong>Week 4 — Review.</strong> We present disagreements, not agreements: where we flagged something they missed, and where we flagged something they were right to ignore. Showing a prospect where we were wrong is not a weakness in this motion, it is the mechanism — a vendor who reports their own false positives is a vendor whose true positives can be believed.</li>
+    <li><strong>Decision.</strong> They have measured our value on their own data. The commercial conversation is now arithmetic instead of persuasion.</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ 07 MOAT -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">07</span>
+    <h1>Defensibility</h1>
+  </div>
+
+  <p class="kicker">
+    The honest question an investor asks is "what stops a well-funded incumbent from shipping this
+    in a quarter?" Here is the answer, ordered from weakest to strongest.
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Weak — the models</h4>
+      <p class="small muted">
+        Our models are public research artefacts. Anyone can download them. We claim no moat here
+        whatsoever, and any pitch that did would be lying. The models are a commodity input; the
+        architecture around them is not.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Moderate — the architecture</h4>
+      <p class="small">
+        Lane separation, coverage-before-verdict, nominate-then-verify, evidence-family governance
+        and the abstention logic represent a substantial body of design judgement that took us the
+        length of this build to get right. Copyable, but not quickly, and not by a team that has not
+        already made our mistakes.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Strong — calibration data</h4>
+      <p class="small">
+        Operating points calibrated against real customer corpora. Every pilot improves thresholds
+        for the domain it came from. A competitor can match our models on day one and still be worse
+        on an agency's actual assets, because they have not seen an agency's actual assets.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Strong — the catalog</h4>
+      <p class="small">
+        A supply-side data network effect. Every registered work makes every scan more valuable to
+        every customer. This is the asset that cannot be bought, only accumulated, and the reason
+        registration is free.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Strongest — audit continuity</h4>
+      <p class="small">
+        A customer's evidence history is bound to our issuer key and transparency log. Leaving does
+        not cost them a migration; it costs them the continuity of their own audit trail. This is
+        the same lock-in that keeps companies with their auditor.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Strongest — the co-attestation network</h4>
+      <p class="small">
+        Once two organisations have jointly signed decisions on chain, the standard is no longer
+        ours to control or theirs to abandon. Each additional member raises the cost of every
+        member leaving. This is a genuine multilateral network effect, and it is already built.
+      </p>
+    </div>
+  </div>
+
+  <h2>7.1 Competitive landscape</h2>
+
+  <table>
+    <thead>
+      <tr><th style="width:42mm">Category</th><th>What they do</th><th style="width:46mm">Why it is not this</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Reverse image search</td><td class="small">Find visually similar images across an index of the public web.</td><td class="small">Discovery, not evidence. No policy, no provenance, no receipt, no coverage statement.</td></tr>
+      <tr><td>AI-detection vendors</td><td class="small">Return a probability that an image is machine-generated.</td><td class="small">One lane of three, delivered as an unauditable number, with no abstention when the evidence is thin.</td></tr>
+      <tr><td>C2PA / Content Credentials</td><td class="small">A cryptographic provenance standard for signed content.</td><td class="small">A substrate, not a product — and it is silent on every file that arrives unsigned, which is most of them. We consume it as our best input.</td></tr>
+      <tr><td>Platform content ID systems</td><td class="small">Closed matching systems operated inside one platform.</td><td class="small">Not available as infrastructure, not portable, not verifiable by an outside party.</td></tr>
+      <tr><td>DAM and rights platforms</td><td class="small">Store, organise and licence creative assets.</td><td class="small">Custody of assets, not evidence about them. Natural integration partners rather than competitors.</td></tr>
+      <tr><td>Legal and IP services</td><td class="small">Human determination of infringement.</td><td class="small">Expensive, slow, and post-hoc. We are the layer that reduces how often they are needed and makes them cheaper when they are.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <h4>The positioning statement</h4>
+    <p>
+      Detection tools sit before the decision. Legal services sit after it.
+      <strong>Nobody occupies the decision itself</strong> — the moment where evidence becomes a
+      recorded, defensible, jointly witnessed action. That is the category CreatorProof is built to
+      define, and category definition is worth more than feature parity.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 08 THE ASK -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">08</span>
+    <h1>The ask and the risks</h1>
+  </div>
+
+  <h2>8.1 Raise</h2>
+
+  <div class="grid3">
+    <div class="stat accent"><b>$300k</b><span>pre-seed</span></div>
+    <div class="stat"><b>18</b><span>months of runway</span></div>
+    <div class="stat pass"><b>$1M</b><span>ARR target at the end of it</span></div>
+  </div>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:44mm">Use of funds</th><th class="num" style="width:18mm">Share</th><th>What it buys</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Engineering</td><td class="num">40%</td><td class="small">Two engineers. Approximate-nearest-neighbour retrieval at catalog scale, learned matcher promotion, hardened key custody.</td></tr>
+      <tr><td>Model calibration</td><td class="num">20%</td><td class="small">Labelled customer corpora, third-party benchmark validation, and the calibration registry that unlocks our highest-authority outcomes.</td></tr>
+      <tr><td>Go to market</td><td class="num">20%</td><td class="small">One commercial hire, the pilot programme, and the association partnerships.</td></tr>
+      <tr><td>Legal and compliance</td><td class="num">12%</td><td class="small">Counsel review of every customer-facing claim, terms, and the indemnity position that enterprise procurement will demand.</td></tr>
+      <tr><td>Infrastructure</td><td class="num">8%</td><td class="small">GPU capacity, production hosting, chain operations.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>8.2 Milestones this buys</h2>
+
+  <ul class="clean">
+    <li><strong>Month 3</strong> — five paying pilots converted from shadow mode; first calibrated operating point on a real customer corpus.</li>
+    <li><strong>Month 6</strong> — public benchmark validated by an independent party; model bundle promoted past <code>RUNTIME_READY</code> with a human sign-off record.</li>
+    <li><strong>Month 9</strong> — first co-attestation pair live in production between an agency and its client.</li>
+    <li><strong>Month 12</strong> — 60 customers, $400k ARR, self-serve Studio tier shipped.</li>
+    <li><strong>Month 18</strong> — $1M ARR, first platform integration, Series A conversation opened from strength.</li>
+  </ul>
+
+  <h2>8.3 Risk register</h2>
+
+  <table>
+    <thead>
+      <tr><th style="width:40mm">Risk</th><th>Honest assessment</th><th style="width:48mm">Mitigation</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Detection accuracy is challenged</td>
+        <td class="small">Our benchmark is our own. A sophisticated buyer will discount it, correctly.</td>
+        <td class="small">Independent validation is funded in this raise and is the first milestone. Until then we quote the benchmark with its methodology attached, every time.</td>
+      </tr>
+      <tr>
+        <td>A hyperscaler ships a competing feature</td>
+        <td class="small">Plausible. They have the models and the distribution.</td>
+        <td class="small">They will ship a score, not a record — a platform that anchors evidence and co-signs with counterparties inherits liability its lawyers will not accept. Our defensibility is in the part they do not want.</td>
+      </tr>
+      <tr>
+        <td>Slow enterprise sales cycles</td>
+        <td class="small">Real. Compliance-adjacent purchases are slow everywhere.</td>
+        <td class="small">The beachhead deliberately avoids procurement committees. Land at Studio tier with one signature; meet procurement later, from inside the account.</td>
+      </tr>
+      <tr>
+        <td>Regulation moves slower than expected</td>
+        <td class="small">Possible. Our tailwind could stall.</td>
+        <td class="small">Commercial contract terms already impose these obligations independently of regulation. The value proposition does not require the law to arrive on schedule.</td>
+      </tr>
+      <tr>
+        <td>Catalog cold start</td>
+        <td class="small">Genuine. An empty catalog produces no matches and looks worthless.</td>
+        <td class="small">Free registration, creator-side acquisition ahead of monetisation, and coverage reporting that is honest about an empty catalog rather than returning a hollow "clean".</td>
+      </tr>
+      <tr>
+        <td>Key-custody failure</td>
+        <td class="small">Our signing key is currently an environment secret. A compromise would undermine every packet we have issued.</td>
+        <td class="small">Externally managed key custody is a funded line item. We disclose the current state rather than implying a hardware security module we do not have.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 09 DELIVERY -->
+<section>
+  <div class="sectionHead">
+    <span class="sectionNum">09</span>
+    <h1>Delivery playbook</h1>
+  </div>
+
+  <p class="kicker">
+    How to present this so a judging panel feels it rather than files it. Rhetoric is not decoration
+    — it is the difference between a project that is understood and a project that is remembered.
+  </p>
+
+  <h2>9.1 The narrative arc</h2>
+
+  <p>
+    Do not open with the technology. Open with a person. Judges evaluate dozens of projects that all
+    begin "our solution leverages" and they blur into one. A specific human in a specific situation
+    does not blur.
+  </p>
+
+  <table class="compact">
+    <thead>
+      <tr><th style="width:26mm">Beat</th><th style="width:32mm">Emotional target</th><th>How to hit it</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1 · The person</td><td class="small">Recognition</td><td class="small">One named illustrator, one stolen piece, one screenshot. Concrete, small, undeniable. Never "artists everywhere".</td></tr>
+      <tr><td>2 · The turn</td><td class="small">Discomfort</td><td class="small">Reveal that the person who used her work is also not a villain. Nobody checked because checking was impossible. The audience loses their easy target.</td></tr>
+      <tr><td>3 · The reframe</td><td class="small">Curiosity</td><td class="small">"This is not one question. It is three." State them. This is the moment the panel realises they had been thinking about it wrongly.</td></tr>
+      <tr><td>4 · The reveal</td><td class="small">Relief</td><td class="small">Show the product doing it. Real screen, real image, real result. Let the interface speak; narrate lightly.</td></tr>
+      <tr><td>5 · The proof</td><td class="small">Trust</td><td class="small">Open the receipt. This is where a demo becomes a company — the artefact outlives the demo.</td></tr>
+      <tr><td>6 · The horizon</td><td class="small">Ambition</td><td class="small">One sentence about the network, not five. Leave them extrapolating rather than listening.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9.2 Six techniques that will do most of the work</h2>
+
+  <ul class="clean">
+    <li><strong>Specificity as a credibility instrument.</strong> "Three weeks of work, mirrored and recoloured, on a listing in another country" outperforms "widespread infringement" every time. Concrete detail signals lived understanding; abstraction signals a slide deck.</li>
+    <li><strong>Restraint as proof of rigour.</strong> The most persuasive sentence available to us is <em>"we could have put ninety-nine percent on this slide, and we did not, because we have not earned it."</em> Voluntarily declining an advantage is the strongest honesty signal a presenter can send, and it makes everything else you say more believable.</li>
+    <li><strong>Loss framing over gain framing.</strong> People are reliably more moved by what they stand to lose than by what they might gain. "The account you lose when you cannot answer the question" lands harder than "improved compliance posture".</li>
+    <li><strong>The tricolon.</strong> Three-part structures are disproportionately memorable. Ours is already built in: <em>what matched, what was checked, what was decided.</em> Use it verbatim, more than once, so it becomes the phrase they repeat to each other afterwards.</li>
+    <li><strong>The deliberate pause.</strong> After the reframe — "it is three questions" — stop for a full two seconds. Silence marks importance more reliably than emphasis does, and almost nobody uses it.</li>
+    <li><strong>Peak-end weighting.</strong> Audiences remember the emotional peak and the final moment, not the average. Engineer the peak at the live match reveal and spend real effort on the last sentence, because those two moments are the memory.</li>
+  </ul>
+
+  <h2>9.3 Vocal delivery</h2>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:40mm">Pace</td><td>Around 150 words per minute. Slower than feels natural. Urgency comes from what you say, not how fast.</td></tr>
+      <tr><td>Terminal pitch</td><td>Let pitch fall at the end of sentences. Rising terminals read as seeking approval; falling terminals read as stating fact.</td></tr>
+      <tr><td>Volume</td><td>Drop volume for the most important line rather than raising it. A panel leans in for a quiet sentence and defends against a loud one.</td></tr>
+      <tr><td>The demo</td><td>Narrate less than you want to. Let two seconds pass after the match appears so the panel discovers it rather than being told.</td></tr>
+      <tr><td>The close</td><td>One sentence, then stop. The last thing they hear should be your line, not your throat-clearing.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>9.4 Pre-empting the four hard questions</h2>
+
+  <table>
+    <thead>
+      <tr><th style="width:52mm">If they ask</th><th>Answer with</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>"How accurate is it, really?"</td>
+        <td class="small">The number, the method and the failure in one breath: <em>"98.1% match recall over 364 transformed cases, zero false matches on 115 negatives, on a benchmark we built ourselves and will publish. Two cases fail, both flat repetitive graphics."</em> Volunteering the failure is what makes the headline credible.</td>
+      </tr>
+      <tr>
+        <td>"Isn't the blockchain part unnecessary?"</td>
+        <td class="small"><em>"It is unnecessary right up until the two parties disagree."</em> A database timestamp is our word. An attestation is a witness that neither party controls, and co-attestation is two parties binding themselves to the same record. That is not decoration; it is the only part that survives a dispute.</td>
+      </tr>
+      <tr>
+        <td>"Why can't Google or Adobe do this tomorrow?"</td>
+        <td class="small">They can build the detection. They will not want the liability of anchoring a rights decision and co-signing it with a counterparty. The defensible position is the one their legal department declines.</td>
+      </tr>
+      <tr>
+        <td>"Who actually pays?"</td>
+        <td class="small">The party with publication risk, never the creator. Name the buyer, the budget line and the signature: head of production, existing risk budget, one signature at Studio tier.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>9.5 The closing line</h2>
+
+  <div class="note good">
+    <h4>Say this, then stop</h4>
+    <p class="lead" style="margin-bottom:0">
+      "We cannot tell you who owns an image. Nobody can. What we can do is make sure that the next
+      time somebody has to answer for one, there is a record — and that the record was not written
+      by the person who benefits from it."
+    </p>
+  </div>
+
+  <div class="footNote">
+    CreatorProof · business model and investment case · prepared for BCOLBD 2026. Market sizes,
+    pricing, unit economics and projections in this document are models built on stated assumptions,
+    not measured results. The product is a working prototype with no revenue. We would rather be
+    trusted on the numbers we do have than believed on numbers we do not.
+  </div>
+</section>
+
+</td></tr></tbody>
+</table>
+
+</body>
+</html>

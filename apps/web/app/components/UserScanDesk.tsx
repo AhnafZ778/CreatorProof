@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
+import { DEFAULT_CATALOG_ID, readCatalogWorks } from "@/app/lib/catalog";
 import { buildScenario, type DemoScenario } from "@/app/lib/demoScenarios";
 
 import CoAttestationPanel from "./CoAttestationPanel";
@@ -43,6 +44,31 @@ function progressFrom(result: ApiResult): ScanProgress | null {
   };
 }
 
+/**
+ * What the named catalog holds, said before the scan rather than after.
+ *
+ * An empty catalog and a clean result produce the same verdict, so this is the
+ * only place the difference can be shown while the operator can still act on
+ * it. Silence when the count is unknown: guessing at zero would invent the
+ * alarming case out of an unreachable API.
+ */
+function CatalogSize({ catalogId, count }: { catalogId: string; count: number | null }) {
+  if (count === null) return null;
+  if (count === 0) {
+    return (
+      <small className="catalogSize isEmpty" role="status">
+        No works registered in <b>{catalogId}</b> — a scan here can only report AI origin.
+        Register work in the Artist portal first.
+      </small>
+    );
+  }
+  return (
+    <small className="catalogSize" role="status">
+      {count} registered {count === 1 ? "work" : "works"} will be searched
+    </small>
+  );
+}
+
 export default function UserScanDesk() {
   const [scanResult, setScanResult] = useState<ApiResult | null>(null);
   const [candidatePreview, setCandidatePreview] = useState<LocalImagePreview | null>(null);
@@ -55,12 +81,31 @@ export default function UserScanDesk() {
   const [timeline, setTimeline] = useState<StageTimeline | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [demoScenarioId, setDemoScenarioId] = useState<string | null>(null);
+  const [catalogId, setCatalogId] = useState(DEFAULT_CATALOG_ID);
+  const [catalogSize, setCatalogSize] = useState<number | null>(null);
   const previewUrls = useRef(new Set<string>());
 
   useEffect(() => {
     const urls = previewUrls.current;
     return () => urls.forEach((url) => URL.revokeObjectURL(url));
   }, []);
+
+  // A scan can only find what the named catalog holds, and an empty catalog
+  // returns the same "nothing found" shape as a genuine clearance. Counting the
+  // works up front is what separates those two for the operator, so it happens
+  // while they are still typing rather than after they have read a verdict.
+  useEffect(() => {
+    let cancelled = false;
+    setCatalogSize(null);
+    const timer = setTimeout(async () => {
+      const works = await readCatalogWorks(catalogId);
+      if (!cancelled) setCatalogSize(works === null ? null : works.length);
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [catalogId]);
 
   function preview(file: File): LocalImagePreview {
     const url = URL.createObjectURL(file);
@@ -216,15 +261,17 @@ export default function UserScanDesk() {
     try {
       const bundle = await buildScenario(scenario);
       // A catalog per run, so repeated demos never inflate the coverage counts
-      // that the result page reports as eligible references.
-      const catalogId = `demo-${scenario.id}-${crypto.randomUUID().slice(0, 8)}`;
+      // that the result page reports as eligible references. Deliberately not
+      // the catalog in the form: a scenario ships its own references and must
+      // not measure them against whatever the operator happens to have typed.
+      const scenarioCatalogId = `demo-${scenario.id}-${crypto.randomUUID().slice(0, 8)}`;
 
       for (const reference of bundle.references) {
         const registration = new FormData();
         registration.append("file", reference.file);
         registration.append("title", reference.title);
         registration.append("claimant", reference.claimant);
-        registration.append("catalog_id", catalogId);
+        registration.append("catalog_id", scenarioCatalogId);
         registration.append("claim_state", "ASSERTED");
         const response = await fetch("/api/works", { method: "POST", body: registration });
         if (!response.ok) {
@@ -234,7 +281,7 @@ export default function UserScanDesk() {
 
       const form = new FormData();
       form.append("file", bundle.candidate);
-      form.append("catalog_id", catalogId);
+      form.append("catalog_id", scenarioCatalogId);
       form.append("intended_use", scenario.intendedUse);
       await startScan(form, bundle.candidate);
     } catch (caught) {
@@ -308,7 +355,13 @@ export default function UserScanDesk() {
             </div>
             <label className="portalField">
               <span className="portalFieldLabel">Catalog</span>
-              <input required name="catalog_id" defaultValue="demo-catalog" />
+              <input
+                required
+                name="catalog_id"
+                value={catalogId}
+                onChange={(event) => setCatalogId(event.target.value)}
+              />
+              <CatalogSize catalogId={catalogId} count={catalogSize} />
             </label>
             <label className="portalField">
               <span className="portalFieldLabel">Intended use</span>

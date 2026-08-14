@@ -1,0 +1,816 @@
+/**
+ * CreatorProof submission document stylesheet.
+ *
+ * Print target is A4. The palette is lifted directly from the product's own
+ * design tokens (apps/web/app/styles/tokens.css) so a judge who reads the PDF
+ * and then opens the site sees one system, not two. Lane hues are identities,
+ * never verdicts; pass/review/block are the only colours allowed to carry a
+ * decision.
+ */
+
+@font-face {
+  font-family: "Geist";
+  src: url("fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+}
+
+:root {
+  --bg: #05070c;
+  --panel: rgba(255, 255, 255, 0.042);
+  --panel-raised: rgba(255, 255, 255, 0.072);
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+
+/**
+ * Page frame.
+ *
+ * Chrome will not extend a page background into the @page margin box, so a
+ * dark document printed with page margins shows white gutters on every sheet.
+ * The fix is a zero-margin page plus a single wrapper table: Chrome repeats
+ * thead and tfoot on every page, so those two empty rows become the top and
+ * bottom margin, and the cell padding becomes the side margin. The background
+ * is then free to bleed to the paper edge.
+ */
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+html {
+  background: var(--bg);
+}
+
+table.pageFrame,
+table.pageFrame > thead > tr > td,
+table.pageFrame > tfoot > tr > td,
+table.pageFrame > tbody > tr > td {
+  margin: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  break-inside: auto;
+}
+
+table.pageFrame {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.pageFrame > thead > tr > td,
+table.pageFrame > tfoot > tr > td {
+  height: 15mm;
+  padding: 0;
+}
+
+table.pageFrame > tbody > tr > td {
+  padding: 0 15mm;
+  vertical-align: top;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-2);
+  font-family: var(--sans);
+  font-size: 10.2pt;
+  line-height: 1.62;
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- cover */
+
+.cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 210mm;
+  height: 296.7mm;
+  padding: 22mm 20mm 16mm;
+  overflow: hidden;
+  background:
+    radial-gradient(80% 55% at 12% 4%, rgba(96, 165, 250, 0.22), transparent 62%),
+    radial-gradient(70% 50% at 92% 96%, rgba(165, 180, 252, 0.16), transparent 60%),
+    #05070c;
+  break-after: page;
+}
+
+.cover::after {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+  background-size: 34px 34px;
+  content: "";
+  pointer-events: none;
+}
+
+.cover > * {
+  position: relative;
+  z-index: 1;
+}
+
+.coverMark {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text-4);
+  font: 600 8.4pt/1 var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.coverMark b {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+
+.coverMark span {
+  width: 26px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.coverTitle {
+  margin: 0 0 6mm;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 46pt;
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+/* A gradient clipped to text rasterises with a visible layer edge in Chrome's
+   PDF pipeline, so the second line takes a solid accent instead. */
+.coverTitle em {
+  display: block;
+  color: #7fb3ff;
+  font-style: normal;
+}
+
+.coverLead {
+  max-width: 138mm;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12.4pt;
+  line-height: 1.55;
+}
+
+.coverBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6mm 0;
+}
+
+.coverLanes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  margin-bottom: 8mm;
+}
+
+.coverLane {
+  padding: 5mm 5mm 6mm;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--tone);
+  border-radius: 3mm;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.coverLane b {
+  display: block;
+  margin-bottom: 2mm;
+  color: var(--tone);
+  font: 600 7.6pt/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.coverLane span {
+  color: var(--text-2);
+  font-size: 9.4pt;
+  line-height: 1.45;
+}
+
+.coverFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: 6mm;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
+  font: 500 8.2pt/1.6 var(--mono);
+  letter-spacing: 0.06em;
+}
+
+.coverFoot b {
+  display: block;
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- headings */
+
+h1 {
+  margin: 0 0 4mm;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 21pt;
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  margin: 9mm 0 3mm;
+  color: var(--text);
+  font-size: 13pt;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.008em;
+  break-after: avoid;
+}
+
+h3 {
+  margin: 6mm 0 2mm;
+  color: var(--text);
+  font-size: 10.6pt;
+  font-weight: 600;
+  break-after: avoid;
+}
+
+h4 {
+  margin: 4mm 0 1.5mm;
+  color: var(--text-2);
+  font: 600 8.2pt/1.3 var(--mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  break-after: avoid;
+}
+
+p {
+  margin: 0 0 3mm;
+}
+
+strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+em {
+  color: var(--text);
+  font-style: italic;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+code {
+  padding: 0.5mm 1.2mm;
+  border-radius: 1mm;
+  background: rgba(255, 255, 255, 0.07);
+  color: #cfe3ff;
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+
+/* --------------------------------------------------------------- section */
+
+/* Sections flow rather than each forcing a new page: a forced break per
+   section stranded two-line tails on otherwise empty sheets. The numbered
+   rule below is separation enough, and the document is a third shorter. */
+section {
+  margin-top: 13mm;
+}
+
+section:first-of-type {
+  margin-top: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 5mm;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid var(--line);
+  break-after: avoid;
+  break-inside: avoid;
+}
+
+.sectionNum {
+  color: var(--accent);
+  font: 600 9pt/1 var(--mono);
+  letter-spacing: 0.14em;
+}
+
+.sectionHead h1 {
+  flex: 1;
+  margin: 0;
+}
+
+.kicker {
+  margin: 0 0 5mm;
+  color: var(--text-3);
+  font-size: 10.4pt;
+  line-height: 1.55;
+}
+
+/* ----------------------------------------------------------------- lists */
+
+ul,
+ol {
+  margin: 0 0 3mm;
+  padding-left: 5.4mm;
+}
+
+li {
+  margin-bottom: 1.6mm;
+  padding-left: 1mm;
+}
+
+li::marker {
+  color: var(--text-4);
+}
+
+ul.clean {
+  padding-left: 0;
+  list-style: none;
+}
+
+ul.clean li {
+  position: relative;
+  padding-left: 6mm;
+}
+
+ul.clean li::before {
+  position: absolute;
+  left: 0;
+  top: 2.1mm;
+  width: 2.6mm;
+  height: 2.6mm;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  content: "";
+}
+
+/* ---------------------------------------------------------------- tables */
+
+/* Long tables split across pages by row rather than being pushed whole, which
+   is what previously left half-empty sheets behind. */
+table {
+  width: 100%;
+  margin: 3mm 0 5mm;
+  border-collapse: collapse;
+  font-size: 8.8pt;
+  break-inside: auto;
+}
+
+thead {
+  display: table-header-group;
+}
+
+tr {
+  break-inside: avoid;
+}
+
+thead th {
+  padding: 2.2mm 2.6mm;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--text-3);
+  font: 600 7.4pt/1.3 var(--mono);
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  vertical-align: bottom;
+}
+
+tbody td {
+  padding: 2.4mm 2.6mm;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  line-height: 1.48;
+  vertical-align: top;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody td:first-child {
+  color: var(--text);
+  font-weight: 500;
+}
+
+td.m,
+th.m {
+  font-family: var(--mono);
+  font-size: 8.2pt;
+}
+
+td.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.compact {
+  font-size: 8.4pt;
+}
+
+table.compact tbody td {
+  padding: 1.8mm 2.4mm;
+}
+
+/* ----------------------------------------------------------------- cards */
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4mm;
+  margin: 3mm 0 5mm;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3.4mm;
+  margin: 3mm 0 5mm;
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3mm;
+  margin: 3mm 0 5mm;
+}
+
+.card {
+  padding: 4.4mm;
+  border: 1px solid var(--line);
+  border-radius: 2.6mm;
+  background: var(--panel);
+  break-inside: avoid;
+}
+
+.card h4 {
+  margin-top: 0;
+}
+
+.card p:last-child,
+.card ul:last-child {
+  margin-bottom: 0;
+}
+
+.card.lane {
+  border-top: 2px solid var(--tone);
+}
+
+.card.lane h4 {
+  color: var(--tone);
+}
+
+.laneCopy {
+  --tone: var(--copy);
+}
+
+.laneOrigin {
+  --tone: var(--origin);
+}
+
+.laneProfile {
+  --tone: var(--profile);
+}
+
+/* --------------------------------------------------------------- figures */
+
+.stat {
+  padding: 4mm;
+  border: 1px solid var(--line);
+  border-radius: 2.6mm;
+  background: var(--panel);
+  break-inside: avoid;
+}
+
+.stat b {
+  display: block;
+  margin-bottom: 1mm;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 19pt;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.stat span {
+  display: block;
+  color: var(--text-3);
+  font-size: 8.2pt;
+  line-height: 1.4;
+}
+
+.stat.pass b {
+  color: var(--pass);
+}
+
+.stat.accent b {
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------- callout */
+
+.note {
+  margin: 4mm 0;
+  padding: 4mm 4.6mm;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 2.4mm 2.4mm 0;
+  background: rgba(96, 165, 250, 0.055);
+  break-inside: avoid;
+}
+
+.note h4 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+.note p:last-child {
+  margin-bottom: 0;
+}
+
+.note.warn {
+  border-left-color: var(--review);
+  background: rgba(251, 191, 36, 0.055);
+}
+
+.note.warn h4 {
+  color: var(--review);
+}
+
+.note.good {
+  border-left-color: var(--pass);
+  background: rgba(52, 211, 153, 0.055);
+}
+
+.note.good h4 {
+  color: var(--pass);
+}
+
+/* ------------------------------------------------------------- verdicts */
+
+.pill {
+  display: inline-block;
+  padding: 0.6mm 2mm;
+  border: 1px solid currentColor;
+  border-radius: 6mm;
+  font: 600 7pt/1.5 var(--mono);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.pill.pass {
+  color: var(--pass);
+}
+
+.pill.review {
+  color: var(--review);
+}
+
+.pill.block {
+  color: var(--block);
+}
+
+.pill.neutral {
+  color: var(--text-3);
+}
+
+/* ------------------------------------------------------------- pipeline */
+
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  margin: 4mm 0 5mm;
+  border: 1px solid var(--line);
+  border-radius: 2.6mm;
+  overflow: hidden;
+  break-inside: avoid;
+}
+
+.pipeStep {
+  position: relative;
+  padding: 4.4mm 4mm;
+  background: var(--panel);
+}
+
+.pipeStep + .pipeStep {
+  border-left: 1px solid var(--line);
+}
+
+.pipeStep i {
+  display: block;
+  margin-bottom: 2mm;
+  color: var(--text-4);
+  font: 600 7pt/1 var(--mono);
+  font-style: normal;
+  letter-spacing: 0.16em;
+}
+
+.pipeStep b {
+  display: block;
+  margin-bottom: 1.4mm;
+  color: var(--text);
+  font-size: 9.6pt;
+  font-weight: 600;
+}
+
+.pipeStep span {
+  color: var(--text-3);
+  font-size: 8.2pt;
+  line-height: 1.44;
+}
+
+/* -------------------------------------------------------------- scorebar */
+
+.scoreRow {
+  display: grid;
+  grid-template-columns: 52mm 1fr 20mm;
+  align-items: center;
+  gap: 4mm;
+  padding: 2.8mm 0;
+  border-bottom: 1px solid var(--line);
+  break-inside: avoid;
+}
+
+.scoreRow:last-of-type {
+  border-bottom: none;
+}
+
+.scoreRow > b {
+  color: var(--text);
+  font-size: 9.4pt;
+  font-weight: 600;
+}
+
+.scoreRow > b small {
+  display: block;
+  color: var(--text-4);
+  font: 500 7.4pt/1.4 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.scoreTrack {
+  position: relative;
+  height: 4mm;
+  border: 1px solid var(--line);
+  border-radius: 4mm;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.scoreFill {
+  height: 100%;
+  border-radius: 4mm;
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.5), var(--accent-2));
+}
+
+.scoreVal {
+  color: var(--text);
+  font: 500 10pt/1 var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* --------------------------------------------------------------- codeish */
+
+pre {
+  margin: 3mm 0 4mm;
+  padding: 4mm;
+  border: 1px solid var(--line);
+  border-radius: 2.4mm;
+  background: rgba(0, 0, 0, 0.42);
+  color: #cfe3ff;
+  font-family: var(--mono);
+  font-size: 8pt;
+  line-height: 1.55;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  break-inside: avoid;
+}
+
+pre .c {
+  color: var(--text-4);
+}
+
+pre .k {
+  color: var(--origin);
+}
+
+pre .s {
+  color: var(--pass);
+}
+
+/* -------------------------------------------------------------- helpers */
+
+.lead {
+  color: var(--text);
+  font-size: 11.4pt;
+  line-height: 1.55;
+}
+
+.small {
+  font-size: 8.6pt;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--text-3);
+}
+
+.faint {
+  color: var(--text-4);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+.avoid {
+  break-inside: avoid;
+}
+
+.pageBreak {
+  break-before: page;
+}
+
+hr {
+  height: 0;
+  margin: 6mm 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+.footNote {
+  margin-top: 3mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
+  font-size: 8pt;
+  line-height: 1.5;
+}
