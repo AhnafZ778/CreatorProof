@@ -1,3 +1,10 @@
+"""Alignment-conditioned structure after a validated homography.
+
+Runs only if geometry already passed. Measures luminance/gradient agreement on
+the support region. Colour cannot veto a transformed copy. Not a copy decision
+on its own.
+"""
+
 import math
 
 import cv2

@@ -1,8 +1,8 @@
 # CreatorProof Model Lab
 
-This directory is the file-backed control plane for Part 1 intelligence. It tracks
-identity and qualification; it does not contain model weights, private media, or
-benchmark assets.
+**Judges:** the readable catalog is [`MODELS.md`](../../../MODELS.md) at the
+repo root. This directory is the machine-readable control plane (cards, SHA
+pins, bundle identity). It does not contain weights or private media.
 
 ## What is authoritative
 

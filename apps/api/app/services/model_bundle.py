@@ -1,3 +1,10 @@
+"""Pinned ModelBundle identity.
+
+A bundle records which provider, which file SHA-256, which preprocess, and which
+qualification state is in force. RUNTIME_READY means those bytes load. It is not
+DEMO_READY and not a calibrated accuracy claim.
+"""
+
 from __future__ import annotations
 
 import hashlib

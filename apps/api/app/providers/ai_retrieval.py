@@ -1,3 +1,13 @@
+"""Copy-lane retrieval using Meta's official SSCD DISC Mixup TorchScript.
+
+Embeds an image to a unit 512-d vector used only to rank registered works.
+A high cosine score is not a copy finding; geometry still has to verify.
+
+Preprocess: RGB, shortest side 288, ImageNet normalization.
+The file SHA-256 is checked against the ModelBundle before the model is used.
+Missing or mismatched weights raise a visible fallback; they never fake a score.
+"""
+
 from __future__ import annotations
 
 import hashlib

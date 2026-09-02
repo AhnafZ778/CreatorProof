@@ -1,3 +1,10 @@
+"""Copy-lane geometric verification.
+
+SSCD only nominates a neighbour. This module tries to fit a homography
+(SIFT, then ORB; USAC/MAGSAC) and rejects the pair unless inliers, coverage,
+and transfer error all clear the gates. A failed fit draws no copy region.
+"""
+
 import math
 
 import cv2

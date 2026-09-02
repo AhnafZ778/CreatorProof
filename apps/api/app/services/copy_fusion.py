@@ -1,3 +1,10 @@
+"""Copy-lane fusion.
+
+Exact SHA-256 is an exact copy. Any other MATCH needs validated geometry plus
+aligned structure. SSCD and pHash corroborate; they cannot MATCH on their own.
+The evidence index is not a probability and not a legal score.
+"""
+
 import math
 from dataclasses import dataclass
 

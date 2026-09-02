@@ -1,3 +1,12 @@
+"""AI-origin pixel detectors.
+
+Primary local model: official Community Forensics ViT-S/384 (safetensors).
+Preprocess is the authors' eval transform: shorter side 440, center crop 384.
+
+Sightengine, when configured, is called once on the original file. Local
+models run only if that call fails. A quiet score is not proof of human origin.
+"""
+
 from __future__ import annotations
 
 import hashlib

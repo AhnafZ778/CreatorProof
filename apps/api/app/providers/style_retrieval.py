@@ -1,3 +1,10 @@
+"""Creator-profile style descriptors.
+
+Optional CSD ViT-L adapter plus a diagnostic fallback (palette, edges, texture).
+The fallback sets learned=false and cannot attribute a creator. CSD is
+experimental: the upstream checkpoint warning is surfaced, not hidden.
+"""
+
 from __future__ import annotations
 
 import hashlib
