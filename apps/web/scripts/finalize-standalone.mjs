@@ -16,6 +16,11 @@ import { fileURLToPath } from "node:url";
 const web = dirname(dirname(fileURLToPath(import.meta.url)));
 const standalone = join(web, ".next", "standalone");
 
+if (process.env.VERCEL === "1") {
+  console.log("finalize-standalone: skipped on Vercel (Next.js is hosted natively)");
+  process.exit(0);
+}
+
 if (!existsSync(standalone)) {
   console.error(
     'finalize-standalone: .next/standalone is missing. Expected `output: "standalone"` in next.config.ts.',

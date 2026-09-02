@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from io import BytesIO
 from typing import Annotated
 
 from fastapi import (
@@ -31,6 +32,7 @@ from app.models import EvidenceStatement, Scan, ScanInputBinding, new_id
 from app.observability import METRICS, current_correlation_id
 from app.schemas import (
     ScanCancelRequest,
+    ScanFromUploadRequest,
     ScanRead,
     ScanStageTimelineRead,
     StatementStatusRequest,
@@ -47,6 +49,7 @@ from app.services.statements import (
     latest_statement,
     verify_statement_row,
 )
+from app.services.upload_tokens import UploadGrantError, load_verified_upload, verify_upload_token
 
 router = APIRouter(prefix="/v1/scans", tags=["scans"])
 
@@ -232,6 +235,77 @@ async def create_scan(
     db.expire_all()
     refreshed = db.get(Scan, scan.id)
     return refreshed or scan
+
+
+@router.post("/from-upload", response_model=ScanRead, status_code=status.HTTP_202_ACCEPTED)
+async def create_scan_from_upload(
+    payload: ScanFromUploadRequest,
+    auth: Annotated[AuthContext, Depends(require_scope(CredentialScope.SCANS_WRITE))],
+    db: Annotated[Session, Depends(get_db)],
+    container: Annotated[Container, Depends(get_container)],
+) -> Scan:
+    """Consume a tenant-bound S3 upload without proxying image bytes through Vercel."""
+
+    try:
+        claims = verify_upload_token(
+            payload.upload_token,
+            container.settings.upload_token_secret,
+            tenant_id=auth.tenant_id,
+            purpose="scan",
+        )
+        # The signed upload nonce is the idempotency identity for the direct path.
+        # This lets a retry return the committed scan even though the temporary
+        # object was removed after the first successful response attempt.
+        direct_idempotency_key = f"upload:{claims.nonce}"
+        existing = db.scalar(
+            select(Scan).where(
+                Scan.tenant_id == auth.tenant_id,
+                Scan.idempotency_key == direct_idempotency_key,
+            )
+        )
+        if existing is not None:
+            if existing.catalog_id == normalize_scan_text(
+                payload.catalog_id
+            ) and existing.intended_use == normalize_scan_text(payload.intended_use):
+                container.storage.delete(claims.key)
+                return existing
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "code": "IDEMPOTENCY_PAYLOAD_MISMATCH",
+                    "message": "This upload token is already bound to a different scan request.",
+                    "existing_scan_id": existing.id,
+                },
+            )
+        raw = load_verified_upload(
+            container.storage,
+            claims,
+            max_bytes=container.settings.max_upload_bytes,
+        )
+    except UploadGrantError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={"code": exc.code, "message": exc.message},
+        ) from exc
+
+    upload = UploadFile(file=BytesIO(raw), filename=claims.filename)
+    try:
+        result = await create_scan(
+            catalog_id=payload.catalog_id,
+            intended_use=payload.intended_use,
+            file=upload,
+            idempotency_key=direct_idempotency_key,
+            auth=auth,
+            db=db,
+            container=container,
+        )
+    except HTTPException as exc:
+        if exc.status_code < 500:
+            container.storage.delete(claims.key)
+        raise
+    else:
+        container.storage.delete(claims.key)
+        return result
 
 
 @router.get("/{scan_id}", response_model=ScanRead)

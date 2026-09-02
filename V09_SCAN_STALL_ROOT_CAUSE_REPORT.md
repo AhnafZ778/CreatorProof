@@ -6,7 +6,7 @@
 
 **Observed failure location:** The HTTP `POST /v1/scans` response is held for **~130 seconds** because the entire evidence pipeline runs synchronously inside the request handler (`InlineJobQueue.enqueue` → `process_scan` → `build_evidence_packet`), and within that pipeline the GRIP CLIPDet external adapter spawns a **fresh Python process that reloads 270 MB of model weights for every single transformed view** (10 views × ~11s each = ~110s).
 
-**Primary root cause:** `ExternalJsonSyntheticDetector.predict()` spawns `subprocess.run()` on every call ([`synthetic_detection.py:318`](./apps/api/app/providers/synthetic_detection.py#L312-L324)). The GRIP adapter command invokes a separate Python process that imports PyTorch, loads CLIP weights, and runs inference — then exits. This happens **10 times sequentially** (5 delivery views + 5 spatial crops), with no model caching between views.
+**Primary root cause:** `ExternalJsonSyntheticDetector.predict()` spawns `subprocess.run()` on every call ([`synthetic_detection.py:318`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/providers/synthetic_detection.py#L312-L324)). The GRIP adapter command invokes a separate Python process that imports PyTorch, loads CLIP weights, and runs inference — then exits. This happens **10 times sequentially** (5 delivery views + 5 spatial crops), with no model caching between views.
 
 **Confidence:** HIGH — supported by measured per-view timings, worst-case budget arithmetic, process observation, and the structural fact that `ExternalJsonSyntheticDetector` contains no model caching mechanism.
 
@@ -67,22 +67,22 @@
 | Relative time (s) | Layer | Event | Scan state | Evidence |
 |---:|---|---|---|---|
 | 0.0 | Browser | `POST /api/scans` sent | — | User clicks "Run evidence verification" |
-| 0.0 | Next.js proxy | `fetch(backend/v1/scans)` starts | — | [`route.ts:11`](./apps/web/app/api/scans/route.ts#L11) |
-| 0.0 | API | Request received, multipart read | — | [`scans.py:39`](./apps/api/app/api/routes/scans.py#L39) |
-| 0.2 | API | Fingerprints computed, scan row created | `QUEUED` | [`scans.py:58-62`](./apps/api/app/api/routes/scans.py#L58-L62) |
-| 0.2 | API | `InlineJobQueue.enqueue()` → `process_scan()` | `PROCESSING` | [`jobs.py:20-21`](./apps/api/app/services/jobs.py#L20-L21), [`evidence.py:624`](./apps/api/app/services/evidence.py#L624) |
-| 0.2 | API | Image decode | `PROCESSING` | [`evidence.py:295`](./apps/api/app/services/evidence.py#L295) |
-| 0.2 | API | Provenance check (C2PA unavailable) | `PROCESSING` | [`evidence.py:301`](./apps/api/app/services/evidence.py#L301) |
-| 0.9 | API | Visible markers OCR (5 views × 2 PSM modes) | `PROCESSING` | [`evidence.py:303`](./apps/api/app/services/evidence.py#L303) |
-| 0.9 | API | `analyze_synthetic_origin()` begins | `PROCESSING` | [`evidence.py:317`](./apps/api/app/services/evidence.py#L317) |
+| 0.0 | Next.js proxy | `fetch(backend/v1/scans)` starts | — | [`route.ts:11`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/web/app/api/scans/route.ts#L11) |
+| 0.0 | API | Request received, multipart read | — | [`scans.py:39`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/api/routes/scans.py#L39) |
+| 0.2 | API | Fingerprints computed, scan row created | `QUEUED` | [`scans.py:58-62`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/api/routes/scans.py#L58-L62) |
+| 0.2 | API | `InlineJobQueue.enqueue()` → `process_scan()` | `PROCESSING` | [`jobs.py:20-21`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/jobs.py#L20-L21), [`evidence.py:624`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/evidence.py#L624) |
+| 0.2 | API | Image decode | `PROCESSING` | [`evidence.py:295`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/evidence.py#L295) |
+| 0.2 | API | Provenance check (C2PA unavailable) | `PROCESSING` | [`evidence.py:301`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/evidence.py#L301) |
+| 0.9 | API | Visible markers OCR (5 views × 2 PSM modes) | `PROCESSING` | [`evidence.py:303`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/evidence.py#L303) |
+| 0.9 | API | `analyze_synthetic_origin()` begins | `PROCESSING` | [`evidence.py:317`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/evidence.py#L317) |
 | 0.9–2.2 | API | Community Forensics: 10 views × ~130ms (in-process) | `PROCESSING` | Measured: 1.3s total |
 | 2.2–104.5 | API | **GRIP CLIPDet: 10 views × ~10.3s (subprocess reload)** | `PROCESSING` | **Measured: ~103s total** |
 | 104.5 | API | Synthetic analysis complete | `PROCESSING` | |
 | 104.8 | API | Retrieval (empty catalog, 295ms) | `PROCESSING` | |
 | 104.8 | API | Style analysis (~1ms, no profiles) | `PROCESSING` | |
 | 104.8 | API | Evidence fusion, proof anchor (<1ms) | `PROCESSING` | |
-| 104.8 | API | `scan.state = COMPLETED`, DB commit | `COMPLETED` | [`evidence.py:630-632`](./apps/api/app/services/evidence.py#L630-L632) |
-| 104.8 | API | `POST /v1/scans` returns 202 with COMPLETED body | — | [`scans.py:89`](./apps/api/app/api/routes/scans.py#L89) |
+| 104.8 | API | `scan.state = COMPLETED`, DB commit | `COMPLETED` | [`evidence.py:630-632`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/evidence.py#L630-L632) |
+| 104.8 | API | `POST /v1/scans` returns 202 with COMPLETED body | — | [`scans.py:89`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/api/routes/scans.py#L89) |
 | 104.8 | Next.js | Backend response received, proxied to browser | — | |
 | 104.8 | Browser | Response received; body.state === "COMPLETED" | — | Polling loop skipped |
 
@@ -135,10 +135,10 @@ style work         = 0 (no profiles)
 
 | Question | Answer | Evidence |
 |---|---|---|
-| Does GRIP start a fresh Python process per view? | **YES** | `ExternalJsonSyntheticDetector.predict()` calls `subprocess.run()` each time at [`synthetic_detection.py:318`](./apps/api/app/providers/synthetic_detection.py#L318). Each invocation imports torch, loads 270MB weights, runs inference, then exits. |
+| Does GRIP start a fresh Python process per view? | **YES** | `ExternalJsonSyntheticDetector.predict()` calls `subprocess.run()` each time at [`synthetic_detection.py:318`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/providers/synthetic_detection.py#L318). Each invocation imports torch, loads 270MB weights, runs inference, then exits. |
 | Is the 180s timeout applied per scan or per view? | **Per view** | The timeout is passed directly to `subprocess.run(timeout=self.timeout)` inside `predict()`, which is called once per view. |
 | Does model startup occur once per service or per view? | **Per view** | The adapter command starts a fresh `python3 -m scripts.clipdet_json_adapter` process. The adapter's `_run()` function spawns yet another subprocess with `runner-python main.py`. Model weights are loaded from scratch each time. |
-| Are views evaluated sequentially or concurrently? | **Sequentially** | The detector loop in `analyze_synthetic_origin()` at [`synthetic_analysis.py:452-469`](./apps/api/app/services/synthetic_analysis.py#L452-L469) iterates views in a plain `for` loop. |
+| Are views evaluated sequentially or concurrently? | **Sequentially** | The detector loop in `analyze_synthetic_origin()` at [`synthetic_analysis.py:452-469`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/synthetic_analysis.py#L452-L469) iterates views in a plain `for` loop. |
 | Are reference embeddings cached? | N/A | Empty catalog in reproduction. SSCD computes query embedding once and scans stored descriptors. |
 
 ---
@@ -197,7 +197,7 @@ The in-process detector with a **resident model** is ~80× faster per view than 
 
 **Per-view subprocess model reloading in `ExternalJsonSyntheticDetector`**
 
-- **File:** [`app/providers/synthetic_detection.py`](./apps/api/app/providers/synthetic_detection.py#L312-L324)
+- **File:** [`app/providers/synthetic_detection.py`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/providers/synthetic_detection.py#L312-L324)
 - **Function:** `ExternalJsonSyntheticDetector.predict()`, line 318
 - **Mechanism:** Every call to `predict()` runs `subprocess.run(command, ...)` which starts a fresh Python process. The GRIP adapter (`scripts/clipdet_json_adapter.py`) imports torch, loads 270MB weights from disk, runs inference on one image, prints JSON, and exits. This happens 10 times sequentially (5 delivery + 5 spatial views).
 - **Measured cost:** ~10.3s per view × 10 views = **~103s**
@@ -206,13 +206,13 @@ The in-process detector with a **resident model** is ~80× faster per view than 
 ### Contributing Factors
 
 1. **Inline job execution blocks the HTTP response**
-   - [`container.py:88`](./apps/api/app/container.py#L88): `InlineJobQueue(lambda scan_id: process_scan(container, scan_id))`
-   - [`jobs.py:20-21`](./apps/api/app/services/jobs.py#L20-L21): `enqueue()` directly calls `self.callback(scan_id)`
-   - [`scans.py:77`](./apps/api/app/api/routes/scans.py#L77): `container.queue.enqueue(scan.id)` — this blocks until the entire `process_scan()` completes
+   - [`container.py:88`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/container.py#L88): `InlineJobQueue(lambda scan_id: process_scan(container, scan_id))`
+   - [`jobs.py:20-21`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/jobs.py#L20-L21): `enqueue()` directly calls `self.callback(scan_id)`
+   - [`scans.py:77`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/api/routes/scans.py#L77): `container.queue.enqueue(scan.id)` — this blocks until the entire `process_scan()` completes
    - Impact: The Next.js proxy and browser are held open for the full ~130s
 
 2. **Sequential view iteration with no concurrency**
-   - [`synthetic_analysis.py:458`](./apps/api/app/services/synthetic_analysis.py#L458): `for view_name, view, quality_weight, view_scope in views:`
+   - [`synthetic_analysis.py:458`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/api/app/services/synthetic_analysis.py#L458): `for view_name, view, quality_weight, view_scope in views:`
    - All 10 views are processed serially on a single thread
 
 3. **Multiplicative timeout budget (1,800s theoretical maximum)**
@@ -222,7 +222,7 @@ The in-process detector with a **resident model** is ~80× faster per view than 
 ### User-Interface Amplification
 
 - **No progress indicator:** The UI shows "Verifying…" with no elapsed time, stage name, or progress bar
-- **Polling loop is irrelevant in inline mode:** The POST itself blocks until COMPLETED, so the polling loop at [`page.tsx:157-163`](./apps/web/app/page.tsx#L157-L163) is never exercised
+- **Polling loop is irrelevant in inline mode:** The POST itself blocks until COMPLETED, so the polling loop at [`page.tsx:157-163`](file:///home/ahnaf-zakaria/Desktop/BCOL/creatorproof/apps/web/app/page.tsx#L157-L163) is never exercised
 - **No cancel button:** The user cannot abort the scan
 - **If Redis mode were used:** The polling budget (20 polls × 350ms = 7s) would exhaust ~18× before a ~130s job completes, leaving the UI stuck on an old state
 

@@ -50,6 +50,10 @@ function upper(value: unknown, fallback: string): string {
   return (str(value) ?? fallback).toUpperCase();
 }
 
+function stringList(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
 /** Prefer a human title; fall back to a short identifier rather than a raw one. */
 function workLabel(match: Record_ | null): string {
   if (!match) return "a stored work";
@@ -335,59 +339,179 @@ function originLane(packet: Record_ | null): LaneStatus {
 }
 
 function profileLane(packet: Record_ | null): LaneStatus {
-  const question = "Does it resemble a registered creator?";
+  const question = "Does it resemble a creator profile in this catalog?";
   const style = asRecord(packet?.style_analysis);
   const decision = asRecord(style?.decision);
   const joint = asRecord(asRecord(packet?.decision)?.joint_risk);
   const topProfile = asArray(style?.top_profiles)[0] ?? null;
   const creator = topProfile ? str(topProfile.creator) : null;
-  const note = "Creator intelligence compares the candidate against the registered profile.";
   const tier = upper(decision?.evidence_tier, "");
+  const classification = upper(decision?.classification, "");
+  const reasons = stringList(decision?.reason_codes).map((reason) => reason.toUpperCase());
+  const exactStoredWork = asArray(packet?.matches).some((match) => match.exact_sha256 === true);
+  const exemplarReviewOnly =
+    upper(decision?.evidence_basis, "") === "STRONGEST_EXEMPLAR_CROSS_CONTENT" ||
+    reasons.includes("SELECTED_EXEMPLAR_REVIEW_ONLY");
+  const sampleCount =
+    topProfile && typeof topProfile.sample_count === "number" && Number.isFinite(topProfile.sample_count)
+      ? Math.max(0, Math.round(topProfile.sample_count))
+      : null;
+  const singleton = Boolean(
+    !exemplarReviewOnly &&
+      (sampleCount === 1 ||
+        upper(topProfile?.profile_strength, "").includes("SINGLE") ||
+        upper(decision?.profile_reliability, "").includes("SINGLE")),
+  );
+  const enrollmentUnconfirmed = Boolean(
+    topProfile?.profile_authorized === false ||
+      decision?.policy_escalation_authorized === false ||
+      tier === "ADVISORY_ONLY" ||
+      classification === "PROFILE_ENROLLMENT_NOT_CONSENT_BACKED" ||
+      reasons.includes("PROFILE_CONSENT_NOT_CONFIRMED") ||
+      reasons.includes("STYLE_POLICY_ESCALATION_SUPPRESSED"),
+  );
+
+  const profileSubject = enrollmentUnconfirmed
+    ? creator
+      ? `${creator}'s unconfirmed profile grouping`
+      : "an unconfirmed profile grouping"
+    : singleton
+      ? creator
+        ? `${creator}'s single registered exemplar`
+        : "a single registered exemplar"
+      : creator
+        ? `the registered profile of ${creator}`
+        : "a registered creator profile";
+
+  const qualificationNote = exemplarReviewOnly
+    ? enrollmentUnconfirmed
+      ? `A strong cross-content resemblance to one exemplar in this ${sampleCount ?? "multi"}-work unconfirmed grouping was found. This selected-exemplar signal is review-only and cannot affect policy.`
+      : `A strong cross-content resemblance to one exemplar in this ${sampleCount ?? "multi"}-work profile was found. Selected-exemplar evidence is review-only.`
+    : enrollmentUnconfirmed
+      ? singleton
+        ? "Enrollment or consent is not confirmed, and only one exemplar represents this creator. This visual comparison cannot affect policy."
+        : "Enrollment or consent is not confirmed, so this visual comparison cannot affect policy."
+    : singleton
+      ? "Only one exemplar represents this creator, so this is a limited pairwise comparison rather than a multi-work profile."
+      : "Creator intelligence compares the candidate against the registered multi-work profile.";
 
   if (!style || !decision) {
     return {
       key: "profile",
       question,
-      headline: "Build a creator profile",
-      answer: "Build a creator profile to activate this lane",
-      note: "Register at least three representative works to activate creator-profile matching.",
+      headline: "Creator-profile analysis did not run",
+      answer: "No creator-profile result was returned for this scan",
+      note: "Register an eligible exemplar or retry the scan if the catalog already contains one.",
       state: "unchecked",
     };
   }
 
-  if (tier === "VERY_HIGH" || tier === "HIGH") {
+  if (tier === "UNAVAILABLE" || classification.includes("UNAVAILABLE") || style.error_code) {
     return {
       key: "profile",
       question,
-      headline: creator ? `Strong resemblance to ${creator}` : "Strong creator-profile resemblance",
+      headline: "Creator-profile analysis was unavailable",
+      answer: "No creator-profile conclusion was produced",
+      note: "The comparison provider did not complete, so this is not a clean result.",
+      state: "unchecked",
+    };
+  }
+
+  if (!topProfile || classification === "NO_STYLE_REFERENCE_CORPUS") {
+    return {
+      key: "profile",
+      question,
+      headline: "No creator profile to compare against",
+      answer: "No eligible creator profile was available for this scan",
+      note: "One eligible exemplar enables a limited comparison; three representative works create a stronger multi-work profile.",
+      state: "unchecked",
+    };
+  }
+
+  if (
+    tier === "DIAGNOSTIC" ||
+    classification.includes("DIAGNOSTIC") ||
+    style.learned_provider_active === false
+  ) {
+    return {
+      key: "profile",
+      question,
+      headline: "Learned creator-profile analysis was unavailable",
       answer: creator
-        ? `Yes — strong resemblance to the registered profile of ${creator}`
-        : "Yes — strong resemblance to a registered creator profile",
-      note,
+        ? `No creator-profile conclusion — only low-level visual diagnostics against ${creator}`
+        : "No creator-profile conclusion — only low-level visual diagnostics were produced",
+      note: "Palette, tone, edge, and texture diagnostics cannot identify or attribute a creator.",
+      state: "unchecked",
+    };
+  }
+
+  if (exactStoredWork) {
+    return {
+      key: "profile",
+      question,
+      headline: "This is the registered work itself",
+      answer: "Creator-style resemblance is not interpreted separately for byte-identical content",
+      note: "Use the Work Match result: the candidate and stored reference have the same SHA-256 hash.",
+      state: "unchecked",
+    };
+  }
+
+  // Creator-profile resemblance is always advisory. New packets keep the
+  // measured evidence tier separate from policy eligibility; older packets
+  // rewrote the same review-worthy reading to ADVISORY_ONLY when enrollment or
+  // consent was not confirmed. Both shapes must preserve the visual evidence on
+  // screen while leaving policy escalation suppressed.
+  const resemblanceObserved = Boolean(
+    tier === "VERY_HIGH" ||
+      tier === "HIGH" ||
+      tier === "REVIEW" ||
+      tier === "ADVISORY_ONLY" ||
+      decision.evidence_review_recommended === true ||
+      decision.review_recommended === true ||
+      decision.supported === true ||
+      joint?.style_supported === true ||
+      classification === "PROFILE_ENROLLMENT_NOT_CONSENT_BACKED" ||
+      reasons.includes("STYLE_RESEMBLANCE_REVIEW_RECOMMENDED"),
+  );
+
+  if (resemblanceObserved) {
+    const strong = tier === "VERY_HIGH" || tier === "HIGH";
+    return {
+      key: "profile",
+      question,
+      headline: strong
+        ? creator
+          ? `Strong visual resemblance to ${creator}`
+          : "Strong creator-profile resemblance"
+        : creator
+          ? `Visual resemblance to ${creator} needs context`
+          : "Creator-profile resemblance needs context",
+      answer: strong
+        ? `Strong visual resemblance was found against ${profileSubject}`
+        : `Visual resemblance was found against ${profileSubject}`,
+      note: qualificationNote,
       state: "advisory",
     };
   }
 
-  if (decision.review_recommended === true || decision.supported === true || joint?.style_supported === true) {
+  if (tier === "LOW") {
     return {
       key: "profile",
       question,
-      headline: creator ? `Some resemblance to ${creator}` : "Some creator-profile resemblance",
-      answer: creator
-        ? `Some resemblance to the registered profile of ${creator}`
-        : "Resembles a registered creator profile",
-      note,
-      state: "advisory",
+      headline: creator ? `No strong resemblance to ${creator}` : "No strong creator-profile signal",
+      answer: `No resemblance to ${profileSubject} reached the review threshold`,
+      note: qualificationNote,
+      state: "clear",
     };
   }
 
   return {
     key: "profile",
     question,
-    headline: "No strong creator-profile signal",
-    answer: "No profile resemblance above threshold",
-    note,
-    state: "clear",
+    headline: "Creator-profile result needs interpretation",
+    answer: "The creator-profile lane returned an unrecognized evidence state",
+    note: "Open the advanced measurements or retry with a compatible analysis provider.",
+    state: "unchecked",
   };
 }
 

@@ -223,9 +223,7 @@ def test_a_refusal_quotes_the_score_and_the_limit(tmp_path, api_key, monkeypatch
     assert "50%" in outcome.reason
 
 
-def test_an_admitted_borderline_file_records_why_it_was_let_through(
-    tmp_path, api_key, monkeypatch
-):
+def test_an_admitted_borderline_file_records_why_it_was_let_through(tmp_path, api_key, monkeypatch):
     outcome = _screened(tmp_path, api_key, monkeypatch, "AI_INDICATORS_NEED_REVIEW", 0.44)
 
     assert outcome.allowed is True

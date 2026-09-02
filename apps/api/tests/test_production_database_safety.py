@@ -20,6 +20,12 @@ def _production_settings(**overrides) -> Settings:
     values = {
         "environment": "production",
         "database_url": "postgresql+psycopg://creatorproof_app@example.invalid/creatorproof",
+        "storage_provider": "s3",
+        "s3_bucket": "creatorproof-test-private",
+        "s3_region": "us-east-1",
+        "s3_access_key_id": "test-access-key",
+        "s3_secret_access_key": "test-secret-key",
+        "upload_token_secret": "test-private-upload-token-secret-value",
         "dev_auth_enabled": False,
         "dev_api_key": "private-nondefault-api-key",
         "api_key_pepper": "private-deployment-pepper",
@@ -39,6 +45,11 @@ def test_production_accepts_explicit_off_chain_mode_with_real_signing_and_rls() 
     assert settings.proof_anchor_mode == "none"
     assert settings.statement_signing_enabled is True
     assert settings.enable_postgres_rls is True
+
+
+def test_production_rejects_ephemeral_local_object_storage() -> None:
+    with pytest.raises(ValidationError, match="STORAGE_PROVIDER must be s3"):
+        _production_settings(storage_provider="local")
 
 
 def test_production_rejects_auto_provider_selection() -> None:

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 
+import { OriginField } from "@/app/components/EvidenceCharts";
 import { laneMetrics, usableMetric } from "@/app/lib/laneMetrics";
 import { laneStatuses, type LaneKey, type LaneState, type LaneStatus } from "@/app/lib/laneStatus";
 import { isPublicBlockchainProof } from "@/app/lib/verifyStatement";
@@ -144,9 +145,14 @@ type StyleDiagnostics = {
 
 type StyleProfile = {
   profile_id: string;
+  profile_version?: string;
   creator: string;
   sample_count: number;
   profile_strength: string;
+  consent_state?: string;
+  enrollment_method?: string;
+  profile_authorized?: boolean;
+  profile_source?: string;
   prototype_similarity: number;
   robust_member_similarity?: number;
   profile_similarity?: number;
@@ -168,18 +174,37 @@ type StyleProfile = {
   exemplar_similarity: number;
 };
 
+type StyleContentConfoundState =
+  | "CONTENT_CONTROL_UNAVAILABLE"
+  | "STYLE_EXCEEDS_CONTENT_CONTROL"
+  | "STYLE_AND_CONTENT_CONFOUNDED"
+  | "MIXED_STYLE_AND_CONTENT_SIGNAL";
+
 type StyleDecision = {
   evidence_index: number;
   evidence_tier: string;
   classification: string;
   review_recommended: boolean;
+  /** Evidence asks for human attention independently from policy eligibility. */
+  evidence_review_recommended?: boolean;
+  /** Policy may stay quiet even while evidence remains visible as advisory context. */
+  policy_review_recommended?: boolean;
+  policy_escalation_authorized?: boolean;
+  evidence_basis?: string;
+  profile_aggregate_style_similarity?: number | null;
+  profile_aggregate_evidence_index?: number | null;
+  exemplar_work_id?: string | null;
+  exemplar_similarity?: number | null;
+  exemplar_content_similarity?: number | null;
+  exemplar_evidence_index?: number | null;
+  exemplar_selection_count?: number | null;
   independent_support_count?: number;
   learned_style_similarity?: number | null;
   mechanics_similarity?: number | null;
   tile_consistency?: number | null;
   content_similarity?: number | null;
   style_content_gap?: number | null;
-  content_confound_state?: string;
+  content_confound_state?: StyleContentConfoundState;
   profile_reliability?: string;
   reason_codes?: string[];
   score_semantics?: string;
@@ -464,7 +489,7 @@ const MODE_META: Record<ViewMode, ModeMeta> = {
     label: "Was AI used?",
     lane: "AI CHECK",
     short: "Score, visible labels, and source info",
-    guidance: "Read the AI signal to understand the strength of the origin-analysis result.",
+    guidance: "Read the AI signal and evidence quality together to understand the strength of the origin-analysis result.",
   },
   copy: {
     number: "03",
@@ -806,7 +831,7 @@ const LANE_ACTION: Record<LaneKey, Partial<Record<LaneState, string>>> = {
   },
   profile: {
     advisory: "Read this as context for a human decision. Resemblance to a creator’s body of work is not by itself an infringement finding.",
-    clear: "No creator-profile follow-up needed for this candidate.",
+    clear: "No creator-profile follow-up is indicated within this catalog; keep the profile’s coverage limits in view.",
   },
   origin: {},
   rights: {},
@@ -866,9 +891,8 @@ function LaneEmpty({
     <div className="microscopeEmpty">
       <b>No creator profile to compare against</b>
       <span>
-        A profile is built from several works by one claimant. Register at least three works under
-        the same claimant to activate this lane; until then it has nothing to measure resemblance
-        against.
+        Register at least one eligible work for a limited pairwise comparison. Three representative
+        works under the same creator make a stronger multi-work profile.
       </span>
     </div>
   );
@@ -881,9 +905,25 @@ function tierPhrase(tier: string | undefined): string {
     case "HIGH": return "Strong evidence";
     case "REVIEW": return "Enough to review";
     case "ADVISORY_ONLY": return "Context only, not a finding";
+    case "DIAGNOSTIC": return "Low-level diagnostics only";
     case "LOW": return "Below the review bar";
     case "": case "UNAVAILABLE": return "No tier recorded";
     default: return (tier ?? "").replaceAll("_", " ").toLowerCase();
+  }
+}
+
+function contentControlPhrase(state: StyleContentConfoundState | undefined): string {
+  switch (state) {
+    case "STYLE_EXCEEDS_CONTENT_CONTROL":
+      return "Style signal exceeds the content control";
+    case "STYLE_AND_CONTENT_CONFOUNDED":
+      return "Shared content may explain part of the signal";
+    case "MIXED_STYLE_AND_CONTENT_SIGNAL":
+      return "Style and content signals are mixed";
+    case "CONTENT_CONTROL_UNAVAILABLE":
+      return "Same-content control was unavailable";
+    default:
+      return "Content-control state was not reported";
   }
 }
 
@@ -953,6 +993,7 @@ function OriginSummary({
   const signalScore =
     scorecard?.signal_score ??
     (synthetic?.fused_detector_score == null ? null : Math.round(synthetic.fused_detector_score * 100));
+  const qualityScore = scorecard?.evidence_quality_score ?? null;
 
   return (
     <div className="lanePanel lane-origin" data-state={state} role="status" aria-atomic="true">
@@ -961,11 +1002,22 @@ function OriginSummary({
       <div className="laneReading originReading">
         <OriginImageCard candidate={candidate} markerSignal={synthetic?.visible_marker_signal} />
 
+        <figure className="originFieldWrap">
+          <OriginField signal={signalScore} quality={qualityScore} />
+          <figcaption>
+            A finding needs both: a signal the models can see, and evidence good
+            enough to trust it. Low on either axis is not a clearance.
+          </figcaption>
+        </figure>
+
         <div className="laneFigures">
           <LaneFigure
             label="AI SIGNAL"
             value={signalScore === null ? "—" : String(signalScore)}
             unit={signalScore === null ? undefined : "/100"}
+            // A low signal only means "no AI" when the evidence behind it is
+            // good. Where the lane could not conclude, the engine's own label
+            // would over-read the number, so the caveat replaces it.
             meaning={
               state === "unchecked"
                 ? "Not conclusive on its own"
@@ -973,9 +1025,16 @@ function OriginSummary({
             }
             note={
               state === "unchecked"
-                ? "This reading is too weak to treat as a clearance or a finding."
+                ? "A reading this weak needs evidence quality behind it before it means anything."
                 : "How much the active models saw."
             }
+          />
+          <LaneFigure
+            label="EVIDENCE QUALITY"
+            value={qualityScore === null ? "—" : String(qualityScore)}
+            unit={qualityScore === null ? undefined : "/100"}
+            meaning={scorecard?.evidence_quality_label ? `${scorecard.evidence_quality_label} analysis quality` : "No reading returned"}
+            note="How far that reading can be trusted."
           />
         </div>
       </div>
@@ -1171,7 +1230,16 @@ export default function EvidenceMicroscope({
   const selectedStyleCell = allStyleCells.find((item) => item.id === activeStyleCell) ?? null;
   const styleDecision = style?.decision;
   const styleEvidenceIndex = styleDecision?.evidence_index;
-  const rawStyleScore = styleProfile?.raw_pool_similarity ?? styleProfile?.profile_similarity ?? styleProfile?.prototype_similarity;
+  const selectedExemplarReview =
+    styleDecision?.evidence_basis === "STRONGEST_EXEMPLAR_CROSS_CONTENT";
+  const rawStyleScore = selectedExemplarReview
+    ? styleDecision?.learned_style_similarity
+    : styleProfile?.raw_pool_similarity ??
+      styleProfile?.profile_similarity ??
+      styleProfile?.prototype_similarity;
+  const singletonProfile = styleProfile?.sample_count === 1;
+  const profilePolicyAuthorized =
+    styleDecision?.policy_escalation_authorized ?? styleProfile?.profile_authorized;
   const activeMode = MODE_META[mode];
   const chainProof = isPublicBlockchainProof(proof);
 
@@ -1183,6 +1251,20 @@ export default function EvidenceMicroscope({
   const isDetailView = mode === "structure" || mode === "stylemap";
   const copyFigure = usableMetric(metrics.copy, lanes.copy.state);
   const profileFigure = usableMetric(metrics.profile, lanes.profile.state);
+  const profileMetricNote = [
+    profileFigure.withheld ?? profileFigure.qualifier ?? "A corroborated creator-profile evidence index, not a probability.",
+    profilePolicyAuthorized === false
+      ? "Profile enrollment is not authorized for policy escalation."
+      : null,
+    singletonProfile
+      ? "One exemplar supports only a limited pairwise comparison."
+      : null,
+    selectedExemplarReview
+      ? "A strong cross-content exemplar remained review-worthy after the broader claimant grouping diluted the aggregate score; this selected-exemplar route is capped at review."
+      : null,
+  ]
+    .filter((item): item is string => Boolean(item))
+    .join(" ");
   const laneAction = laneNextStep(activeLane);
 
   async function explainEvidence() {
@@ -1290,7 +1372,7 @@ export default function EvidenceMicroscope({
           <div className="laneKey">
             <div><i className="originDot" /><span><b>AI check</b> Was AI likely involved?</span></div>
             <div><i className="copyDot" /><span><b>Work match</b> Is the same work reused?</span></div>
-            <div><i className="styleDot" /><span><b>Creator profile</b> Does a different image resemble the creator?</span></div>
+            <div><i className="styleDot" /><span><b>Creator profile</b> Does it resemble a profile in this catalog?</span></div>
           </div>
         </aside>
 
@@ -1497,24 +1579,32 @@ export default function EvidenceMicroscope({
               variant="name"
               label="CLOSEST PROFILE"
               value={styleProfile.creator}
-              meaning={`${styleProfile.sample_count} registered ${styleProfile.sample_count === 1 ? "work" : "works"} in the profile`}
-              note="A profile is built from several works, so one shared subject cannot carry it."
+              meaning={
+                singletonProfile
+                  ? "1 registered exemplar · limited comparison"
+                  : `${styleProfile.sample_count} registered works in the profile`
+              }
+              note={
+                selectedExemplarReview
+                  ? `The strongest cross-content exemplar triggered review; the ${styleProfile.sample_count}-work grouping aggregate stayed below the review bar.`
+                  : singletonProfile
+                  ? "One exemplar is not a multi-work creator profile; treat this as pairwise visual context."
+                  : profilePolicyAuthorized === false
+                    ? "This claimant grouping is not consent-confirmed for policy escalation."
+                    : "Several representative works reduce the chance that one shared subject carries the result."
+              }
             />
             <LaneFigure
               label="RESEMBLANCE"
               value={profileFigure.display}
               meaning={tierPhrase(styleDecision?.evidence_tier)}
-              note={profileFigure.withheld ?? profileFigure.qualifier ?? "Weighted across palette, tone, edge direction, and texture."}
+              note={profileMetricNote}
             />
             <LaneFigure
               label="INDEPENDENT SUPPORT"
               value={String(styleDecision?.independent_support_count ?? 0)}
-              meaning={
-                styleDecision?.content_confound_state === "CONTENT_CONFOUND_PRESENT"
-                  ? "May reuse the same content"
-                  : "Different content, so style stands alone"
-              }
-              note="Separate checks that agreed before this lane would speak."
+              meaning={contentControlPhrase(styleDecision?.content_confound_state)}
+              note="Separate checks that agreed, plus whether shared subject matter could explain the resemblance."
             />
           </div>
           {diagnostics && (
@@ -1567,10 +1657,37 @@ export default function EvidenceMicroscope({
                 any single value here.
               </p>
               <dl className="laneMeasurements">
+                <div><dt>Evidence tier</dt><dd>{tierPhrase(styleDecision?.evidence_tier)}</dd></div>
+                <div>
+                  <dt>Policy escalation</dt>
+                  <dd>
+                    {profilePolicyAuthorized === false
+                      ? "Not authorized"
+                      : profilePolicyAuthorized === true
+                        ? styleDecision?.policy_review_recommended
+                          ? "Authorized · review requested"
+                          : "Authorized · no review requested"
+                        : "Not reported"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Evidence basis</dt>
+                  <dd>
+                    {selectedExemplarReview
+                      ? "Strongest cross-content exemplar · review-only"
+                      : "Creator-profile aggregate"}
+                  </dd>
+                </div>
                 <div><dt>Raw style-model score</dt><dd>{metric(rawStyleScore, 3)}</dd></div>
+                {selectedExemplarReview && (
+                  <>
+                    <div><dt>Profile aggregate score</dt><dd>{metric(styleDecision?.profile_aggregate_style_similarity, 3)}</dd></div>
+                    <div><dt>Profile aggregate index</dt><dd>{metric(styleDecision?.profile_aggregate_evidence_index, 3)}</dd></div>
+                  </>
+                )}
                 <div><dt>Catalog rank score</dt><dd>{metric(styleProfile.csls_score, 3)}</dd></div>
-                <div><dt>Same-content control</dt><dd>{metric(styleProfile.content_similarity, 3)}</dd></div>
-                <div><dt>Style minus content</dt><dd>{metric(styleProfile.style_content_gap, 3)}</dd></div>
+                <div><dt>Same-content control</dt><dd>{metric(styleDecision?.content_similarity ?? styleProfile.content_similarity, 3)}</dd></div>
+                <div><dt>Style minus content</dt><dd>{metric(styleDecision?.style_content_gap ?? styleProfile.style_content_gap, 3)}</dd></div>
                 <div><dt>Profile consistency</dt><dd>{metric(styleProfile.within_profile_cohesion, 3)}</dd></div>
                 <div><dt>Catalog rank</dt><dd>#{styleProfile.readout_rank ?? "?"} · {percent(styleProfile.catalog_percentile)}</dd></div>
                 <div><dt>False-match tail</dt><dd>{metric(styleDecision?.negative_tail_p, 4)}</dd></div>

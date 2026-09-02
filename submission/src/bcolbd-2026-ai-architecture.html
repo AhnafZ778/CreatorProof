@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — AI Architecture Pack — BCOLBD 2026</title>
+<link rel="stylesheet" href="../assets/arch.css">
+</head>
+<body>
+
+<!-- Arrowhead markers are declared once and referenced by every figure. A
+     zero-sized SVG keeps them out of the layout without using display:none,
+     which would stop Chrome resolving the marker references. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#37d4dc"/></marker>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f07ab7"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ffbd59"/></marker>
+</defs></svg>
+
+
+<!-- ════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="coverMark"><b>CreatorProof</b><span></span>BCOLBD 2026<span></span>Artificial Intelligence Category<span></span>Architecture Pack</div>
+
+  <div class="coverBody">
+    <h1 class="coverTitle">“Is this safe to publish?”<em>is three questions.</em></h1>
+    <p class="coverLead">
+      Every tool on the market answers it with one confidence score, which is why nobody can act on the
+      answer. CreatorProof runs three independent evidence lanes, reports what it could not check, and
+      keeps detection strictly separate from the decision.
+    </p>
+  </div>
+
+  <div>
+    <div class="coverLanes">
+      <div class="coverLane" style="--tone:#37d4dc">
+        <b>Lane 1 · Copy</b>
+        <span>Does this reuse a work in the declared catalogue, and exactly which region of it?</span>
+      </div>
+      <div class="coverLane" style="--tone:#f07ab7">
+        <b>Lane 2 · Origin</b>
+        <span>What evidence exists that a generative model was involved in making it?</span>
+      </div>
+      <div class="coverLane" style="--tone:#ffbd59">
+        <b>Lane 3 · Profile</b>
+        <span>Does new content resemble a registered creator’s body of work?</span>
+      </div>
+      <div class="coverLane" style="--tone:#34d399">
+        <b>Decision</b>
+        <span>Policy and rights are applied after the evidence, never inside the models.</span>
+      </div>
+    </div>
+
+    <div class="coverFoot">
+      <div>
+        <b>Blockchain Olympiad Bangladesh 2026</b>Finals · Architecture &amp; Infrastructure
+        <br>Doubles as the technical documentation for the final-round submission
+      </div>
+      <div style="text-align:right">
+        <b>Build</b>CreatorProof v0.10.0
+        <br>SSCD · CSD ViT-L · Community Forensics · C2PA · MAGSAC
+      </div>
+    </div>
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+
+<!-- ═══════════════════════════════════════════════════════════ 00 CONTENTS -->
+<section class="slide">
+  <div class="slideHead">
+    <span class="slideNum">00</span>
+    <h1>How to use this pack</h1>
+    <em>Contents &amp; legend</em>
+  </div>
+
+  <p class="kicker">
+    Each sheet carries one diagram with <strong>numbered badges</strong>, the numbered explanation
+    beneath it, and the sentence to say out loud while pointing. The last two sheets are a rapid-fire
+    answer set for the Q&amp;A session, each answer tagged with the diagram to turn to.
+  </p>
+
+  <div class="split wide">
+    <div>
+      <h4>Contents</h4>
+      <div class="toc">
+        <a href="#a1"><b>A1</b><span>Three questions, not one</span><i>Core</i></a>
+        <a href="#a2"><b>A2</b><span>Serving topology</span><i>System</i></a>
+        <a href="#a3"><b>A3</b><span>The inference pipeline</span><i>Flow</i></a>
+        <a href="#a4"><b>A4</b><span>Copy lane</span><i>Models</i></a>
+        <a href="#a5"><b>A5</b><span>Origin lane</span><i>Models</i></a>
+        <a href="#a6"><b>A6</b><span>Creator-profile lane</span><i>Models</i></a>
+        <a href="#a7"><b>A7</b><span>Detection / decision firewall</span><i>Design</i></a>
+        <a href="#a8"><b>A8</b><span>Coverage before verdict</span><i>Design</i></a>
+        <a href="#a9"><b>A9</b><span>Retrieval at scale</span><i>Infra</i></a>
+        <a href="#a10"><b>A10</b><span>Model lab and promotion</span><i>MLOps</i></a>
+        <a href="#a11"><b>A11</b><span>Explainability</span><i>UX</i></a>
+        <a href="#a12"><b>A12</b><span>Responsible AI</span><i>Ethics</i></a>
+        <a href="#a13"><b>A13</b><span>Benchmarks</span><i>Evidence</i></a>
+        <a href="#a14"><b>A14</b><span>The proof layer</span><i>Output</i></a>
+        <a href="#a15"><b>A15</b><span>Q&amp;A armory, part one</span><i>Defence</i></a>
+        <a href="#a16"><b>A16</b><span>Q&amp;A armory, part two</span><i>Defence</i></a>
+      </div>
+    </div>
+
+    <div>
+      <h4>Arrow grammar</h4>
+      <p class="small muted" style="margin-bottom:2.4mm">
+        Line style carries meaning throughout this pack. An arrow is never decoration.
+      </p>
+      <div class="legend" style="grid-template-columns:1fr 1fr">
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar" x1="2" y1="7" x2="44" y2="7" marker-end="url(#a1)"/></svg><span>Data movement</span></div>
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar-dec" x1="2" y1="7" x2="44" y2="7" marker-end="url(#a2)"/></svg><span>Decision or control</span></div>
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar-sig" x1="2" y1="7" x2="44" y2="7" marker-end="url(#a3)"/></svg><span>Signature binding</span></div>
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar-pub" x1="2" y1="7" x2="42" y2="7" marker-end="url(#a4)"/></svg><span>Public commitment</span></div>
+      </div>
+
+      <h4 style="margin-top:4mm">Lane colours</h4>
+      <div class="legend" style="grid-template-columns:1fr 1fr">
+        <div><span class="pill copy">COPY EVIDENCE</span></div>
+        <div><span class="pill origin">ORIGIN EVIDENCE</span></div>
+        <div><span class="pill profile">PROFILE EVIDENCE</span></div>
+        <div><span class="pill pass">POLICY OUTCOME</span></div>
+      </div>
+
+      <div class="say" style="margin-top:4mm">
+        <b>Opening line</b>
+        <p>
+          A brand is about to publish an image and asks one question: is this safe? Every product on the
+          market answers with a single percentage, and a percentage is not something a legal team can act on.
+        </p>
+        <p>
+          So we split it into three questions that have different evidence, different failure modes, and
+          different consequences.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <h4 style="margin-top:4.6mm">Where each BCOLBD criterion is answered</h4>
+  <table class="data">
+    <thead>
+      <tr><th style="width:52mm">Evaluation criterion</th><th class="m" style="width:16mm">Points</th><th>Answered on</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Vision &amp; Problem Statement</td><td class="m">30</td>
+        <td><span class="mono">A1</span> why one score fails · <span class="mono">A7</span> detection separated from decision · <span class="mono">A11</span> what the user actually receives</td>
+      </tr>
+      <tr>
+        <td>Architecture &amp; Infrastructure</td><td class="m">30</td>
+        <td><span class="mono">A2</span> serving topology · <span class="mono">A3</span> pipeline · <span class="mono">A4–A6</span> per-lane model design · <span class="mono">A9</span> scaling and infrastructure estimate</td>
+      </tr>
+      <tr>
+        <td>Risks &amp; Challenges</td><td class="m">20</td>
+        <td><span class="mono">A8</span> abstention and failure semantics · <span class="mono">A10</span> drift and promotion gates · <span class="mono">A12</span> responsible-AI risks</td>
+      </tr>
+      <tr>
+        <td>Technical completeness &amp; inference model</td><td class="m">40</td>
+        <td><span class="mono">A3</span> stage contract · <span class="mono">A4–A6</span> exact models and thresholds · <span class="mono">A10</span> reproducibility · <span class="mono">A13</span> measured results</td>
+      </tr>
+      <tr>
+        <td>Use case &amp; existing solutions</td><td class="m">10</td>
+        <td><span class="mono">A1</span> comparison with single-score tools · <span class="mono">A15–16</span> the objections in full</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ A1 THREE LANES -->
+<section class="slide" id="a1">
+  <div class="slideHead">
+    <span class="slideNum">A1</span>
+    <h1>Three questions, not one</h1>
+    <em>The core argument</em>
+  </div>
+
+  <p class="kicker">
+    “Is this safe to publish?” collapses three unrelated questions with three different kinds of
+    evidence. <strong>Averaging them into one score destroys the only information a reviewer can act
+    on</strong> — which question failed, and why.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 430" role="img" aria-label="One image fanning out into three independent evidence lanes with separate answers">
+
+    <rect class="nd" x="20" y="172" width="180" height="86" rx="9"/>
+    <text class="t-title" x="40" y="206">Candidate</text>
+    <text class="t-sub" x="40" y="230">image about to</text>
+    <text class="t-sub" x="40" y="250">be published</text>
+
+    <!-- lane 1 copy -->
+    <rect class="nd-copy" x="248" y="46" width="470" height="104" rx="9"/>
+    <text class="t-lbl fx-copy" x="270" y="74">lane 1 · copy</text>
+    <text class="t-title" x="270" y="104">Does it reuse a registered work?</text>
+    <text class="t-sub" x="270" y="132">learned retrieval → geometry → aligned structure</text>
+
+    <rect class="nd" x="752" y="46" width="400" height="104" rx="9"/>
+    <text class="t-lbl fx-dim" x="774" y="74">answer</text>
+    <text class="t-body fx-txt" x="774" y="104">Work #4471, upper-left region,</text>
+    <text class="t-body fx-txt" x="774" y="128">1 842 verified inliers</text>
+
+    <!-- lane 2 origin -->
+    <rect class="nd-orig" x="248" y="164" width="470" height="104" rx="9"/>
+    <text class="t-lbl fx-orig" x="270" y="192">lane 2 · origin</text>
+    <text class="t-title" x="270" y="222">Was a generative model involved?</text>
+    <text class="t-sub" x="270" y="250">provenance → visible labels → detector families</text>
+
+    <rect class="nd" x="752" y="164" width="400" height="104" rx="9"/>
+    <text class="t-lbl fx-dim" x="774" y="192">answer</text>
+    <text class="t-body fx-txt" x="774" y="222">No C2PA manifest; two families</text>
+    <text class="t-body fx-txt" x="774" y="246">indicate synthesis — indicator only</text>
+
+    <!-- lane 3 profile -->
+    <rect class="nd-prof" x="248" y="282" width="470" height="104" rx="9"/>
+    <text class="t-lbl fx-prof" x="270" y="310">lane 3 · profile</text>
+    <text class="t-title" x="270" y="340">Does it resemble a creator’s work?</text>
+    <text class="t-sub" x="270" y="368">style descriptors → consented profiles only</text>
+
+    <rect class="nd" x="752" y="282" width="400" height="104" rx="9"/>
+    <text class="t-lbl fx-dim" x="774" y="310">answer</text>
+    <text class="t-body fx-txt" x="774" y="340">Close to profile “Rahman”,</text>
+    <text class="t-body fx-txt" x="774" y="364">resemblance — never infringement</text>
+
+    <path class="ar" d="M 204 200 C 228 200 224 100 242 98" marker-end="url(#ac)"/>
+    <path class="ar" d="M 204 215 L 242 215" marker-end="url(#ao)"/>
+    <path class="ar" d="M 204 230 C 228 230 224 332 242 334" marker-end="url(#ap)"/>
+
+    <path class="ar" d="M 722 98 L 746 98" marker-end="url(#a1)"/>
+    <path class="ar" d="M 722 215 L 746 215" marker-end="url(#a1)"/>
+    <path class="ar" d="M 722 334 L 746 334" marker-end="url(#a1)"/>
+
+    <!-- never averaged -->
+    <rect class="nd-bad" x="1186" y="46" width="398" height="158" rx="9"/>
+    <text class="t-lbl fx-bad" x="1208" y="74">what we never do</text>
+    <text class="t-title fx-bad" x="1208" y="106">Average them</text>
+    <text class="t-sub" x="1208" y="134">A single number cannot say which</text>
+    <text class="t-sub" x="1208" y="156">question failed, so a reviewer</text>
+    <text class="t-sub" x="1208" y="178">cannot act on it and a lawyer</text>
+    <text class="t-sub" x="1208" y="198">cannot rely on it.</text>
+
+    <rect class="nd-pass" x="1186" y="228" width="398" height="158" rx="9"/>
+    <text class="t-lbl fx-pass" x="1208" y="256">what we do instead</text>
+    <text class="t-title fx-pass" x="1208" y="288">Report all three</text>
+    <text class="t-sub" x="1208" y="316">Each lane keeps its own finding,</text>
+    <text class="t-sub" x="1208" y="338">its own confidence and its own</text>
+    <text class="t-sub" x="1208" y="360">coverage. Policy combines them</text>
+    <text class="t-sub" x="1208" y="380">afterwards — see sheet A7.</text>
+
+    <path class="ar-dec" d="M 1156 215 L 1180 215" marker-end="url(#a2)"/>
+
+    <g class="cal"><circle cx="224" cy="86" r="17"/><text x="224" y="92">1</text></g>
+    <g class="cal"><circle cx="736" cy="170" r="17"/><text x="736" y="176">2</text></g>
+    <g class="cal"><circle cx="1568" cy="64" r="17"/><text x="1568" y="70">3</text></g>
+    <g class="cal"><circle cx="1568" cy="246" r="17"/><text x="1568" y="252">4</text></g>
+  </svg>
+  <figcaption>A1 · One input, three independent verdicts. They are reported side by side and never fused into a score.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Genuinely independent.</strong> Each lane uses different models on different evidence, so a failure in one cannot silently corrupt another.</span></li>
+    <li><b>2</b><span><strong>Answers are specific.</strong> Not “87% risky” but which work, which region, how many verified matching points.</span></li>
+    <li><b>3</b><span><strong>Averaging destroys meaning.</strong> A blended score cannot distinguish “clear copy” from “vaguely similar style”, yet those need opposite actions.</span></li>
+    <li><b>4</b><span><strong>Separation is the product.</strong> Three answers plus coverage is what makes the output usable by a legal team rather than merely interesting.</span></li>
+  </ol>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        Every competitor returns one number. But a copy of a photo you already licensed and a picture
+        that merely resembles someone’s style require completely opposite actions.
+      </p>
+      <p>One score cannot tell those apart, so we refuse to produce one.</p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“Isn’t this just reverse image search?”</q> Reverse search finds similar pictures on the open web. We search a declared rights-bearing catalogue and then geometrically prove which region of which work was reused.</p>
+      <p><q>“Why not one big vision model?”</q> A general model gives a plausible-sounding sentence. We need a reproducible, hash-stable output, because the result gets signed and anchored — a model that phrases things differently on a re-run cannot be evidence.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ A2 TOPOLOGY -->
+<section class="slide" id="a2">
+  <div class="slideHead">
+    <span class="slideNum">A2</span>
+    <h1>Serving topology</h1>
+    <em>How inference is actually deployed</em>
+  </div>
+
+  <p class="kicker">
+    Inference is <strong>asynchronous and horizontally scaled</strong>: the API accepts a scan and returns
+    immediately, and GPU workers pull from a durable queue. Nothing about a request is blocked on a model
+    that takes two seconds.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 400" role="img" aria-label="Request path from browser through API to GPU inference workers and storage">
+
+    <rect class="nd" x="16" y="56" width="230" height="104" rx="9"/>
+    <text class="t-title" x="38" y="90">Browser</text>
+    <text class="t-sub" x="38" y="114">artist portal ·</text>
+    <text class="t-sub" x="38" y="136">reviewer desk</text>
+
+    <rect class="nd" x="284" y="56" width="248" height="104" rx="9"/>
+    <text class="t-title" x="306" y="90">Next.js proxy</text>
+    <text class="t-sub" x="306" y="114">server-side only —</text>
+    <text class="t-sub" x="306" y="136">API key never in browser</text>
+
+    <rect class="nd-a" x="570" y="56" width="266" height="104" rx="9"/>
+    <text class="t-lbl fx-a" x="592" y="84">FastAPI</text>
+    <text class="t-title" x="592" y="114">Accept &amp; enqueue</text>
+    <text class="t-mono fx-dim" x="592" y="140">202 in &lt;120 ms</text>
+
+    <rect class="nd-a" x="874" y="56" width="230" height="104" rx="9"/>
+    <text class="t-lbl fx-a" x="896" y="84">Redis Streams</text>
+    <text class="t-title" x="896" y="114">Durable queue</text>
+    <text class="t-mono fx-dim" x="896" y="140">at-least-once</text>
+
+    <path class="ar" d="M 250 108 L 278 108" marker-end="url(#a1)"/>
+    <path class="ar" d="M 536 108 L 564 108" marker-end="url(#a1)"/>
+    <path class="ar" d="M 840 108 L 868 108" marker-end="url(#a1)"/>
+
+    <!-- workers -->
+    <rect class="zone" x="1142" y="40" width="442" height="200" rx="10"/>
+    <text class="t-lbl fx-a" x="1164" y="30">GPU inference workers · autoscaled</text>
+    <rect class="nd-copy" x="1164" y="60" width="398" height="48" rx="7"/>
+    <text class="t-body" x="1186" y="90">SSCD copy embeddings · 512-d</text>
+    <rect class="nd-orig" x="1164" y="118" width="398" height="48" rx="7"/>
+    <text class="t-body" x="1186" y="148">Community Forensics ViT · 384px</text>
+    <rect class="nd-prof" x="1164" y="176" width="398" height="48" rx="7"/>
+    <text class="t-body" x="1186" y="206">CSD style descriptors · 768-d</text>
+    <path class="ar" d="M 1108 108 L 1136 108" marker-end="url(#a1)"/>
+
+    <!-- cpu stages -->
+    <rect class="nd" x="570" y="196" width="534" height="88" rx="9"/>
+    <text class="t-lbl fx-dim" x="592" y="222">CPU stages · same worker pool</text>
+    <text class="t-body" x="592" y="252">SIFT / ORB geometry · MAGSAC homography · aligned SSIM</text>
+    <text class="t-body" x="592" y="274">pHash · SHA-256 · Tesseract OCR · c2patool</text>
+    <path class="ar" d="M 1136 200 C 1120 200 1120 232 1110 236" marker-end="url(#a1)"/>
+
+    <!-- storage -->
+    <rect class="nd" x="16" y="196" width="248" height="88" rx="9"/>
+    <text class="t-title" x="38" y="228">S3 object store</text>
+    <text class="t-sub" x="38" y="252">media + cached</text>
+    <text class="t-sub" x="38" y="274">embedding vectors</text>
+
+    <rect class="nd" x="296" y="196" width="248" height="88" rx="9"/>
+    <text class="t-title" x="318" y="228">PostgreSQL 17</text>
+    <text class="t-sub" x="318" y="252">catalogue, scans,</text>
+    <text class="t-sub" x="318" y="274">row-level security</text>
+
+    <path class="ar" d="M 268 240 L 290 240" marker-end="url(#a1)"/>
+    <path class="ar" d="M 564 240 L 550 240" marker-end="url(#a1)"/>
+
+    <!-- results -->
+    <rect class="nd-pass" x="16" y="312" width="1568" height="72" rx="9"/>
+    <text class="t-lbl fx-pass" x="38" y="338">completion</text>
+    <text class="t-body" x="176" y="338">Evidence packet written · signed webhook delivered · client polls or receives push · median end-to-end 2.4 s for a 50 000-work catalogue</text>
+    <text class="t-mono fx-dim" x="176" y="366">a slow model degrades throughput, never availability — the API never blocks on inference</text>
+
+    <g class="cal"><circle cx="424" cy="38" r="17"/><text x="424" y="44">1</text></g>
+    <g class="cal"><circle cx="990" cy="38" r="17"/><text x="990" y="44">2</text></g>
+    <g class="cal"><circle cx="1568" cy="258" r="17"/><text x="1568" y="264">3</text></g>
+    <g class="cal"><circle cx="1548" cy="338" r="17"/><text x="1548" y="344">4</text></g>
+  </svg>
+  <figcaption>A2 · The API layer is stateless and cheap; only the worker tier needs GPUs, and only that tier scales with load.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Credentials never reach the browser.</strong> The Next.js layer proxies server-side, so no API key is exposed to a client device.</span></li>
+    <li><b>2</b><span><strong>A durable queue, not a thread.</strong> A worker crash mid-scan replays the job rather than losing the customer’s request.</span></li>
+    <li><b>3</b><span><strong>Only workers need GPUs.</strong> The expensive tier scales independently, which is what keeps unit cost predictable.</span></li>
+    <li><b>4</b><span><strong>Latency is a product decision.</strong> Returning in milliseconds and completing in seconds keeps the integration simple for the customer.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      The architecture assumes models are slow and occasionally unavailable. Everything expensive sits
+      behind a durable queue, so the worst a model failure can do is slow a queue down — never take the
+      service off the air.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ A3 PIPELINE -->
+<section class="slide" id="a3">
+  <div class="slideHead">
+    <span class="slideNum">A3</span>
+    <h1>The inference pipeline, stage by stage</h1>
+    <em>End-to-end flow</em>
+  </div>
+
+  <p class="kicker">
+    Eight stages, each of which reports its own outcome and its own coverage. These are the exact stage
+    names the API streams to the client, so <strong>what the judge sees in the demo matches this diagram
+    label for label</strong>.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 396" role="img" aria-label="Eight named inference stages arranged in two rows">
+
+    <!-- row 1 -->
+    <rect class="nd" x="16" y="52" width="366" height="126" rx="9"/>
+    <text class="t-lbl fx-dim" x="38" y="80">stage 1</text>
+    <text class="t-title" x="38" y="110">PREPARING_IMAGE</text>
+    <text class="t-sub" x="38" y="138">Decode, enforce pixel and size limits,</text>
+    <text class="t-sub" x="38" y="160">compute SHA-256 and perceptual hash.</text>
+
+    <rect class="nd-orig" x="402" y="52" width="366" height="126" rx="9"/>
+    <text class="t-lbl fx-orig" x="424" y="80">stage 2</text>
+    <text class="t-title" x="424" y="110">CHECKING_SOURCE</text>
+    <text class="t-sub" x="424" y="138">Inspect C2PA provenance manifests and</text>
+    <text class="t-sub" x="424" y="160">validate their signature chain.</text>
+
+    <rect class="nd-orig" x="788" y="52" width="366" height="126" rx="9"/>
+    <text class="t-lbl fx-orig" x="810" y="80">stage 3</text>
+    <text class="t-title" x="810" y="110">CHECKING_VISIBLE_LABELS</text>
+    <text class="t-sub" x="810" y="138">OCR the full frame and its corners for</text>
+    <text class="t-sub" x="810" y="160">declared generator watermarks.</text>
+
+    <rect class="nd-orig" x="1174" y="52" width="410" height="126" rx="9"/>
+    <text class="t-lbl fx-orig" x="1196" y="80">stage 4</text>
+    <text class="t-title" x="1196" y="110">CHECKING_AI_SIGNALS</text>
+    <text class="t-sub" x="1196" y="138">Run the detector families, require a</text>
+    <text class="t-sub" x="1196" y="160">quorum, apply Platt calibration.</text>
+
+    <path class="ar" d="M 386 115 L 396 115" marker-end="url(#a1)"/>
+    <path class="ar" d="M 772 115 L 782 115" marker-end="url(#a1)"/>
+    <path class="ar" d="M 1158 115 L 1168 115" marker-end="url(#a1)"/>
+
+    <!-- row 2 -->
+    <rect class="nd-copy" x="16" y="204" width="366" height="126" rx="9"/>
+    <text class="t-lbl fx-copy" x="38" y="232">stage 5</text>
+    <text class="t-title" x="38" y="262">SEARCHING_CATALOG</text>
+    <text class="t-sub" x="38" y="290">Approximate nearest-neighbour recall over</text>
+    <text class="t-sub" x="38" y="312">SSCD vectors, plus regional crops.</text>
+
+    <rect class="nd-prof" x="402" y="204" width="366" height="126" rx="9"/>
+    <text class="t-lbl fx-prof" x="424" y="232">stage 6</text>
+    <text class="t-title" x="424" y="262">CHECKING_CREATOR_PROFILE</text>
+    <text class="t-sub" x="424" y="290">Style descriptors ranked with CSLS against</text>
+    <text class="t-sub" x="424" y="312">consented creator profiles.</text>
+
+    <rect class="nd-copy" x="788" y="204" width="366" height="126" rx="9"/>
+    <text class="t-lbl fx-copy" x="810" y="232">stage 7</text>
+    <text class="t-title" x="810" y="262">VERIFYING_CLOSEST_MATCHES</text>
+    <text class="t-sub" x="810" y="290">Geometric verification then aligned</text>
+    <text class="t-sub" x="810" y="312">structural comparison, per candidate.</text>
+
+    <rect class="nd-pass" x="1174" y="204" width="410" height="126" rx="9"/>
+    <text class="t-lbl fx-pass" x="1196" y="232">stage 8</text>
+    <text class="t-title fx-pass" x="1196" y="262">POLICY</text>
+    <text class="t-sub" x="1196" y="290">Rights lookup, then the customer’s own</text>
+    <text class="t-sub" x="1196" y="312">thresholds decide PASS / REVIEW / BLOCK.</text>
+
+    <path class="ar" d="M 386 267 L 396 267" marker-end="url(#a1)"/>
+    <path class="ar" d="M 772 267 L 782 267" marker-end="url(#a1)"/>
+    <path class="ar-dec" d="M 1158 267 L 1168 267" marker-end="url(#a2)"/>
+    <path class="ar" d="M 1379 182 C 1379 194 200 190 199 198" marker-end="url(#a1)"/>
+
+    <rect class="nd" x="16" y="352" width="1568" height="40" rx="7"/>
+    <text class="t-mono fx-dim" x="38" y="378">every stage writes: outcome · confidence · coverage · elapsed_ms · provider version — an unrun stage is recorded, never assumed clean</text>
+
+    <g class="cal"><circle cx="1379" cy="36" r="17"/><text x="1379" y="42">1</text></g>
+    <g class="cal"><circle cx="199" cy="188" r="17"/><text x="199" y="194">2</text></g>
+    <g class="cal"><circle cx="971" cy="188" r="17"/><text x="971" y="194">3</text></g>
+    <g class="cal"><circle cx="1560" cy="372" r="17"/><text x="1560" y="378">4</text></g>
+  </svg>
+  <figcaption>A3 · Stages 2–4 are the origin lane, 5 and 7 the copy lane, 6 the profile lane. Policy runs last, on evidence only.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Provenance outranks statistics.</strong> A valid C2PA manifest is hard evidence and is trusted above any statistical detector.</span></li>
+    <li><b>2</b><span><strong>Recall then verify.</strong> A cheap vector search proposes candidates; expensive geometry only runs on the shortlist.</span></li>
+    <li><b>3</b><span><strong>Verification is per candidate.</strong> Each shortlisted work is independently proven or rejected, so one strong match cannot drag others along.</span></li>
+    <li><b>4</b><span><strong>Coverage travels with the result.</strong> If a stage could not run, that fact is recorded and surfaced rather than quietly ignored.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Watch the stage names during the demo — they are the same eight you see here. Each one records not
+      just what it found but whether it was able to look at all, and that second field is what makes the
+      first one trustworthy.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ A4 COPY LANE -->
+<section class="slide" id="a4">
+  <div class="slideHead">
+    <span class="slideNum">A4</span>
+    <h1>Copy lane — recall, then proof</h1>
+    <em>Lane 1 · same work reused</em>
+  </div>
+
+  <p class="kicker">
+    A neural embedding is fast but only ever suggests. <strong>Nothing becomes a match until classical
+    geometry proves a pixel-level correspondence</strong> and an aligned structural comparison agrees —
+    so an embedding that is merely confused cannot accuse anyone.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 404" role="img" aria-label="Copy lane: SSCD recall, SIFT MAGSAC geometry, aligned structure, fusion gate">
+
+    <rect class="nd-copy" x="4" y="42" width="380" height="196" rx="9"/>
+    <text class="t-lbl fx-copy" x="26" y="70">step 1 · recall</text>
+    <text class="t-title" x="26" y="102">SSCD embeddings</text>
+    <text class="t-sub" x="26" y="132">512-d L2-normalised vectors,</text>
+    <text class="t-sub" x="26" y="154">shortest side resized to 288 px</text>
+    <text class="t-sub" x="26" y="182">whole frame plus five overlapping</text>
+    <text class="t-sub" x="26" y="204">crops, so a small inset is found</text>
+    <text class="t-mono fx-copy" x="26" y="230">→ top 8 candidates</text>
+
+    <rect class="nd-copy" x="408" y="42" width="380" height="196" rx="9"/>
+    <text class="t-lbl fx-copy" x="430" y="70">step 2 · prove</text>
+    <text class="t-title" x="430" y="102">SIFT + MAGSAC</text>
+    <text class="t-sub" x="430" y="132">2 400 keypoints, mutual nearest</text>
+    <text class="t-sub" x="430" y="154">neighbours, Lowe ratio 0.75</text>
+    <text class="t-sub" x="430" y="182">homography fitted with USAC-MAGSAC;</text>
+    <text class="t-sub" x="430" y="204">mirror and rotation retried</text>
+    <text class="t-mono fx-copy" x="430" y="230">→ ≥12 inliers, ratio ≥0.35</text>
+
+    <rect class="nd-copy" x="812" y="42" width="380" height="196" rx="9"/>
+    <text class="t-lbl fx-copy" x="834" y="70">step 3 · measure</text>
+    <text class="t-title" x="834" y="102">Aligned structure</text>
+    <text class="t-sub" x="834" y="132">the candidate is warped onto the</text>
+    <text class="t-sub" x="834" y="154">query before anything is compared</text>
+    <text class="t-sub" x="834" y="182">masked SSIM, luminance correlation,</text>
+    <text class="t-sub" x="834" y="204">gradient magnitude similarity</text>
+    <text class="t-mono fx-copy" x="834" y="230">→ geometric-mean consensus</text>
+
+    <rect class="nd-pass" x="1216" y="42" width="380" height="196" rx="9"/>
+    <text class="t-lbl fx-pass" x="1238" y="70">step 4 · fuse</text>
+    <text class="t-title" x="1238" y="102">Evidence index</text>
+    <text class="t-sub" x="1238" y="132">0.25 recall · 0.15 perceptual hash</text>
+    <text class="t-sub" x="1238" y="154">0.32 geometry · 0.28 structure</text>
+    <text class="t-sub" x="1238" y="182">a weighted index, deliberately not</text>
+    <text class="t-sub" x="1238" y="204">presented as a probability</text>
+    <text class="t-mono fx-pass" x="1238" y="230">→ ≥0.84 is the top tier</text>
+
+    <path class="ar" d="M 388 140 L 402 140" marker-end="url(#ac)"/>
+    <path class="ar" d="M 792 140 L 806 140" marker-end="url(#ac)"/>
+    <path class="ar" d="M 1196 140 L 1210 140" marker-end="url(#a2)"/>
+
+    <rect class="nd-pass" x="4" y="266" width="988" height="126" rx="9"/>
+    <text class="t-lbl fx-pass" x="26" y="294">the rule that prevents a false accusation</text>
+    <text class="t-title fx-pass" x="26" y="328">Similarity alone can never produce a match.</text>
+    <text class="t-sub" x="26" y="358">Unless the files are byte-identical, a MATCH_FOUND requires validated geometry</text>
+    <text class="t-sub" x="26" y="380">and aligned structural agreement. Similarity and hash distance are supporting evidence only.</text>
+
+    <rect class="nd" x="1016" y="266" width="580" height="126" rx="9"/>
+    <text class="t-lbl fx-dim" x="1038" y="294">what the lane is allowed to output</text>
+    <text class="t-mono fx-txt" x="1038" y="326">MATCH_FOUND</text>
+    <text class="t-mono fx-txt" x="1038" y="352">NO_MATCH_IN_CHECKED_SOURCES</text>
+    <text class="t-mono fx-txt" x="1038" y="378">INCONCLUSIVE</text>
+    <text class="t-mono fx-dim" x="1310" y="326">proved, region identified</text>
+    <text class="t-mono fx-dim" x="1310" y="352">searched, nothing found</text>
+    <text class="t-mono fx-dim" x="1310" y="378">SCOPE_INCOMPLETE · ERROR</text>
+
+    <g class="cal"><circle cx="360" cy="66" r="17"/><text x="360" y="72">1</text></g>
+    <g class="cal"><circle cx="764" cy="66" r="17"/><text x="764" y="72">2</text></g>
+    <g class="cal"><circle cx="1168" cy="66" r="17"/><text x="1168" y="72">3</text></g>
+    <g class="cal"><circle cx="964" cy="290" r="17"/><text x="964" y="296">4</text></g>
+  </svg>
+  <figcaption>A4 · Learned retrieval proposes; classical computer vision disposes. The order of those two is the whole design.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Crops are searched too.</strong> A logo lifted into the corner of a banner is found because five regional views are queried alongside the whole frame.</span></li>
+    <li><b>2</b><span><strong>Geometry is not a score.</strong> It either fits a consistent transform between the two images or it does not, and we store the matching point pairs as evidence.</span></li>
+    <li><b>3</b><span><strong>Compare after aligning.</strong> Measuring structure on un-aligned images is meaningless; we warp first, then measure only the overlapping area.</span></li>
+    <li><b>4</b><span><strong>Two independent confirmations.</strong> Geometry and structure use unrelated mathematics, so both agreeing is what earns the word “match”.</span></li>
+  </ol>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        The embedding is a librarian — it fetches eight books that might be the one. The geometry is the
+        proof: it finds hundreds of specific points that line up under a single consistent transform.
+      </p>
+      <p>Only the second one is allowed to say the word “match”.</p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“Embeddings can be fooled by adversarial noise.”</q> Which is exactly why they cannot decide. An adversarial vector might get a work into the shortlist, but it cannot manufacture 12 geometrically consistent keypoint correspondences with a work it did not copy.</p>
+      <p><q>“What about crops, rotations and re-encodes?”</q> The homography absorbs crop, scale, rotation and mirror; JPEG re-encoding barely moves SSCD vectors. Our transform benchmark covers 26 of these and is on sheet A13.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ A5 ORIGIN LANE -->
+<section class="slide" id="a5">
+  <div class="slideHead">
+    <span class="slideNum">A5</span>
+    <h1>Origin lane — a ladder, not a verdict</h1>
+    <em>Lane 2 · was a model involved</em>
+  </div>
+
+  <p class="kicker">
+    AI detection is the least reliable claim in this space, so we rank the evidence by how much it
+    deserves to be trusted. <strong>Cryptographic provenance beats a declared label, which beats a
+    statistical detector</strong> — and the detector tier is advisory by default.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 428" role="img" aria-label="Origin evidence ladder from C2PA provenance down to statistical detectors and abstention">
+
+    <text class="t-lbl fx-dim" x="4" y="26">evidence strength</text>
+    <line class="rule" x1="60" y1="42" x2="60" y2="330"/>
+    <path d="M 60 42 L 54 56 L 66 56 z" fill="rgba(255,255,255,0.2)"/>
+    <text class="t-mono fx-dim" x="4" y="200" transform="rotate(-90 30 200)" text-anchor="middle">hard → soft</text>
+
+    <!-- tier 1 -->
+    <rect class="nd-pass" x="92" y="42" width="900" height="82" rx="9"/>
+    <text class="t-lbl fx-pass" x="114" y="70">tier 1 · cryptographic</text>
+    <text class="t-title" x="114" y="104">C2PA provenance manifest, signature chain validated</text>
+    <rect class="nd" x="1016" y="42" width="580" height="82" rx="9"/>
+    <text class="t-mono fx-txt" x="1038" y="72">VALID_TRUSTED → decisive</text>
+    <text class="t-mono fx-dim" x="1038" y="104">VALID_UNTRUSTED · INVALID · NOT_PRESENT · ERROR</text>
+
+    <!-- tier 2 -->
+    <rect class="nd-orig" x="92" y="140" width="900" height="82" rx="9"/>
+    <text class="t-lbl fx-orig" x="114" y="168">tier 2 · declared</text>
+    <text class="t-title" x="114" y="202">Visible generator labels, read by OCR across five views</text>
+    <rect class="nd" x="1016" y="140" width="580" height="82" rx="9"/>
+    <text class="t-mono fx-txt" x="1038" y="170">full frame + four corners</text>
+    <text class="t-mono fx-dim" x="1038" y="202">accepted above 0.42 OCR confidence</text>
+
+    <!-- tier 3 -->
+    <rect class="nd-orig" x="92" y="238" width="900" height="92" rx="9"/>
+    <text class="t-lbl fx-orig" x="114" y="264">tier 3 · statistical</text>
+    <text class="t-title" x="114" y="294">Detector families — Community Forensics ViT · Sightengine</text>
+    <text class="t-sub" x="114" y="318">weighted logit fusion within a family, Platt-calibrated on held-out data</text>
+    <rect class="nd" x="1016" y="238" width="580" height="92" rx="9"/>
+    <text class="t-mono fx-txt" x="1038" y="264">quorum: ≥2 independent families</text>
+    <text class="t-mono fx-dim" x="1038" y="292">calibration needs ≥100 samples,</text>
+    <text class="t-mono fx-dim" x="1038" y="316">≥25 per class, else it abstains</text>
+
+    <!-- abstention -->
+    <rect class="nd-warn" x="92" y="348" width="1504" height="72" rx="9"/>
+    <text class="t-lbl fx-warn" x="114" y="376">when the ladder cannot reach a conclusion, it says so</text>
+    <text class="t-mono fx-txt" x="114" y="406">INCONCLUSIVE_LOW_RESOLUTION</text>
+    <text class="t-mono fx-txt" x="560" y="406">INCONCLUSIVE_DETECTOR_DISAGREEMENT</text>
+    <text class="t-mono fx-txt" x="1100" y="406">INCONCLUSIVE_TRANSFORM_INSTABILITY</text>
+
+    <path class="ar-dec" d="M 1004 83 L 1010 83" marker-end="url(#a2)"/>
+    <path class="ar-dec" d="M 1004 181 L 1010 181" marker-end="url(#a2)"/>
+    <path class="ar-dec" d="M 1004 284 L 1010 284" marker-end="url(#a2)"/>
+
+    <g class="cal"><circle cx="968" cy="64" r="17"/><text x="968" y="70">1</text></g>
+    <g class="cal"><circle cx="968" cy="162" r="17"/><text x="968" y="168">2</text></g>
+    <g class="cal"><circle cx="968" cy="260" r="17"/><text x="968" y="266">3</text></g>
+    <g class="cal"><circle cx="1572" cy="370" r="17"/><text x="1572" y="376">4</text></g>
+  </svg>
+  <figcaption>A5 · A trusted C2PA manifest ends the question. Everything below it is an indicator that is reported as an indicator.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Provenance is decisive.</strong> A validated manifest is a signed statement from the tool that made the file, so it outranks every statistical guess.</span></li>
+    <li><b>2</b><span><strong>Labels are read, not assumed.</strong> We OCR the corners specifically, because that is where generators put their marks and where crops remove them.</span></li>
+    <li><b>3</b><span><strong>One detector is never enough.</strong> Two independent model families must agree, and each must be calibrated on held-out data before its number is used at all.</span></li>
+    <li><b>4</b><span><strong>Abstention is a first-class result.</strong> Low resolution, disagreement or instability under re-crop each produce a named inconclusive state rather than a coin flip.</span></li>
+  </ol>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        Everyone in this room knows AI detectors are unreliable. So we treat them as the weakest tier of a
+        ladder, require two independent families to agree, and by default the whole lane is advisory — it
+        cannot block a publication on its own.
+      </p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“AI detectors have terrible false-positive rates.”</q> Agreed, which is why this lane cannot change the copy verdict and defaults to informational. It reports evidence; a customer who wants it to gate publication must opt in explicitly.</p>
+      <p><q>“C2PA is barely adopted.”</q> True today and improving fast — Adobe, Leica, OpenAI and Google all emit it. Our architecture is built so that as adoption rises, the hard tier absorbs cases the statistical tier currently handles.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════ A6 PROFILE LANE -->
+<section class="slide" id="a6">
+  <div class="slideHead">
+    <span class="slideNum">A6</span>
+    <h1>Creator-profile lane — resemblance, stated as resemblance</h1>
+    <em>Lane 3 · style</em>
+  </div>
+
+  <p class="kicker">
+    Style is not copyrightable, and we never say it is. This lane exists because a creator whose body of
+    work is being imitated at scale deserves to know — so it produces a <strong>consent-gated
+    resemblance reading that can request review but can never assert infringement</strong>.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 420" role="img" aria-label="Creator profile lane: CSD descriptors, prototypes, CSLS ranking, consent gate, resemblance band">
+
+    <rect class="nd" x="4" y="52" width="200" height="120" rx="9"/>
+    <text class="t-title" x="26" y="88">Candidate</text>
+    <text class="t-sub" x="26" y="116">the image being</text>
+    <text class="t-sub" x="26" y="138">checked</text>
+
+    <rect class="nd-prof" x="232" y="52" width="366" height="120" rx="9"/>
+    <text class="t-lbl fx-prof" x="254" y="80">descriptor</text>
+    <text class="t-title" x="254" y="112">CSD ViT-L · 768-d</text>
+    <text class="t-sub" x="254" y="142">trained to encode style and suppress</text>
+    <text class="t-sub" x="254" y="164">subject matter</text>
+
+    <rect class="nd-prof" x="626" y="52" width="366" height="120" rx="9"/>
+    <text class="t-lbl fx-prof" x="648" y="80">profile</text>
+    <text class="t-title" x="648" y="112">Prototype + members</text>
+    <text class="t-sub" x="648" y="142">0.65 × centroid cosine plus</text>
+    <text class="t-sub" x="648" y="164">0.35 × median of the top three works</text>
+
+    <rect class="nd-prof" x="1020" y="52" width="366" height="120" rx="9"/>
+    <text class="t-lbl fx-prof" x="1042" y="80">ranking</text>
+    <text class="t-title" x="1042" y="112">CSLS, k = 15</text>
+    <text class="t-sub" x="1042" y="142">corrects hub profiles that sit close</text>
+    <text class="t-sub" x="1042" y="164">to everything in the space</text>
+
+    <path class="ar" d="M 208 112 L 226 112" marker-end="url(#ap)"/>
+    <path class="ar" d="M 602 112 L 620 112" marker-end="url(#ap)"/>
+    <path class="ar" d="M 996 112 L 1014 112" marker-end="url(#ap)"/>
+
+    <!-- content control -->
+    <rect class="nd-copy" x="626" y="192" width="760" height="88" rx="9"/>
+    <text class="t-lbl fx-copy" x="648" y="218">content control</text>
+    <text class="t-body" x="648" y="244">The SSCD copy score is subtracted as a confound — two photographs</text>
+    <text class="t-body" x="648" y="268">of the same building are similar in content, not in style.</text>
+    <path class="ar" d="M 1203 188 L 1203 176" marker-end="url(#ap)"/>
+
+    <!-- consent gate -->
+    <rect class="nd-a" x="4" y="196" width="580" height="200" rx="9"/>
+    <text class="t-lbl fx-a" x="26" y="224">consent gate · evaluated before any output</text>
+    <text class="t-title" x="26" y="258">CONFIRMED</text>
+    <text class="t-sub" x="228" y="258">profile is scored and may request review</text>
+    <text class="t-title fx-dim" x="26" y="296">NOT_CONFIRMED</text>
+    <text class="t-sub" x="228" y="296">enrolled but silent — no review raised</text>
+    <text class="t-title fx-dim" x="26" y="334">REVOKED</text>
+    <text class="t-sub" x="228" y="334">removed from scoring entirely</text>
+    <text class="t-sub" x="26" y="372">a profile needs at least three works before it can be scored</text>
+
+    <!-- output band -->
+    <rect class="nd-prof" x="1414" y="52" width="182" height="216" rx="9"/>
+    <text class="t-lbl fx-prof" x="1436" y="80">reading</text>
+    <text class="t-mono fx-txt" x="1436" y="114">≥ 0.84</text>
+    <text class="t-sub" x="1436" y="136">very high</text>
+    <text class="t-mono fx-txt" x="1436" y="176">≥ 0.74</text>
+    <text class="t-sub" x="1436" y="198">high</text>
+    <text class="t-mono fx-txt" x="1436" y="238">≥ 0.58</text>
+    <text class="t-sub" x="1436" y="260">review</text>
+
+    <rect class="nd-bad" x="612" y="292" width="984" height="104" rx="9"/>
+    <text class="t-lbl fx-bad" x="634" y="320">the boundary we will not cross</text>
+    <text class="t-title" x="634" y="354">This lane cannot change the copy verdict, and never uses the word infringement.</text>
+    <text class="t-sub" x="634" y="382">Resemblance to a registered profile is reported as resemblance, with the profile named and the consent state attached.</text>
+
+    <g class="cal"><circle cx="574" cy="74" r="17"/><text x="574" y="80">1</text></g>
+    <g class="cal"><circle cx="1362" cy="74" r="17"/><text x="1362" y="80">2</text></g>
+    <g class="cal"><circle cx="556" cy="218" r="17"/><text x="556" y="224">3</text></g>
+    <g class="cal"><circle cx="1568" cy="314" r="17"/><text x="1568" y="320">4</text></g>
+  </svg>
+  <figcaption>A6 · Consent is checked before scoring, not after. A creator who has not opted in is not scored against.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Style, not subject.</strong> CSD descriptors are trained specifically to encode how something was made rather than what it depicts.</span></li>
+    <li><b>2</b><span><strong>Hub correction matters.</strong> CSLS discounts profiles that sit near everything, which is the classic failure of raw cosine ranking on style vectors.</span></li>
+    <li><b>3</b><span><strong>Opt-in by construction.</strong> A profile with unconfirmed or revoked consent produces no reading at all — the gate runs before the model, not after.</span></li>
+    <li><b>4</b><span><strong>A deliberate legal ceiling.</strong> The most this lane can ever do is ask a human to look, which keeps the product on the right side of a genuinely unsettled area of law.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Style is not protected by copyright anywhere, and we did not build a product that pretends
+      otherwise. What we built is a way for a creator who opted in to find out that something closely
+      resembling their work is circulating — and then decide for themselves what to do.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ A7 FIREWALL -->
+<section class="slide" id="a7">
+  <div class="slideHead">
+    <span class="slideNum">A7</span>
+    <h1>The firewall between detection and decision</h1>
+    <em>The most important design choice</em>
+  </div>
+
+  <p class="kicker">
+    Models never decide anything. They produce evidence; a <strong>separately versioned policy
+    document</strong> turns evidence into an action. That separation is why a model upgrade cannot
+    silently change what a customer’s pipeline blocks.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 416" role="img" aria-label="Detection side and decision side separated by a firewall, with enum outputs on each side">
+
+    <rect class="zone" x="4" y="34" width="700" height="330" rx="10"/>
+    <text class="t-lbl fx-dim" x="26" y="24">detection side · models live here</text>
+
+    <rect class="nd-copy" x="30" y="60" width="648" height="60" rx="8"/>
+    <text class="t-body" x="52" y="86">Copy lane</text>
+    <text class="t-mono fx-copy" x="240" y="86">evidence index · verified regions</text>
+    <text class="t-mono fx-dim" x="52" y="110">may output MATCH_FOUND · INCONCLUSIVE · NO_MATCH_IN_CHECKED_SOURCES</text>
+
+    <rect class="nd-orig" x="30" y="136" width="648" height="60" rx="8"/>
+    <text class="t-body" x="52" y="162">Origin lane</text>
+    <text class="t-mono fx-orig" x="240" y="162">calibrated family scores</text>
+    <text class="t-mono fx-dim" x="52" y="186">advisory by default — cannot alter the copy verdict</text>
+
+    <rect class="nd-prof" x="30" y="212" width="648" height="60" rx="8"/>
+    <text class="t-body" x="52" y="238">Profile lane</text>
+    <text class="t-mono fx-prof" x="240" y="238">resemblance reading · consent state</text>
+    <text class="t-mono fx-dim" x="52" y="262">may request review · never asserts infringement</text>
+
+    <rect class="nd" x="30" y="288" width="648" height="56" rx="8"/>
+    <text class="t-mono fx-dim" x="52" y="314">what none of them may do: read the customer’s licences,</text>
+    <text class="t-mono fx-dim" x="52" y="336">read the policy thresholds, or write a policy_action</text>
+
+    <!-- firewall -->
+    <line class="rule-hot" x1="740" y1="20" x2="740" y2="380"/>
+    <text class="t-lbl" x="740" y="12" text-anchor="middle" fill="#7fb3ff">firewall</text>
+    <path class="ar-dec" d="M 704 200 L 776 200" marker-end="url(#a2)"/>
+    <rect x="674" y="222" width="126" height="24" fill="#05070c"/>
+    <text class="t-mono fx-dim" x="737" y="240" text-anchor="middle">evidence only</text>
+
+    <!-- decision side -->
+    <rect class="zone-public" x="800" y="34" width="796" height="330" rx="10"/>
+    <text class="t-lbl fx-a" x="822" y="24">decision side · versioned policy, no models</text>
+
+    <rect class="nd-a" x="826" y="60" width="744" height="88" rx="8"/>
+    <text class="t-title" x="848" y="90">Rights resolution</text>
+    <text class="t-sub" x="848" y="118">Does the customer already hold a licence for the matched work?</text>
+    <text class="t-mono fx-dim" x="848" y="140">EXISTING_LICENSE · LICENSE_AVAILABLE · NO_LICENSE_INFO · DISPUTED</text>
+
+    <rect class="nd-a" x="826" y="164" width="744" height="88" rx="8"/>
+    <text class="t-title" x="848" y="194">Policy evaluation</text>
+    <text class="t-sub" x="848" y="222">A versioned JSON rule set the customer owns and can diff, not code.</text>
+    <text class="t-mono fx-dim" x="848" y="244">every scan stores the exact policy version that judged it</text>
+
+    <rect class="nd-pass" x="826" y="268" width="744" height="76" rx="8"/>
+    <text class="t-lbl fx-pass" x="848" y="294">outcome</text>
+    <text class="t-title fx-pass" x="848" y="330">PASS_BY_POLICY</text>
+    <text class="t-title fx-warn" x="1140" y="330">REVIEW</text>
+    <text class="t-title fx-bad" x="1372" y="330">BLOCK</text>
+
+    <path class="ar-dec" d="M 1198 152 L 1198 160" marker-end="url(#a2)"/>
+    <path class="ar-dec" d="M 1198 256 L 1198 264" marker-end="url(#a2)"/>
+
+    <rect class="nd" x="4" y="384" width="1592" height="30" rx="6"/>
+    <text class="t-mono fx-dim" x="26" y="404">consequence: swapping a detection model changes the evidence, never the rule — and old scans can be replayed against a new policy version to see what changes</text>
+
+    <g class="cal"><circle cx="656" cy="310" r="17"/><text x="656" y="316">1</text></g>
+    <g class="cal"><circle cx="740" cy="290" r="17"/><text x="740" y="296">2</text></g>
+    <g class="cal"><circle cx="1548" cy="186" r="17"/><text x="1548" y="192">3</text></g>
+    <g class="cal"><circle cx="1548" cy="290" r="17"/><text x="1548" y="296">4</text></g>
+  </svg>
+  <figcaption>A7 · Detection answers “what is true about this image”. Policy answers “what should this organisation do about it”.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Models are blind to consequences.</strong> No model can see a licence or a threshold, so no model can be tuned into a business outcome.</span></li>
+    <li><b>2</b><span><strong>Only evidence crosses.</strong> The firewall carries findings and coverage — never a suggested action.</span></li>
+    <li><b>3</b><span><strong>Policy is a document.</strong> It is versioned JSON the customer owns, so a compliance officer can read and diff it without reading Python.</span></li>
+    <li><b>4</b><span><strong>Two systems, two audits.</strong> “Was the detection correct?” and “was the rule correct?” become separate questions with separate answers.</span></li>
+  </ol>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        This is the line most products get wrong. They tune the model until it blocks the right things,
+        which means every model update silently rewrites the company’s policy.
+      </p>
+      <p>Ours cannot, because the model has never been allowed to see the policy.</p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“Isn’t that just extra layers?”</q> It is the difference between a defensible and an indefensible audit. When a regulator asks why an image was blocked, we point at a policy version with a date; when they ask whether the evidence was sound, we point at the packet. Fusing them makes both questions unanswerable.</p>
+      <p><q>“Who sets the thresholds?”</q> The customer, per workspace. A news wire and an advertising agency need genuinely different lines, and neither should have to ask us to retrain something.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ A8 COVERAGE -->
+<section class="slide" id="a8">
+  <div class="slideHead">
+    <span class="slideNum">A8</span>
+    <h1>Coverage — the difference between “clean” and “unchecked”</h1>
+    <em>Honest failure</em>
+  </div>
+
+  <p class="kicker">
+    A system that returns “no match” when it never actually searched is worse than no system, because it
+    manufactures false confidence. <strong>Every scan reports what it was able to examine</strong>, and an
+    incomplete search is a distinct outcome with its own name.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 434" role="img" aria-label="Three-valued outcome logic separating no match found from unable to check">
+
+    <rect class="nd-pass" x="4" y="44" width="514" height="164" rx="9"/>
+    <text class="t-lbl fx-pass" x="26" y="72">outcome a</text>
+    <text class="t-title fx-pass" x="26" y="106">We looked, and found nothing.</text>
+    <text class="t-mono fx-txt" x="26" y="140">NO_MATCH_IN_CHECKED_SOURCES</text>
+    <text class="t-sub" x="26" y="170">Coverage COMPLETE. Every declared work</text>
+    <text class="t-sub" x="26" y="192">was embedded, searched and verified.</text>
+
+    <rect class="nd-warn" x="542" y="44" width="514" height="164" rx="9"/>
+    <text class="t-lbl fx-warn" x="564" y="72">outcome b</text>
+    <text class="t-title fx-warn" x="564" y="106">We could not look properly.</text>
+    <text class="t-mono fx-txt" x="564" y="140">SCOPE_INCOMPLETE</text>
+    <text class="t-sub" x="564" y="170">Coverage PARTIAL, DEGRADED or</text>
+    <text class="t-sub" x="564" y="192">TRUNCATED — with the reason attached.</text>
+
+    <rect class="nd-bad" x="1080" y="44" width="516" height="164" rx="9"/>
+    <text class="t-lbl fx-bad" x="1102" y="72">outcome c</text>
+    <text class="t-title fx-bad" x="1102" y="106">Nobody declared anything.</text>
+    <text class="t-mono fx-txt" x="1102" y="140">EMPTY_SCOPE</text>
+    <text class="t-sub" x="1102" y="170">The catalogue is empty, so a clean</text>
+    <text class="t-sub" x="1102" y="192">result would be meaningless.</text>
+
+    <rect class="nd" x="4" y="236" width="1592" height="98" rx="9"/>
+    <text class="t-lbl fx-dim" x="26" y="264">named reasons, recorded per scan — never a generic error string</text>
+    <text class="t-mono fx-txt" x="26" y="296">DECLARED_CATALOG_EMPTY</text>
+    <text class="t-mono fx-txt" x="356" y="296">REQUIRED_LEARNED_RETRIEVAL_INCOMPLETE</text>
+    <text class="t-mono fx-txt" x="880" y="296">CANDIDATE_VERIFICATION_TRUNCATED</text>
+    <text class="t-mono fx-txt" x="1250" y="296">CANDIDATE_VERIFICATION_FAILURE</text>
+    <text class="t-mono fx-dim" x="26" y="322">and per capability: NOT_CONFIGURED · READY · EXECUTED · SKIPPED_BY_POLICY · UNAVAILABLE · FAILED</text>
+
+    <rect class="nd-a" x="4" y="352" width="1592" height="78" rx="9"/>
+    <text class="t-lbl fx-a" x="26" y="380">why this is a competitive advantage, not a caveat</text>
+    <text class="t-body" x="26" y="410">A buyer’s legal team can only rely on a clean result if the system is capable of telling them when it is not. Silent degradation is what makes every other tool unusable as evidence.</text>
+
+    <g class="cal"><circle cx="494" cy="66" r="17"/><text x="494" y="72">1</text></g>
+    <g class="cal"><circle cx="1032" cy="66" r="17"/><text x="1032" y="72">2</text></g>
+    <g class="cal"><circle cx="1572" cy="66" r="17"/><text x="1572" y="72">3</text></g>
+    <g class="cal"><circle cx="1572" cy="258" r="17"/><text x="1572" y="264">4</text></g>
+  </svg>
+  <figcaption>A8 · Three outcomes that every other product collapses into one green tick.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>A clean result is a claim.</strong> It asserts that the declared catalogue was fully searched, and that assertion is checkable.</span></li>
+    <li><b>2</b><span><strong>Degradation is visible.</strong> If one reference image failed to embed, coverage drops and the scan says so rather than quietly skipping it.</span></li>
+    <li><b>3</b><span><strong>Empty is not clean.</strong> Scanning against nothing returns a distinct state, so an unconfigured workspace cannot look like a passing one.</span></li>
+    <li><b>4</b><span><strong>Per-capability truth.</strong> Each model records whether it ran, was skipped, or was unavailable, which is what makes the packet auditable later.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Ask any competing tool what happens when its detector times out. It returns a pass. Ours returns
+      <span class="mono">SCOPE_INCOMPLETE</span> with the reason code, because the only thing more
+      dangerous than a wrong answer is a confident one.
+    </p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════ A9 RETRIEVAL -->
+<section class="slide" id="a9">
+  <div class="slideHead">
+    <span class="slideNum">A9</span>
+    <h1>Retrieval at scale</h1>
+    <em>From one catalogue to ten million works</em>
+  </div>
+
+  <p class="kicker">
+    The expensive part of this system is comparing an image against every work that could have been
+    copied. We make that cheap with a <strong>three-tier funnel</strong>: exact identity first, then
+    approximate vector recall, and only then the heavy geometric proof.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 412" role="img" aria-label="Three tier retrieval funnel with costs and candidate counts at each tier">
+
+    <rect class="nd" x="4" y="46" width="240" height="300" rx="9"/>
+    <text class="t-lbl fx-dim" x="26" y="74">catalogue</text>
+    <text class="t-big" x="26" y="118">10 000 000</text>
+    <text class="t-sub" x="26" y="148">registered works in</text>
+    <text class="t-sub" x="26" y="170">the declared scope</text>
+    <text class="t-sub" x="26" y="214">Vectors are computed</text>
+    <text class="t-sub" x="26" y="236">once at registration,</text>
+    <text class="t-sub" x="26" y="258">then cached by content</text>
+    <text class="t-sub" x="26" y="280">hash plus model id.</text>
+    <text class="t-sub" x="26" y="316">An upgrade invalidates</text>
+    <text class="t-sub" x="26" y="338">that cache by design.</text>
+
+    <!-- tier 1 -->
+    <rect class="nd-a" x="272" y="46" width="410" height="132" rx="9"/>
+    <text class="t-lbl fx-a" x="294" y="74">tier 1 · exact identity</text>
+    <text class="t-title" x="294" y="106">SHA-256 and 64-bit pHash</text>
+    <text class="t-sub" x="294" y="136">A B-tree and a Hamming lookup.</text>
+    <text class="t-sub" x="294" y="158">Catches the re-upload case instantly.</text>
+    <text class="t-mono fx-a" x="598" y="136">&lt;5 ms</text>
+
+    <!-- tier 2 -->
+    <rect class="nd-copy" x="272" y="196" width="410" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="294" y="224">tier 2 · approximate recall</text>
+    <text class="t-title" x="294" y="256">HNSW over SSCD vectors</text>
+    <text class="t-sub" x="294" y="286">Sub-linear graph search, sharded by</text>
+    <text class="t-sub" x="294" y="308">workspace so scope is a hard boundary.</text>
+    <text class="t-mono fx-copy" x="294" y="336">recall@10 stays flat as the shard grows</text>
+
+    <!-- tier 3 -->
+    <rect class="nd-copy" x="710" y="46" width="410" height="300" rx="9"/>
+    <text class="t-lbl fx-copy" x="732" y="74">tier 3 · proof</text>
+    <text class="t-title" x="732" y="106">Geometry + structure</text>
+    <text class="t-sub" x="732" y="138">Runs on the eight shortlisted works</text>
+    <text class="t-sub" x="732" y="160">only — never on the catalogue.</text>
+    <text class="t-sub" x="732" y="196">Roughly 40 ms per candidate on CPU,</text>
+    <text class="t-sub" x="732" y="218">parallelised across the shortlist.</text>
+    <text class="t-mono fx-dim" x="732" y="258">small catalogues skip the funnel:</text>
+    <text class="t-mono fx-dim" x="732" y="280">at 64 works or fewer we verify every</text>
+    <text class="t-mono fx-dim" x="732" y="302">single one and report COMPLETE</text>
+    <text class="t-mono fx-copy" x="732" y="336">≈ 8 candidates at any scale</text>
+
+    <path class="ar" d="M 248 112 L 266 112" marker-end="url(#a1)"/>
+    <path class="ar" d="M 248 268 L 266 268" marker-end="url(#ac)"/>
+    <path class="ar" d="M 686 112 C 700 112 698 180 704 186" marker-end="url(#ac)"/>
+    <path class="ar" d="M 686 268 L 704 268" marker-end="url(#ac)"/>
+    <path class="ar" d="M 1124 196 L 1142 196" marker-end="url(#a2)"/>
+
+    <!-- economics -->
+    <rect class="nd-pass" x="1148" y="46" width="448" height="300" rx="9"/>
+    <text class="t-lbl fx-pass" x="1170" y="74">what the funnel buys</text>
+    <text class="t-big fx-pass" x="1170" y="122">2.4 s</text>
+    <text class="t-sub" x="1170" y="148">median end-to-end scan, cold cache</text>
+    <text class="t-big fx-pass" x="1170" y="204">O(log n)</text>
+    <text class="t-sub" x="1170" y="230">catalogue growth cost, not linear</text>
+    <text class="t-big fx-pass" x="1170" y="286">1 GPU</text>
+    <text class="t-sub" x="1170" y="312">serves roughly 40 000 scans a day,</text>
+    <text class="t-sub" x="1170" y="334">so unit cost stays in fractions of a cent</text>
+
+    <rect class="nd" x="4" y="368" width="1592" height="40" rx="7"/>
+    <text class="t-mono fx-dim" x="26" y="394">scope is enforced at the index, not filtered afterwards — a workspace cannot retrieve a vector belonging to another tenant, and row-level security repeats that boundary</text>
+
+    <g class="cal"><circle cx="658" cy="68" r="17"/><text x="658" y="74">1</text></g>
+    <g class="cal"><circle cx="658" cy="218" r="17"/><text x="658" y="224">2</text></g>
+    <g class="cal"><circle cx="1096" cy="68" r="17"/><text x="1096" y="74">3</text></g>
+    <g class="cal"><circle cx="1572" cy="68" r="17"/><text x="1572" y="74">4</text></g>
+  </svg>
+  <figcaption>A9 · Cheap filters run on everything, expensive proof runs on almost nothing. That ratio is what makes the economics work.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Identity before intelligence.</strong> Most real reuse is an unmodified re-upload, and a hash lookup answers that in milliseconds.</span></li>
+    <li><b>2</b><span><strong>Recall is sub-linear.</strong> A graph index means doubling the catalogue does not double the search time.</span></li>
+    <li><b>3</b><span><strong>The expensive stage is bounded.</strong> Geometry always runs on about eight images, so the slowest part of the pipeline has constant cost.</span></li>
+    <li><b>4</b><span><strong>Cost per scan is flat.</strong> That is what makes per-scan pricing viable rather than a bespoke enterprise deal every time.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      The naive version of this product compares one image against a million images and dies. We only
+      ever run the expensive proof on about eight candidates, so the cost of a scan barely moves as the
+      catalogue grows from a thousand works to ten million.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ A10 MODEL LAB -->
+<section class="slide" id="a10">
+  <div class="slideHead">
+    <span class="slideNum">A10</span>
+    <h1>Model Lab — how a model earns the right to run</h1>
+    <em>MLOps and reproducibility</em>
+  </div>
+
+  <p class="kicker">
+    No model reaches production because someone liked its demo. Each one climbs a
+    <strong>six-rung qualification ladder</strong> with a written gate at every rung, and the exact
+    bundle of versions that judged a scan is recorded inside that scan.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 444" role="img" aria-label="Six rung model qualification ladder with gates and the runtime bundle">
+
+    <rect class="nd" x="4" y="42" width="258" height="86" rx="9"/>
+    <text class="t-lbl fx-dim" x="26" y="70">rung 1</text>
+    <text class="t-body fx-txt" x="26" y="100">SOURCE_VERIFIED</text>
+    <text class="t-sub" x="26" y="120">weights hash-pinned</text>
+
+    <rect class="nd" x="278" y="42" width="258" height="86" rx="9"/>
+    <text class="t-lbl fx-dim" x="300" y="70">rung 2</text>
+    <text class="t-body fx-txt" x="300" y="100">RUNTIME_READY</text>
+    <text class="t-sub" x="300" y="120">loads and infers</text>
+
+    <rect class="nd" x="552" y="42" width="258" height="86" rx="9"/>
+    <text class="t-lbl fx-dim" x="574" y="70">rung 3</text>
+    <text class="t-body fx-txt" x="574" y="100">SMOKE_TEST_ONLY</text>
+    <text class="t-sub" x="574" y="120">too small to quote</text>
+
+    <rect class="nd-warn" x="826" y="42" width="258" height="86" rx="9"/>
+    <text class="t-lbl fx-warn" x="848" y="70">rung 4</text>
+    <text class="t-body fx-txt" x="848" y="100">DEMO_READY</text>
+    <text class="t-sub" x="848" y="120">visible in the product</text>
+
+    <rect class="nd-a" x="1100" y="42" width="258" height="86" rx="9"/>
+    <text class="t-lbl fx-a" x="1122" y="70">rung 5</text>
+    <text class="t-body fx-txt" x="1122" y="100">CALIBRATED</text>
+    <text class="t-sub" x="1122" y="120">held-out calibration</text>
+
+    <rect class="nd-pass" x="1374" y="42" width="222" height="86" rx="9"/>
+    <text class="t-lbl fx-pass" x="1396" y="70">rung 6</text>
+    <text class="t-body fx-txt" x="1396" y="100">PRODUCTION</text>
+    <text class="t-sub" x="1396" y="120">gates all passed</text>
+
+    <path class="ar" d="M 266 85 L 274 85" marker-end="url(#a1)"/>
+    <path class="ar" d="M 540 85 L 548 85" marker-end="url(#a1)"/>
+    <path class="ar" d="M 814 85 L 822 85" marker-end="url(#a1)"/>
+    <path class="ar" d="M 1088 85 L 1096 85" marker-end="url(#a1)"/>
+    <path class="ar-dec" d="M 1362 85 L 1370 85" marker-end="url(#a2)"/>
+
+    <!-- gates -->
+    <rect class="nd-a" x="4" y="164" width="780" height="158" rx="9"/>
+    <text class="t-lbl fx-a" x="26" y="192">the promotion gate · a written acceptance policy, not a judgement call</text>
+    <text class="t-body" x="26" y="226">Style ranking · CSLS top-1 lower bound</text>
+    <text class="t-mono fx-txt" x="620" y="226">≥ 0.70</text>
+    <text class="t-body" x="26" y="256">Copy recall at 5 · lower bound</text>
+    <text class="t-mono fx-txt" x="620" y="256">≥ 0.90</text>
+    <text class="t-body" x="26" y="286">Verification separability · ROC AUC lower bound</text>
+    <text class="t-mono fx-txt" x="620" y="286">≥ 0.75</text>
+    <text class="t-mono fx-dim" x="26" y="308">lower bound, never the point estimate — a lucky run cannot promote a model</text>
+
+    <rect class="nd" x="812" y="164" width="784" height="158" rx="9"/>
+    <text class="t-lbl fx-dim" x="834" y="192">what ships together · the runtime bundle</text>
+    <text class="t-body" x="834" y="224">One signed manifest names every component and its exact version:</text>
+    <text class="t-mono fx-txt" x="834" y="254">SSCD · CSD ViT-L · Community Forensics · Sightengine</text>
+    <text class="t-mono fx-txt" x="834" y="278">c2patool 0.27.7 · Tesseract · calibration registry</text>
+    <text class="t-mono fx-dim" x="834" y="304">every scan stores its bundle id, so any result can be reproduced years later</text>
+
+    <rect class="nd-warn" x="4" y="342" width="1592" height="98" rx="9"/>
+    <text class="t-lbl fx-warn" x="26" y="370">continuous drift monitoring</text>
+    <text class="t-body" x="26" y="400">Score distributions are compared against a stored baseline for every model, and a distribution shift raises an alert that can</text>
+    <text class="t-body" x="26" y="424">automatically demote it back to advisory — a model that silently changes behaviour is worse than one that is switched off.</text>
+
+    <g class="cal"><circle cx="1568" cy="64" r="17"/><text x="1568" y="70">1</text></g>
+    <g class="cal"><circle cx="756" cy="186" r="17"/><text x="756" y="192">2</text></g>
+    <g class="cal"><circle cx="1568" cy="186" r="17"/><text x="1568" y="192">3</text></g>
+    <g class="cal"><circle cx="1568" cy="364" r="17"/><text x="1568" y="370">4</text></g>
+  </svg>
+  <figcaption>A10 · Six rungs, a written gate, a signed bundle and a drift baseline. This is the part that turns a demo into a system.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Most models never reach the top.</strong> A model can be useful at rung four and still be barred from influencing a decision.</span></li>
+    <li><b>2</b><span><strong>Gates use confidence bounds.</strong> We promote on the lower bound of a Wilson interval, so a small favourable sample cannot pass a model.</span></li>
+    <li><b>3</b><span><strong>Reproducibility is a stored field.</strong> Given a scan id we can reconstruct the exact model set that produced it, which is what makes the evidence hold up.</span></li>
+    <li><b>4</b><span><strong>Demotion is automatic.</strong> Drift against the baseline pulls a model back down the ladder without waiting for a human to notice.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Every team here can show a model that works. The question is what happens on the four-hundredth
+      day, when the weights have been swapped twice and someone disputes a result from last March. We can
+      answer that, because the scan carries the bundle that judged it.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════ A11 EXPLAINABILITY -->
+<section class="slide" id="a11">
+  <div class="slideHead">
+    <span class="slideNum">A11</span>
+    <h1>Evidence Microscope — showing the work</h1>
+    <em>Explainability the user can act on</em>
+  </div>
+
+  <p class="kicker">
+    The reviewer sees the actual evidence, not a bar chart of a score. <strong>Six inspection modes, one
+    per question</strong>, each drawing on the same signed packet the API returned — so what is on screen
+    and what is in the record cannot diverge.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 414" role="img" aria-label="Six evidence microscope modes with what each one displays">
+
+    <rect class="nd-a" x="4" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-a" x="26" y="70">start here</text>
+    <text class="t-title" x="26" y="102">Summary</text>
+    <text class="t-sub" x="26" y="132">Plain-language verdict,</text>
+    <text class="t-sub" x="26" y="154">coverage badge and the</text>
+    <text class="t-sub" x="26" y="176">one action to take.</text>
+
+    <rect class="nd-orig" x="272" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-orig" x="294" y="70">ai check</text>
+    <text class="t-title" x="294" y="102">Origin</text>
+    <text class="t-sub" x="294" y="132">Which detector families</text>
+    <text class="t-sub" x="294" y="154">fired, their calibration</text>
+    <text class="t-sub" x="294" y="176">state, C2PA findings.</text>
+
+    <rect class="nd-copy" x="540" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="562" y="70">work match</text>
+    <text class="t-title" x="562" y="102">Copy</text>
+    <text class="t-sub" x="562" y="132">Verified support regions</text>
+    <text class="t-sub" x="562" y="154">outlined on both images,</text>
+    <text class="t-sub" x="562" y="176">plus matching point pairs.</text>
+
+    <rect class="nd-copy" x="808" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="830" y="70">match detail</text>
+    <text class="t-title" x="830" y="102">Structure</text>
+    <text class="t-sub" x="830" y="132">Post-alignment measures:</text>
+    <text class="t-sub" x="830" y="154">SSIM, luminance and</text>
+    <text class="t-sub" x="830" y="176">gradient agreement.</text>
+
+    <rect class="nd-prof" x="1076" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-prof" x="1098" y="70">creator</text>
+    <text class="t-title" x="1098" y="102">Style</text>
+    <text class="t-sub" x="1098" y="132">Profile name, sample</text>
+    <text class="t-sub" x="1098" y="154">count, consent state and</text>
+    <text class="t-sub" x="1098" y="176">the factor breakdown.</text>
+
+    <rect class="nd-prof" x="1340" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-prof" x="1362" y="70">creator detail</text>
+    <text class="t-title" x="1362" y="102">Style map</text>
+    <text class="t-sub" x="1362" y="132">A 4 × 4 tile heat map</text>
+    <text class="t-sub" x="1362" y="154">showing which areas drive</text>
+    <text class="t-sub" x="1362" y="176">the resemblance.</text>
+
+    <rect class="nd" x="4" y="218" width="1050" height="106" rx="9"/>
+    <text class="t-lbl fx-dim" x="26" y="246">how the overlays are specified</text>
+    <text class="t-body" x="26" y="278">Coordinates are normalised to the 0–1 image space and travel inside the evidence packet itself, so the</text>
+    <text class="t-body" x="26" y="302">same outline renders identically in the web app, in a PDF export, and in a customer’s own viewer.</text>
+
+    <rect class="nd-bad" x="1078" y="218" width="518" height="106" rx="9"/>
+    <text class="t-lbl fx-bad" x="1100" y="246">a strict rule</text>
+    <text class="t-body" x="1100" y="278">The microscope is downstream of everything.</text>
+    <text class="t-body" x="1100" y="302">It can never alter a verdict, only display one.</text>
+
+    <rect class="nd-pass" x="4" y="344" width="1592" height="66" rx="9"/>
+    <text class="t-lbl fx-pass" x="26" y="372">why this wins the room</text>
+    <text class="t-body" x="26" y="396">When a reviewer can point at the exact overlapping region and count the matching points, the conversation stops being about whether they trust the model.</text>
+
+    <g class="cal"><circle cx="768" cy="64" r="17"/><text x="768" y="70">1</text></g>
+    <g class="cal"><circle cx="1568" cy="64" r="17"/><text x="1568" y="70">2</text></g>
+    <g class="cal"><circle cx="1026" cy="240" r="17"/><text x="1026" y="246">3</text></g>
+    <g class="cal"><circle cx="1568" cy="240" r="17"/><text x="1568" y="246">4</text></g>
+  </svg>
+  <figcaption>A11 · Six modes, one packet. Everything on screen is a rendering of data that was signed and anchored.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Evidence, not attribution heat.</strong> We draw the geometrically verified correspondences, which are checkable, rather than a saliency blur that is not.</span></li>
+    <li><b>2</b><span><strong>Style gets its own view.</strong> A tile map shows resemblance is diffuse across the frame, which is precisely why it is not a copy.</span></li>
+    <li><b>3</b><span><strong>Portable coordinates.</strong> Normalised geometry means a customer can rebuild the same overlay in their own tooling from the packet alone.</span></li>
+    <li><b>4</b><span><strong>Read-only by design.</strong> The UI has no path to modify a verdict, so what a reviewer sees is what was recorded.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Explainability in most AI products means a percentage with a colour. Ours means the reviewer sees
+      the two images aligned, the matched region outlined, and the specific points that line up — and can
+      disagree with us on the evidence rather than on faith.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════ A12 RESPONSIBLE AI -->
+<section class="slide" id="a12">
+  <div class="slideHead">
+    <span class="slideNum">A12</span>
+    <h1>Responsible AI — the risks we designed against</h1>
+    <em>Risks &amp; challenges</em>
+  </div>
+
+  <p class="kicker">
+    A system that accuses people of copying has real failure costs. These are the five ways it could
+    cause harm and the <strong>structural control that makes each one hard to reach</strong> — controls in
+    the architecture, not promises in a policy document.
+  </p>
+
+  <table class="data">
+    <thead>
+      <tr>
+        <th style="width:44mm">Risk</th>
+        <th style="width:62mm">What it would look like</th>
+        <th>The structural control</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>False accusation of copying</td>
+        <td>An embedding finds two visually similar but independent works and the system calls it a match.</td>
+        <td>A match is impossible without a validated homography and aligned structural agreement. Similarity alone is capped at <span class="mono">INCONCLUSIVE</span>, and both confirmations use unrelated mathematics.</td>
+      </tr>
+      <tr>
+        <td>AI-detector false positives on human work</td>
+        <td>A heavily edited photograph is labelled machine-generated and the photographer is penalised.</td>
+        <td>The origin lane is advisory by default and cannot change the copy verdict. Two independent, individually calibrated families must agree, and disagreement produces a named inconclusive state.</td>
+      </tr>
+      <tr>
+        <td>Style policing</td>
+        <td>An artist is blocked for painting in a genre that resembles someone with a profile on the platform.</td>
+        <td>Consent is checked before scoring; the lane can only request human review; the word infringement never appears in a style finding. A profile needs at least three works before it exists at all.</td>
+      </tr>
+      <tr>
+        <td>Silent degradation</td>
+        <td>A model is unavailable, the scan returns clean, and a customer publishes believing they were checked.</td>
+        <td>Coverage and per-capability execution state are mandatory fields on every scan. An unrun stage produces <span class="mono">SCOPE_INCOMPLETE</span>, never a pass.</td>
+      </tr>
+      <tr>
+        <td>Creator data misuse</td>
+        <td>Registered works or creator profiles leak, or are used to train something the creator never agreed to.</td>
+        <td>Works stay in the customer’s own scope, enforced at the index and again by row-level security. Only 32-byte hashes ever reach the public chain, and nothing registered is used as training data.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        Notice that none of these controls are “we will be careful”. Each one is a place in the code where
+        the harmful outcome is structurally unreachable — a match cannot exist without geometry, a style
+        score cannot exist without consent.
+      </p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“What about bias across cultures or art traditions?”</q> The copy lane is geometric, so it is invariant to subject matter by construction. The style lane is the one with real exposure, which is exactly why it is consent-gated, advisory only, and gated behind a per-profile minimum sample count.</p>
+      <p><q>“Who is accountable when it is wrong?”</q> The customer’s policy made the decision and the packet shows the evidence it was based on. Both are versioned and both are anchored, so an incorrect outcome is investigable rather than deniable.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════ A13 BENCHMARKS -->
+<section class="slide" id="a13">
+  <div class="slideHead">
+    <span class="slideNum">A13</span>
+    <h1>Measured performance</h1>
+    <em>Evidence for the claims</em>
+  </div>
+
+  <p class="kicker">
+    Every number below comes from a harness in the repository that a judge can run. The benchmark is
+    built around <strong>transformations an infringer actually applies</strong> — crops, rotations,
+    mirrors, re-encodes and overlays — not a clean academic split.
+  </p>
+
+  <div class="grid4">
+    <div class="stat pass"><b>98.1%</b><span>of 364 transformed positives returned <span class="mono">MATCH_FOUND</span></span></div>
+    <div class="stat pass"><b>99.45%</b><span>returned match or review — only two cases missed outright</span></div>
+    <div class="stat pass"><b>0</b><span>false matches across 115 negative pairs</span></div>
+    <div class="stat accent"><b>26</b><span>distinct transformation families in the positive set</span></div>
+  </div>
+
+  <div class="split wide">
+    <div>
+      <h4>What the positive set contains</h4>
+      <table class="data">
+        <thead><tr><th style="width:50mm">Transformation family</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Crop, 60–95% of frame</td><td>Recovered by regional query views and absorbed by the homography.</td></tr>
+          <tr><td>Rotation, mirror, transpose</td><td>Mirror was a known miss at 0 of 14; the mirrored-descriptor retry now recovers 14 of 14.</td></tr>
+          <tr><td>JPEG re-encode, resize, blur</td><td>SSCD vectors move very little; geometry is unaffected.</td></tr>
+          <tr><td>Overlays, borders, colour shifts</td><td>Masked structural comparison ignores the added region rather than being dragged down by it.</td></tr>
+          <tr><td>Remaining failures</td><td>Two flat repetitive graphics with almost no distinctive keypoints — reported honestly as inconclusive rather than guessed.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h4>How the numbers are computed</h4>
+      <ul class="clean small">
+        <li><strong>Wilson intervals, not point estimates.</strong> Every rate is reported with a confidence interval, and promotion gates read the lower bound.</li>
+        <li><strong>Lineage-clustered bootstrap.</strong> Twenty-six transformations of one source image are not twenty-six independent samples, so resampling happens at the source-work level.</li>
+        <li><strong>Negatives are hard.</strong> The negative set is visually similar but independent work, which is the case that actually breaks embedding-only systems.</li>
+        <li><strong>Scores are labelled non-probabilistic.</strong> The evidence index is an ordering, and the packet says so explicitly rather than dressing it up as a percentage.</li>
+      </ul>
+
+      <div class="say">
+        <b>Say this</b>
+        <p>
+          The number I care about is the zero. Recall can be bought by lowering a threshold; zero false
+          matches on hard negatives is what makes the output usable by a legal team.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════ A14 PROOF LAYER -->
+<section class="slide" id="a14">
+  <div class="slideHead">
+    <span class="slideNum">A14</span>
+    <h1>Where the AI output becomes evidence</h1>
+    <em>Hand-off to the proof layer</em>
+  </div>
+
+  <p class="kicker">
+    An AI verdict that can be regenerated differently tomorrow is an opinion. <strong>We make the output
+    deterministic, sign it, and anchor its hash publicly</strong> — which is what converts a model result
+    into something a court can date.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 372" role="img" aria-label="Evidence packet is canonicalised, hashed, signed and anchored on chain">
+
+    <rect class="nd-copy" x="4" y="52" width="300" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="26" y="80">1 · evidence</text>
+    <text class="t-title" x="26" y="112">The packet</text>
+    <text class="t-sub" x="26" y="142">Three lane findings, coverage,</text>
+    <text class="t-sub" x="26" y="164">model bundle id, policy version,</text>
+    <text class="t-sub" x="26" y="186">verified region coordinates.</text>
+
+    <rect class="nd" x="332" y="52" width="300" height="150" rx="9"/>
+    <text class="t-lbl fx-dim" x="354" y="80">2 · canonical form</text>
+    <text class="t-title" x="354" y="112">Deterministic bytes</text>
+    <text class="t-sub" x="354" y="142">Sorted keys, fixed number</text>
+    <text class="t-sub" x="354" y="164">formatting — the same scan</text>
+    <text class="t-sub" x="354" y="186">always serialises identically.</text>
+
+    <rect class="nd" x="660" y="52" width="300" height="150" rx="9"/>
+    <text class="t-lbl fx-dim" x="682" y="80">3 · digest</text>
+    <text class="t-title" x="682" y="112">SHA-256</text>
+    <text class="t-sub" x="682" y="142">32 bytes standing in for the</text>
+    <text class="t-sub" x="682" y="164">entire finding. Change one</text>
+    <text class="t-sub" x="682" y="186">pixel of reasoning, change it.</text>
+
+    <rect class="nd" x="988" y="52" width="300" height="150" rx="9"/>
+    <text class="t-lbl fx-dim" x="1010" y="80">4 · signature</text>
+    <text class="t-title" x="1010" y="112">Ed25519</text>
+    <text class="t-sub" x="1010" y="142">Binds the finding to the</text>
+    <text class="t-sub" x="1010" y="164">issuing key, so authorship</text>
+    <text class="t-sub" x="1010" y="186">is provable off-chain.</text>
+
+    <rect class="nd-a" x="1316" y="52" width="280" height="150" rx="9"/>
+    <text class="t-lbl fx-a" x="1338" y="80">5 · anchor</text>
+    <text class="t-title" x="1338" y="112">Public chain</text>
+    <text class="t-sub" x="1338" y="142">The digest is committed on</text>
+    <text class="t-sub" x="1338" y="164">Base via EAS. Nothing about</text>
+    <text class="t-sub" x="1338" y="186">the image ever leaves.</text>
+
+    <path class="ar" d="M 308 127 L 326 127" marker-end="url(#a1)"/>
+    <path class="ar" d="M 636 127 L 654 127" marker-end="url(#a1)"/>
+    <path class="ar" d="M 964 127 L 982 127" marker-end="url(#a3)"/>
+    <path class="ar-pub" d="M 1292 127 L 1310 127" marker-end="url(#a4)"/>
+
+    <rect class="nd-pass" x="4" y="230" width="1010" height="128" rx="9"/>
+    <text class="t-lbl fx-pass" x="26" y="258">why determinism is an AI requirement, not a blockchain one</text>
+    <text class="t-body" x="26" y="292">A model that returns a slightly different phrasing or ordering on a re-run cannot be hashed, cannot be signed,</text>
+    <text class="t-body" x="26" y="316">and therefore cannot be evidence. Every choice in this pack — fixed enums instead of free text, an evidence</text>
+    <text class="t-body" x="26" y="340">index instead of a generated sentence — exists so the output is byte-stable.</text>
+
+    <rect class="nd-a" x="1042" y="230" width="554" height="128" rx="9"/>
+    <text class="t-lbl fx-a" x="1064" y="258">the pair of documents</text>
+    <text class="t-body" x="1064" y="292">This is the seam between the two packs. The AI</text>
+    <text class="t-body" x="1064" y="316">side produces a deterministic finding; the blockchain</text>
+    <text class="t-body" x="1064" y="340">side makes it undeniable. Sheet B3 continues here.</text>
+
+    <g class="cal"><circle cx="608" cy="74" r="17"/><text x="608" y="80">1</text></g>
+    <g class="cal"><circle cx="936" cy="74" r="17"/><text x="936" y="80">2</text></g>
+    <g class="cal"><circle cx="1568" cy="74" r="17"/><text x="1568" y="80">3</text></g>
+    <g class="cal"><circle cx="986" cy="252" r="17"/><text x="986" y="258">4</text></g>
+  </svg>
+  <figcaption>A14 · The AI pipeline is designed backwards from this requirement: the output must be byte-identical on a re-run.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Fixed vocabulary, not prose.</strong> Enums and numbers serialise identically every time; a generated sentence does not.</span></li>
+    <li><b>2</b><span><strong>The digest covers the reasoning.</strong> Model versions and policy version are inside the hashed packet, so nobody can later claim a different configuration was used.</span></li>
+    <li><b>3</b><span><strong>Only 32 bytes go public.</strong> The image, the catalogue and the customer’s identity never cross the boundary.</span></li>
+    <li><b>4</b><span><strong>Determinism is the constraint that shaped the AI.</strong> It is why we did not build this on a large multimodal model that writes an explanation.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      This is why the two submissions are one system. The AI decides what is true about the image; the
+      chain makes it impossible for anyone — including us — to change that answer afterwards.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ A15 ARMORY 1 -->
+<section class="slide" id="a15">
+  <div class="slideHead">
+    <span class="slideNum">A15</span>
+    <h1>Q&amp;A armory — the hard technical questions</h1>
+    <em>Part one of two</em>
+  </div>
+
+  <p class="kicker">
+    Each answer is two or three sentences, followed by the sheet to turn to. Answer, then point — do not
+    read the sheet aloud.
+  </p>
+
+  <div class="armory">
+    <div class="qa">
+      <p class="q"><small>Question 01</small>Why not just use one large multimodal model?</p>
+      <p class="a">
+        Because the output has to be byte-identical on a re-run, or it cannot be hashed, signed or
+        anchored. A general model writes a plausible sentence that changes between runs, which is
+        interesting but is not evidence.
+        <span class="pt">Turn to <b>A14</b> · the determinism panel</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 02</small>AI detectors are famously unreliable. Why trust yours?</p>
+      <p class="a">
+        We do not, and the architecture says so. Origin detection is the weakest tier of a three-tier
+        ladder, requires two independently calibrated model families to agree, and is advisory by
+        default — it cannot block anything on its own.
+        <span class="pt">Turn to <b>A5</b> · the ladder, bottom tier</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 03</small>Isn’t this reverse image search with extra steps?</p>
+      <p class="a">
+        Reverse search finds similar pictures on the open web and stops there. We search a declared
+        rights-bearing catalogue, then geometrically prove which region of which work was reused, and
+        return the matching point pairs as evidence.
+        <span class="pt">Turn to <b>A4</b> · steps two and three</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 04</small>These are all off-the-shelf models. Where is the novelty?</p>
+      <p class="a">
+        The novelty is not a new backbone, it is the evidence contract around them: three separated
+        lanes, mandatory coverage reporting, a firewall between detection and policy, and a
+        deterministic packet that can be anchored. Nobody else outputs something a lawyer can use.
+        <span class="pt">Turn to <b>A7</b> · then <b>A8</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 05</small>What stops an adversarial image fooling you?</p>
+      <p class="a">
+        An adversarial perturbation can push an embedding around, so at worst it gets a work into or out
+        of an eight-item shortlist. It cannot fabricate twelve geometrically consistent keypoint
+        correspondences with an image it never copied.
+        <span class="pt">Turn to <b>A4</b> · callout two</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 06</small>What did you train, and on whose data?</p>
+      <p class="a">
+        We train no backbone on customer material — registered works are never training data. What we
+        fit is calibration: a two-parameter mapping learned on held-out labelled data, plus per-profile
+        prototypes built only from works a creator consented to enrol.
+        <span class="pt">Turn to <b>A10</b> · rung five, and <b>A6</b> · the consent gate</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 07</small>What is the latency, and can it run in a real workflow?</p>
+      <p class="a">
+        The API accepts in under a fifth of a second and the full scan completes in about two and a half
+        seconds, because the heavy geometry only ever runs on eight candidates regardless of catalogue
+        size.
+        <span class="pt">Turn to <b>A9</b> · the funnel, then <b>A2</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 08</small>What happens when a new generator appears next month?</p>
+      <p class="a">
+        A new detector is added as an additional evidence family and enters at the bottom of the
+        qualification ladder; it cannot influence a result until it is calibrated and passes the written
+        gate. Meanwhile the copy and profile lanes are entirely unaffected.
+        <span class="pt">Turn to <b>A10</b> · the ladder and the gate</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ A16 ARMORY 2 -->
+<section class="slide" id="a16">
+  <div class="slideHead">
+    <span class="slideNum">A16</span>
+    <h1>Q&amp;A armory — risk, ethics and business</h1>
+    <em>Part two of two</em>
+  </div>
+
+  <p class="kicker">
+    If a question is not here, answer it with the same shape: name the risk, then point to where in the
+    architecture it is made unreachable.
+  </p>
+
+  <div class="armory">
+    <div class="qa">
+      <p class="q"><small>Question 09</small>Detecting artistic style is legally dangerous. Aren’t you exposed?</p>
+      <p class="a">
+        Style is not copyrightable and we never claim it is. The lane is opt-in per creator, produces a
+        resemblance reading rather than a finding, and its maximum possible effect is to ask a human to
+        take a look.
+        <span class="pt">Turn to <b>A6</b> · the boundary panel</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 10</small>Prove the accuracy. Numbers, not adjectives.</p>
+      <p class="a">
+        Three hundred and sixty-four positives across twenty-six real transformation families: 98.1%
+        returned a match, 99.45% returned match or review, and zero of one hundred and fifteen hard
+        negatives produced a false match.
+        <span class="pt">Turn to <b>A13</b> · the four figures across the top</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 11</small>What if the model is wrong and someone is falsely accused?</p>
+      <p class="a">
+        A match requires two independent confirmations using unrelated mathematics, and even then the
+        system only ever produces evidence — the customer’s own policy decides the action. Every claim
+        comes with the region outlined so it can be disputed on the evidence.
+        <span class="pt">Turn to <b>A12</b> · row one, then <b>A11</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 12</small>Why does an AI product need blockchain at all?</p>
+      <p class="a">
+        Because the value of a pre-publication check is the date on it, and we are the party being paid
+        to produce that date. Anchoring the finding’s hash means our customer’s defence does not depend
+        on trusting us.
+        <span class="pt">Turn to <b>A14</b> · then the blockchain pack, <b>B1</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 13</small>How do you avoid bias against particular art traditions?</p>
+      <p class="a">
+        The copy lane is geometric, so it is invariant to subject and culture by construction. The style
+        lane is the one with genuine exposure, which is why it is consent-gated, advisory only, and
+        requires a minimum sample count before a profile can be scored.
+        <span class="pt">Turn to <b>A12</b> · row three</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 14</small>Do you keep customer images? What about privacy?</p>
+      <p class="a">
+        Media stays inside the customer’s own scope, enforced at the retrieval index and again by
+        row-level security in the database. Only a 32-byte hash is ever published, so nothing about the
+        image or the customer crosses the public boundary.
+        <span class="pt">Turn to <b>A9</b> · the footer, and <b>A14</b> · step five</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 15</small>Couldn’t Adobe or Google ship this next quarter?</p>
+      <p class="a">
+        They can ship detection; they cannot ship neutrality. A platform that also hosts the content
+        benefits from the answer, and a finding only counts if its author does not.
+        <span class="pt">Turn to <b>A7</b> · the firewall, then <b>B2</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 16</small>Who actually pays for this, and why?</p>
+      <p class="a">
+        Agencies, publishers and marketplaces absorbing takedown risk today with no record of having
+        checked. They are buying a dated, signed record of diligence, not detection.
+        <span class="pt">Turn to <b>A1</b> · then <b>A14</b></span>
+      </p>
+    </div>
+  </div>
+
+  <div class="say">
+    <b>Closing line for the session</b>
+    <p>
+      Most teams built a detector. We built the system a detector is one component of: it records what it
+      checked, what it could not, who decided and when — then makes all four impossible to quietly revise.
+    </p>
+  </div>
+</section>
+
+</td></tr></tbody></table>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- B7 · The counterparty’s private key never leaves their browser; only the recovered address is stored. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 398" role="img" aria-label="Five step counterparty co-attestation flow using EIP-712 signatures" overflow="visible" width='1600.0' height='398.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  </defs>
+  <!-- who performs each step, tagged above the box rather than as swimlanes,
+         because the actor alternates and true lanes would cross themselves -->
+    <text class="t-lbl fx-prof" x="24" y="40">counterparty</text>
+    <text class="t-lbl fx-a" x="346" y="202">creatorproof</text>
+    <text class="t-lbl fx-prof" x="668" y="40">counterparty wallet</text>
+    <text class="t-lbl fx-a" x="990" y="202">creatorproof</text>
+    <text class="t-lbl" x="1312" y="40" style="fill:#7fb3ff">base</text>
+
+    <!-- step 1 -->
+    <rect class="nd" x="24" y="58" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-dim" x="46" y="86">step 1</text>
+    <text class="t-title" x="46" y="116">Reviewer decides</text>
+    <text class="t-sub" x="46" y="142">accepts the evidence and</text>
+    <text class="t-sub" x="46" y="164">approves the asset for use</text>
+
+    <!-- step 2 api -->
+    <rect class="nd-a" x="346" y="220" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-a" x="368" y="248">step 2 · challenge</text>
+    <text class="t-title" x="368" y="278">Typed data issued</text>
+    <text class="t-mono" x="368" y="304">domain: chainId +</text>
+    <text class="t-mono" x="368" y="326">verifyingContract</text>
+
+    <!-- step 3 wallet -->
+    <rect class="nd" x="668" y="58" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-dim" x="690" y="86">step 3</text>
+    <text class="t-title" x="690" y="116">Wallet signs</text>
+    <text class="t-mono" x="690" y="142">eth_signTypedData_v4</text>
+    <text class="t-sub" x="690" y="164">key never leaves the browser</text>
+
+    <!-- step 4 verify -->
+    <rect class="nd-a" x="990" y="220" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-a" x="1012" y="248">step 4 · verify</text>
+    <text class="t-title" x="1012" y="278">Signer recovered</text>
+    <text class="t-sub" x="1012" y="304">address must be an active</text>
+    <text class="t-sub" x="1012" y="326">member in the registry</text>
+
+    <!-- step 5 chain -->
+    <rect class="nd-pass" x="1312" y="58" width="264" height="118" rx="9"/>
+    <text class="t-lbl fx-pass" x="1334" y="86">step 5 · anchored</text>
+    <text class="t-title fx-pass" x="1334" y="116">Co-attestation</text>
+    <text class="t-mono" x="1334" y="142">refUID → our</text>
+    <text class="t-mono" x="1334" y="164">attestation</text>
+
+    <path class="ar" d="M 314 130 C 420 130 400 210 470 214" marker-end="url(#a1)"/>
+    <path class="ar-sig" d="M 636 264 C 700 264 660 180 696 172" marker-end="url(#a3)"/>
+    <path class="ar-sig" d="M 958 130 C 1060 130 1050 208 1112 214" marker-end="url(#a3)"/>
+    <path class="ar-pub" d="M 1280 264 C 1360 264 1360 190 1400 182" marker-end="url(#a4)"/>
+
+    <!-- binding annotation -->
+    <rect class="nd-a" x="24" y="220" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-a" x="46" y="248">the binding</text>
+    <text class="t-body" x="46" y="278">Their signature covers the</text>
+    <text class="t-body" x="46" y="300">exact packet hash we anchored,</text>
+    <text class="t-body" x="46" y="322">so neither side can drift.</text>
+
+    <g class="cal"><circle cx="470" cy="130" r="17"/><text x="470" y="136">1</text></g>
+    <g class="cal"><circle cx="668" cy="216" r="17"/><text x="668" y="222">2</text></g>
+    <g class="cal"><circle cx="1030" cy="130" r="17"/><text x="1030" y="136">3</text></g>
+    <g class="cal"><circle cx="1300" cy="188" r="17"/><text x="1300" y="194">4</text></g>
+</svg>

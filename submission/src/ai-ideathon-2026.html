@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — AI Ideathon 2026 Submission</title>
+<link rel="stylesheet" href="../assets/doc.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="coverMark"><b>CreatorProof</b><span></span>AI Ideathon 2026<span></span>Submission PDF</div>
+
+  <div class="coverBody">
+    <h1 class="coverTitle">See what matches.<em>Prove what you checked.</em></h1>
+    <p class="coverLead">
+      Official Cognisor AI Ideathon 2026 submission. This document answers every published
+      judging question, then the remaining submission questions in the Official Rules, so a
+      judge can evaluate the project without a live explanation.
+    </p>
+  </div>
+
+  <div>
+    <div class="coverLanes">
+      <div class="coverLane laneCopy" style="--tone:#37d4dc">
+        <b>Lane 1 · Copy</b>
+        <span>Does this reuse a work already registered in the declared catalog?</span>
+      </div>
+      <div class="coverLane laneOrigin" style="--tone:#f07ab7">
+        <b>Lane 2 · Origin</b>
+        <span>What evidence exists that a generative model was involved?</span>
+      </div>
+      <div class="coverLane laneProfile" style="--tone:#ffbd59">
+        <b>Lane 3 · Profile</b>
+        <span>Does it resemble a specific creator’s body of work?</span>
+      </div>
+    </div>
+
+    <div class="coverFoot">
+      <div>
+        <b>Event</b>AI Ideathon 2026 · AI for Real World Impact
+        <br>Theme area · Open Innovation / Business Productivity
+      </div>
+      <div style="text-align:right">
+        <b>Build</b>CreatorProof v0.10.0
+        <br>MODEL-ACCURACY-HARDENING-2026.08.10
+      </div>
+    </div>
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+<!-- ══════════════════════════════════════════════════════════ 00 IDENTITY -->
+<section class="flow">
+  <div class="sectionHead">
+    <span class="sectionNum">00</span>
+    <h1>Official submission identity</h1>
+  </div>
+
+  <p class="kicker">
+    Fields required by the Cognisor portal and Section 5 of the Official Rules. Paste-ready.
+    Every link below must remain public; judges must not be asked for access.
+  </p>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:42mm">Project title</td><td><strong>CreatorProof</strong> — visual rights intelligence</td></tr>
+      <tr><td>Team name</td><td>CreatorProof</td></tr>
+      <tr><td>Member names</td><td>Ahnaf Zakaria · Mujtahidul Hasan Sami · Farhan Tanvir · Anindya Debnath Ani</td></tr>
+      <tr>
+        <td>Short description</td>
+        <td>
+          Agencies, brands and marketplaces must check images before they publish, but “is this
+          safe?” is three different questions. CreatorProof runs independent AI lanes for copy,
+          AI-origin and creator resemblance, applies the customer’s policy as PASS / REVIEW / BLOCK,
+          and seals the result into a receipt a third party can verify. It returns evidence, not a
+          legal infringement finding.
+        </td>
+      </tr>
+      <tr><td>Theme</td><td>AI for Real World Impact · Open Innovation, with a Business Productivity wedge</td></tr>
+      <tr><td>Target users</td><td>Creative agencies (beachhead), brand studios, marketplaces, publishers; creators as the free supply side</td></tr>
+      <tr>
+        <td>Project URL</td>
+        <td class="m"><a href="https://creatorproof.uaenorth.cloudapp.azure.com/">https://creatorproof.uaenorth.cloudapp.azure.com/</a>
+          · Artist <code>/artist</code> · Checker <code>/user</code></td>
+      </tr>
+      <tr>
+        <td>Source code</td>
+        <td class="m"><a href="https://github.com/AhnafZ778/CreatorProof">https://github.com/AhnafZ778/CreatorProof</a></td>
+      </tr>
+      <tr><td>Demo video URL</td><td>Submitted in the portal Demo Video field (public, playable without sign-in)</td></tr>
+      <tr><td>Stage</td><td>Working end-to-end prototype: FastAPI evidence API + Next.js portals. Not a mockup.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <h4>Portal short description (copy this; well over 40 characters)</h4>
+    <p>
+      Publishers have to decide whether an image is safe to release. That is really three questions
+      — reuse, AI origin, and style resemblance — and today’s tools answer them with one unverifiable
+      number. CreatorProof keeps the questions separate, uses AI to nominate and classical geometry
+      to verify, then records the decision as a signed receipt.
+    </p>
+  </div>
+
+  <h2>Contents</h2>
+  <div class="toc">
+    <a href="#judging"><b>01</b> Judging criteria — every published question</a>
+    <a href="#problem"><b>02</b> Problem</a>
+    <a href="#solution"><b>03</b> Solution</a>
+    <a href="#ai"><b>04</b> AI implementation</a>
+    <a href="#tech"><b>05</b> Product and technical approach</a>
+    <a href="#ux"><b>06</b> User experience</a>
+    <a href="#responsible"><b>07</b> Responsible AI</a>
+    <a href="#prototype"><b>08</b> Current prototype vs later</a>
+    <a href="#impact"><b>09</b> Impact and future potential</a>
+    <a href="#video"><b>10</b> Video pitch answers</a>
+    <a href="#event"><b>11</b> What was built during the ideathon</a>
+    <a href="#demo"><b>12</b> Demo, live pitch, and presentation time</a>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ 01 JUDGING -->
+<section id="judging">
+  <div class="sectionHead">
+    <span class="sectionNum">01</span>
+    <h1>Judging criteria</h1>
+  </div>
+
+  <p class="lead">
+    Official Rules, Section 9. Each published question is answered in full, with evidence, and
+    with the gaps stated rather than hidden. Weights are the organiser’s.
+  </p>
+
+  <div class="weightRow">
+    <div class="stat accent"><b>25%</b><span>Problem fit and real-world impact</span></div>
+    <div class="stat"><b>20%</b><span>Innovation and idea quality</span></div>
+    <div class="stat"><b>20%</b><span>Technical implementation</span></div>
+    <div class="stat"><b>20%</b><span>Product potential and scalability</span></div>
+    <div class="stat"><b>15%</b><span>Demo and presentation</span></div>
+  </div>
+
+  <!-- 1. Problem Fit -->
+  <div class="criterion">
+    <div class="criterionBanner">
+      <b>1. Problem fit and real-world impact</b>
+      <em>Weight 25%</em>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 1.1</small>Is the problem clearly defined?</p>
+      <div class="a">
+        <p>
+          Yes. The problem is not “AI art” or “copyright on the internet.” It is a pre-publication
+          decision that organisations already have to make, and that they currently make with the
+          wrong unit of analysis.
+        </p>
+        <p>
+          Before a brand, agency, marketplace or publisher presses publish, someone must answer
+          <strong>three different questions</strong> about the same file:
+        </p>
+        <ul>
+          <li><strong>Reuse.</strong> Does this image contain a work that is already registered in the sources we are allowed to search?</li>
+          <li><strong>Origin.</strong> What evidence exists that a generative model was involved in producing it?</li>
+          <li><strong>Resemblance.</strong> Does it resemble a specific living creator’s body of work, even if no copy of a stored file is present?</li>
+        </ul>
+        <p>
+          The market sells one number for all three — “87% AI”, “93% similar”, “match found.” Each
+          collapse causes a different harm: origin-as-guilt, similarity-as-infringement,
+          style-as-authorship. A fourth failure is quieter: when a tool searches an incomplete
+          database and returns “no matches,” users hear “this image is clean.” That is a definition
+          of the problem, not a slogan: <em>publishers need a structured record of what was checked,
+          what was found, and what was decided — not a verdict dressed as a percentage.</em>
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 1.2</small>Is the problem meaningful for the intended users?</p>
+      <div class="a">
+        <p>
+          Yes, for people who already carry the cost. A single disputed campaign image can exceed a
+          year of software spend. Marketplace reviewers process takedowns with no shared evidence
+          packet and no consistent standard between shifts. Independent illustrators have no
+          practical way to register a work so that the organisations most likely to reuse it
+          actually consult that registration.
+        </p>
+        <table class="compact">
+          <thead>
+            <tr><th style="width:42mm">Intended user</th><th>Why it is meaningful to them</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Creative agency (beachhead)</td>
+              <td>Client contracts now demand originality warranties and AI disclosure. The agency cannot currently attach a defensible check to the invoice.</td>
+            </tr>
+            <tr>
+              <td>Brand in-house studio</td>
+              <td>Dozens of agencies and freelancers feed the same brand. There is no consistent pre-publication standard and no audit trail six months later.</td>
+            </tr>
+            <tr>
+              <td>Marketplace / UGC platform</td>
+              <td>Human review queues do not scale. Appeals need structured evidence, not a moderator’s memory.</td>
+            </tr>
+            <tr>
+              <td>Publisher / newsroom</td>
+              <td>Synthetic-media disclosure is moving from etiquette into policy. An editor’s gut is not a record.</td>
+            </tr>
+            <tr>
+              <td>Independent creator</td>
+              <td>Not the paying customer. They need a timestamped registration that is actually searched when a brand checks an asset — funded by the checking side.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          A Bangladeshi studio delivering to US/UK/EU clients is a concrete local instance of the
+          same problem: they can lose a Western contract because they cannot <em>show</em> they
+          checked, not because they stole anything.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 1.3</small>Does the solution address a genuine real-world need?</p>
+      <div class="a">
+        <p>
+          Yes. The need already exists as unpaid labour and residual legal risk. People reverse-image
+          search, squint, and hope. That workflow fails on the cases that matter: a mirrored crop
+          inside a social screenshot; a file with no Content Credentials; a style-mimic that copies
+          no stored pixels.
+        </p>
+        <p>
+          CreatorProof addresses the need that is actually in the job description — <strong>produce
+          a check you can stand behind</strong> — by:
+        </p>
+        <ul>
+          <li>searching a <em>declared</em> catalog and stating coverage before any “no match” language is allowed;</li>
+          <li>keeping copy, origin and profile as separate evidence, never averaged into an infringement score;</li>
+          <li>turning findings into the customer’s own PASS / REVIEW / BLOCK policy, with reason codes;</li>
+          <li>sealing the packet so a counterparty can verify it without trusting our database.</li>
+        </ul>
+        <p>
+          It does <strong>not</strong> pretend to replace a lawyer, crawl the open internet, or
+          certify that a work is human-made. Those are not the customer’s operational need; a
+          dated, scoped, inspectable record is.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 1.4</small>Could the solution create measurable value or impact?</p>
+      <div class="a">
+        <p>
+          Yes — in hours displaced, incidents avoided, and disputes that have a file instead of a
+          Slack thread. We model the beachhead (a 20–200 person agency, ~500 assets/month) as:
+        </p>
+        <table class="compact">
+          <thead>
+            <tr><th>Value lever</th><th>How it is measured</th><th class="num">Modelled annual</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Manual review labour</td><td>~6 minutes/asset displaced from reverse-image search</td><td class="num">$16,800</td></tr>
+            <tr><td>Late pulls / rework</td><td>Campaigns withdrawn after a problem surfaces post-publish</td><td class="num">$18,000</td></tr>
+            <tr><td>Claim expected value</td><td>Low-probability, high-cost disputes</td><td class="num">$4,500</td></tr>
+            <tr><td>CreatorProof Studio tier</td><td>Platform + included scan/catalog volume</td><td class="num">$7,200</td></tr>
+            <tr><td><strong>Modelled net</strong></td><td>Before counting retained-client value, which is the closer</td><td class="num"><strong>$32,100</strong></td></tr>
+          </tbody>
+        </table>
+        <p>
+          <strong>Honest gap:</strong> these figures are reasoned unit economics, not pilot
+          measurements or letters of intent. What the prototype already makes measurable, today, is
+          operational: scans completed, coverage state, match/review/no-match-in-checked-sources,
+          policy action, packet hash, and (when configured) an on-chain commitment. Impact after
+          adoption is “fewer blind publishes and a packet you can hand a client.” Impact we will
+          not claim until a customer corpus exists: a published false-positive rate on that corpus.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Innovation -->
+  <div class="criterion">
+    <div class="criterionBanner">
+      <b>2. Innovation and idea quality</b>
+      <em>Weight 20%</em>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 2.1</small>Is the idea creative?</p>
+      <div class="a">
+        <p>
+          The creative move is not a new neural net. It is refusing the product category the market
+          is in — <em>AI that issues a verdict</em> — and building the category organisations
+          actually need: <em>AI that produces evidence, with a proof that the evidence existed.</em>
+        </p>
+        <p>Four design choices are unusual in combination:</p>
+        <ul>
+          <li><strong>Lane separation enforced in code.</strong> Copy, origin and profile have different data, failure modes and legal meanings. They are never fused into an “infringement percentage.”</li>
+          <li><strong>Coverage before verdict.</strong> <code>NO_MATCH_IN_CHECKED_SOURCES</code> is impossible unless declared catalog coverage is <code>COMPLETE</code>. Incomplete searches cannot impersonate clearance.</li>
+          <li><strong>AI nominates; geometry verifies.</strong> A learned descriptor may propose a candidate. A match requires independent physical alignment and aligned-pixel corroboration.</li>
+          <li><strong>Joint witnessing.</strong> A second organisation can co-attest the same evidence commitment on chain, so a decision is not a single vendor’s word.</li>
+        </ul>
+        <p>
+          The product’s most distinctive behaviour is abstention: it will not emit its strongest
+          origin claim until independently verified, calibrated evidence families agree — and today
+          it says they do not. Shipping a system that visibly refuses to overclaim is the idea.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 2.2</small>Does the solution provide a meaningful improvement over existing approaches?</p>
+      <div class="a">
+        <p>
+          Existing tools optimise for one of the three questions and imply the other two.
+        </p>
+        <table>
+          <thead>
+            <tr><th style="width:36mm">Approach today</th><th>What it actually answers</th><th>What users wrongly hear</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Reverse image search</td>
+              <td>Near-duplicate pages the crawler has seen</td>
+              <td>“Not infringing” if nothing famous appears</td>
+            </tr>
+            <tr>
+              <td>AI-image detectors</td>
+              <td>A score under a specific training distribution</td>
+              <td>“This is / is not AI,” as a fact</td>
+            </tr>
+            <tr>
+              <td>Style / “who painted this” apps</td>
+              <td>Nearest embedding in a scraped set</td>
+              <td>Authorship, and therefore copying</td>
+            </tr>
+            <tr>
+              <td>Manual legal review</td>
+              <td>A real opinion, slowly, expensively</td>
+              <td>Unavailable at upload time</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          CreatorProof’s improvement is structural: <strong>scoped search, separated questions,
+          policy the customer owns, and a packet a third party can hash.</strong> A PASS means
+          “nothing against your policy in the sources we finished searching,” which is a weaker
+          sentence and a more useful one. We also recover transformations reverse-image search
+          often misses — mirror, crop, re-encode, screenshot chrome — because the copy lane is
+          built for reposts, not for web-index hits.
+        </p>
+        <p>
+          What we do not claim as an improvement: we do not search the open internet. A tool that
+          claims to have checked everywhere produces a “no match” that means nothing. Declared
+          catalogs are the honest scope.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 2.3</small>Is AI being used purposefully rather than simply added to the project?</p>
+      <div class="a">
+        <p>
+          Yes. Every question the product answers is a model question. The architecture exists to
+          <em>constrain</em> what those models are allowed to conclude. That is the opposite of a
+          chatbot bolted onto a dashboard.
+        </p>
+        <p><strong>Where AI is load-bearing:</strong></p>
+        <ul>
+          <li>SSCD retrieves likely copies from the catalog (including regional crops so a collage still nominates).</li>
+          <li>Community Forensics (and optional Sightengine) supply origin signal; C2PA is checked first because a signed manifest beats any detector.</li>
+          <li>CSD embeddings support creator-profile resemblance, with a content control so “same subject” is not mistaken for “same hand.”</li>
+          <li>Tesseract reads visible generator watermarks as a forgeable review cue, never as provenance.</li>
+        </ul>
+        <p><strong>Where AI is deliberately not allowed to finish the job:</strong></p>
+        <ul>
+          <li>A neural score cannot declare a copy. SIFT/ORB + USAC/MAGSAC homography and aligned structure must agree.</li>
+          <li>Origin scores are labelled <code>ORIGINAL_PRESERVING_QUALITY_WEIGHTED_ENSEMBLE_NOT_PROBABILITY</code>. They are not percentages of truth.</li>
+          <li>The profile lane cannot escalate policy on its own. Resemblance is not copying.</li>
+          <li>Optional OpenRouter text only explains structured metrics. It cannot change retrieval, match status, or policy.</li>
+        </ul>
+        <p>
+          Purpose is also governance: SHA-256-pinned model bundles, an evidence-family registry so
+          two clones of one detector cannot fake independence, a qualification ladder that
+          self-reports <code>RUNTIME_READY</code> rather than “production,” and
+          <code>automatic_promotion_allowed: false</code>. AI is used to see; rules are used to
+          decide what seeing is allowed to mean.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Technical -->
+  <div class="criterion">
+    <div class="criterionBanner">
+      <b>3. Technical implementation</b>
+      <em>Weight 20%</em>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 3.1</small>Has the team developed a functional prototype or convincing technical concept?</p>
+      <div class="a">
+        <p>
+          A functional prototype, not a concept deck. CreatorProof v0.10.0 is a running system:
+        </p>
+        <ul>
+          <li><strong>API.</strong> FastAPI 0.10.0 — catalog, scans, policy, review, proof, network co-attestation, webhooks, usage meters.</li>
+          <li><strong>Web.</strong> Next.js 16.3 / React 19 — marketing landing, Artist portal, User (checker) portal, Evidence Microscope, proof panel.</li>
+          <li><strong>Models on the copy/origin/profile path</strong> load from a pinned bundle (SSCD, Community Forensics, optional CSD). None of those three is a UI placeholder.</li>
+          <li><strong>Proof.</strong> Canonical SHA-256 packet, Ed25519 / COSE Sign1, RFC 6962-style Merkle log, EAS attestation pipeline on Base Sepolia when configured.</li>
+        </ul>
+        <p>
+          Public interface: <a href="https://creatorproof.uaenorth.cloudapp.azure.com/">creatorproof.uaenorth.cloudapp.azure.com</a>.
+          Source: <a href="https://github.com/AhnafZ778/CreatorProof">github.com/AhnafZ778/CreatorProof</a>.
+          End-to-end scans execute against the FastAPI backend on the same host. The Azure app
+          is the real product UI; detection is not simulated in the browser.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 3.2</small>Does the AI functionality work as described?</p>
+      <div class="a">
+        <p>
+          Yes, within the scope we state. We measured the copy lane on a harness we wrote
+          (<code>scripts/copy_detection_bench.py</code>): 14 source images × 26 real-world
+          transformations = 364 positive cases, plus 115 unrelated-image negatives.
+        </p>
+        <div class="grid4">
+          <div class="stat pass"><b>98.08%</b><span>positives returned <code>MATCH_FOUND</code></span></div>
+          <div class="stat pass"><b>99.45%</b><span>flagged match or review</span></div>
+          <div class="stat pass"><b>0</b><span>false matches on 115 negatives</span></div>
+          <div class="stat"><b>14/14</b><span>horizontal mirrors recovered after a dedicated retry path</span></div>
+        </div>
+        <p>
+          Residual failures are named: two misses, both a flat repetitive graphic under aggressive
+          crop or small rotation — SIFT cannot lock distinctive keypoints. We did not loosen
+          thresholds to erase those misses, because a false match is worse than a review referral.
+        </p>
+        <p>
+          Origin works as described, including the uncomfortable part: missing C2PA is
+          <code>NOT_PRESENT</code> (unknown, not human); the strongest origin class is suppressed
+          until calibrated independent families exist; we currently have one verified family, so
+          the system abstains from that class. Profile resemblance ranks with CSLS density
+          correction and stays advisory.
+        </p>
+        <p>
+          These numbers are our pipeline on our transformation set, not a public leaderboard.
+          That is disclosed in the product, not only here.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 3.3</small>Is the technical approach logical and feasible?</p>
+      <div class="a">
+        <p>
+          Logical because each stage uses the tool that is good at that stage, and feasible because
+          every stage already runs.
+        </p>
+        <div class="pipeline">
+          <div class="pipeStep">
+            <i>01 · Retrieve</i>
+            <b>Learned</b>
+            <span>SSCD (and pHash fallback) nominates catalog works, including regional crops for collages.</span>
+          </div>
+          <div class="pipeStep">
+            <i>02 · Verify</i>
+            <b>Classical</b>
+            <span>SIFT/ORB, ratio test, USAC/MAGSAC homography, mirror retry, aligned luminance/gradient/SSIM consensus.</span>
+          </div>
+          <div class="pipeStep">
+            <i>03 · Decide</i>
+            <b>Rules</b>
+            <span>Typed fusion + versioned customer policy. Fusion is not a second neural net, because a customer must be able to justify it.</span>
+          </div>
+          <div class="pipeStep">
+            <i>04 · Prove</i>
+            <b>Crypto</b>
+            <span>Deterministic packet hash, issuer signature, Merkle inclusion, optional 32-byte EAS attest. Artwork never goes on chain.</span>
+          </div>
+        </div>
+        <p>
+          Feasibility constraints are designed in: image size caps; catalog completeness bounds
+          (above the reference limit, a scan cannot claim complete no-match); crash-safe
+          persist-before-broadcast for chain writes; idempotency bound to bytes + catalog + intended
+          use. The approach scales first as an API with remote embeddings (the Render profile), then
+          as GPU workers — not as a laptop demo that cannot leave the laptop.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 3.4</small>Can the team clearly explain how the system works?</p>
+      <div class="a">
+        <p>
+          Yes. One sentence, then the moving parts.
+        </p>
+        <div class="note good">
+          <h4>The system in one sentence</h4>
+          <p>
+            You declare a catalog and an intended use, we run three independent evidence lanes over
+            the image, we apply <em>your</em> policy, and we hand you a signed packet whose hash can
+            be checked without trusting us.
+          </p>
+        </div>
+        <p>
+          A creator registers a reference in the Artist portal; an AI-origin gate can refuse
+          enrollment and returns the score and threshold so the refusal is contestable. A checker
+          drops a candidate in the User portal, sees catalog size <em>before</em> the scan (so an
+          empty catalog cannot look like clearance), watches stage progress, then reads: one bottom
+          line, three lane cards, an Evidence Microscope with actual keypoint correspondences, and
+          a proof status. Policy is a versioned document with a dry-run endpoint. Proof is four
+          independently checkable layers: canonical hash, signature, transparency log, public
+          anchor.
+        </p>
+        <p>
+          This PDF, the README, and the live UI use the same vocabulary on purpose: match status,
+          policy action, coverage, not “infringement %.”
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Product potential -->
+  <div class="criterion">
+    <div class="criterionBanner">
+      <b>4. Product potential and scalability</b>
+      <em>Weight 20%</em>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 4.1</small>Could the solution develop into a usable product, startup, or scalable initiative?</p>
+      <div class="a">
+        <p>
+          Yes. The prototype is already shaped as a product, not as a notebook: multi-tenant API
+          keys, PostgreSQL row-level security, idempotent scans, append-only usage meters (scans,
+          protected assets, storage, GPU seconds, anchors), signed webhooks, first-party Python and
+          TypeScript SDKs, versioned policies, review cases.
+        </p>
+        <p>
+          The startup shape is a B2B API with two portals. Revenue is a three-part tariff already
+          instrumented in code: platform fee (audit continuity), catalog fee (network asset),
+          metered scans (value alignment). Studio / Growth / Platform list prices are
+          $299 / $1,200 / $4,500 per month, with forensic and anchor overages.
+        </p>
+        <p>
+          Scalability is catalog-shaped: each registered work makes every future scan more useful
+          to every customer who shares or consults that catalog. Co-attestation makes switching
+          costly once two organisations have jointly witnessed a decision. Those are product
+          properties, not slide-deck network effects.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 4.2</small>Is there a clearly identifiable target user or customer?</p>
+      <div class="a">
+        <p>
+          Yes. We do not start with “everyone who uses images.”
+        </p>
+        <table class="compact">
+          <tbody>
+            <tr><td style="width:44mm">Beachhead customer</td><td>Creative agency or production studio, 20–200 people, running paid campaigns</td></tr>
+            <tr><td>Economic buyer</td><td>Head of production or operations director — one signature, no procurement theatre</td></tr>
+            <tr><td>Champion</td><td>Producer / traffic manager who currently performs the check by hand</td></tr>
+            <tr><td>Trigger</td><td>A near-miss, a new MSA originality clause, a client AI-disclosure questionnaire, or an actual claim</td></tr>
+            <tr><td>Disqualifiers</td><td>No contractual originality terms; very low volume; expects a legal determination or a web-wide crawl</td></tr>
+            <tr><td>Not the buyer</td><td>Consumers wanting a free “is this AI?” button; independent artists (supply side, free registration)</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Expansion path is built into the artefact: the agency’s proof packet is seen by every
+          client it serves, which is distribution into brands without a second sales motion.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 4.3</small>Can the solution grow beyond the hackathon?</p>
+      <div class="a">
+        <p>
+          Yes. The next product steps are customer-corpus calibration, a first agency pilot, live
+          Base Sepolia (or mainnet L2) anchoring in the default demo path, and catalog network
+          effects between agencies that already share talent.
+        </p>
+        <p>
+          Technical growth is already sequenced in the repo: remote embedding workers so the API
+          does not ship 2+ GB of weights in every process; S3-compatible media; review queues for
+          the REVIEW bucket; SSO and private deployment for enterprise. None of those require
+          rewriting the evidence model. The lanes, coverage rule, and packet schema are the
+          durable core.
+        </p>
+        <p>
+          What does not automatically grow: accuracy on a customer’s actual archive. That takes
+          labelled pairs and a human promotion record. The qualification ladder exists so we
+          cannot paper over that with a version bump.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 4.4</small>Is there potential for adoption, commercialization, partnership, or future funding?</p>
+      <div class="a">
+        <p>
+          <strong>Adoption.</strong> The buyer already has budget under “production risk” and
+          “client compliance.” Integration is an API plus two portals, or an SDK in an existing
+          DAM / traffic tool. Switching cost rises with retained audit history and co-signed packets.
+        </p>
+        <p>
+          <strong>Commercialization.</strong> Metered B2B SaaS with a free creator registration
+          surface. Meters already exist as append-only records; billing is an invoicing layer, not
+          a new architecture.
+        </p>
+        <p>
+          <strong>Partnership.</strong> Natural counterparts are stock/licensing platforms (intake
+          gate + co-attestation of licence decisions), marketplace trust-and-safety, C2PA / Content
+          Credentials implementers, and agency holding groups that want one standard across shops.
+        </p>
+        <p>
+          <strong>Funding.</strong> The case is infrastructure with a wedge, not a consumer app:
+          acute pain, small buying committee, expanding catalog as a moat. We do not claim a round
+          in progress. We do claim a product that is fundable once a pilot produces a measured
+          review-hour delta and a zero-surprise false-match record on that customer’s corpus.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Demo -->
+  <div class="criterion">
+    <div class="criterionBanner">
+      <b>5. Demo and presentation</b>
+      <em>Weight 15%</em>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 5.1</small>Is the problem communicated clearly?</p>
+      <div class="a">
+        <p>
+          Yes, as three questions a non-technical buyer already recognises, not as a research
+          abstract. The landing line is the problem: <em>See what matches. Prove what you checked.</em>
+          The supporting line states the three questions, the policy outcomes, and the legal
+          boundary in one paragraph — the same paragraph used on
+          <a href="https://creatorproof.uaenorth.cloudapp.azure.com">the live site</a>.
+        </p>
+        <p>
+          In the video and the four-minute live pitch we open with a concrete scene (a mirrored,
+          cropped repost of a registered work) rather than a market-size slide, so the problem is
+          visible before it is named.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 5.2</small>Is the proposed solution easy to understand?</p>
+      <div class="a">
+        <p>
+          The UI is built so a reviewer who has never read this PDF can still operate it: one
+          bottom line, then three question cards (Was AI used? Does it reuse a work? Does it
+          resemble a creator?), then optional forensic detail. Colour encodes lane identity, not
+          guilt. PASS / REVIEW / BLOCK are the only decision colours.
+        </p>
+        <p>
+          The conceptual load is four words: <strong>submit → evidence → policy → proof.</strong>
+          We repeatedly say what it is not, because a misunderstood “AI copyright judge” would be
+          easy to understand and wrong. Clarity here includes the boundary.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 5.3</small>Does the demonstration effectively show the project’s main functionality?</p>
+      <div class="a">
+        <p>
+          The demo is the real pipeline, not slides of the pipeline. Main functionality shown:
+        </p>
+        <ol>
+          <li><strong>Register</strong> a human-claimed work in <code>/artist</code>. An obviously generative file is refused at the origin gate, with score and threshold visible.</li>
+          <li><strong>Scan</strong> a hard derivative in <code>/user</code>: mirrored, cropped, re-encoded JPEG — not an identical file.</li>
+          <li><strong>Watch</strong> stages run; lanes resolve independently; copy reports a match.</li>
+          <li><strong>Inspect</strong> the Evidence Microscope: correspondence lines on pixels, aligned region, mirrored label if applicable.</li>
+          <li><strong>Read</strong> coverage (what was searched) and the signed receipt / proof status.</li>
+        </ol>
+        <p>
+          That sequence is the product. A recorded backup of the same path exists for the Final
+          Pitch Round if live networking fails, as the Official Rules require.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 5.4</small>Can the team communicate its value within the allocated presentation time?</p>
+      <div class="a">
+        <p>
+          Yes. Official Rules allocate a <strong>3-minute video</strong> for all teams and, for
+          finalists, a <strong>4-minute live pitch plus 2–3 minutes of questions</strong>. We treat
+          those as hard clocks, not as “about four minutes.”
+        </p>
+        <table class="compact">
+          <thead>
+            <tr><th style="width:28mm">Slot</th><th>What we spend it on</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Video · 3:00</td><td>Problem (who hurts) → solution (three lanes + receipt) → live prototype → impact → one-sentence future. No architecture tour.</td></tr>
+            <tr><td>Live · 4:00</td><td>~45s problem, ~45s architecture-in-plain-language, ~2:00 live register+scan+microscope, ~30s impact/ask, ~20s boundary (“not a legal finding”).</td></tr>
+            <tr><td>Q&amp;A · 2–3:00</td><td>Prepared on: false-match posture, why we don’t crawl the web, origin abstention, who pays, what is on chain (32 bytes), what was built during the event.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Value, in the time we have: <em>a check you can show a client, on the cases reverse-image
+          search misses, without pretending to be a court.</em>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ 02 PROBLEM -->
+<section id="problem">
+  <div class="sectionHead">
+    <span class="sectionNum">02</span>
+    <h1>Problem</h1>
+  </div>
+  <p class="kicker">Official Rules — Submission PDF item 1. Also the video-pitch problem beat.</p>
+
+  <h2>What real-world problem are you solving?</h2>
+  <p>
+    Commercial image pipelines move faster than they can account for. A file can be generated,
+    commissioned, scraped, mirrored, screenshot and published under a brand name in an afternoon.
+    The organisation still has to decide whether publishing it is defensible, and today that
+    decision is unstructured: a person, a reverse-image tab, and no artefact that survives contact
+    with a client, a moderator appeal, or a lawyer six months later.
+  </p>
+  <p>
+    Generative models made origin visually ambiguous. Style mimicry became a one-prompt operation.
+    Content Credentials (C2PA) shipped in cameras and editors, which created a standard to build
+    on — and a new failure mode when the manifest is absent. Disclosure obligations moved into
+    contracts and platform policy. The problem is the missing <strong>record</strong> at the
+    moment of publication.
+  </p>
+
+  <h2>Who experiences this problem?</h2>
+  <p>
+    Production and legal-ops people inside agencies and brands; trust-and-safety reviewers on
+    marketplaces; picture desks in newsrooms; and the illustrators whose work is the catalog those
+    organisations ought to be searching. Neither the brand manager nor the artist is the villain.
+    The villain is a supply chain with no receipts.
+  </p>
+
+  <h2>Why does it matter?</h2>
+  <p>
+    Because the cost of a wrong publish is asymmetric. A false accusation damages a living artist.
+    A missed reuse damages a rights-holder and the publisher’s client relationship. A confident
+    “no match” on an incomplete search manufactures liability. Creative work is a large commercial
+    surface with none of the batch records that every other regulated industry takes for granted.
+    It matters now because the old heuristic — “I can tell by looking” — stopped working.
+  </p>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════ 03 SOLUTION -->
+<section id="solution">
+  <div class="sectionHead">
+    <span class="sectionNum">03</span>
+    <h1>Solution</h1>
+  </div>
+  <p class="kicker">Official Rules — Submission PDF item 2. Also the video-pitch solution beat.</p>
+
+  <h2>What did you build?</h2>
+  <p class="lead">
+    CreatorProof is a pre-publication creative-rights evidence API and two portals. It runs three
+    independent AI lanes over a candidate image, keeps their findings separate, applies a versioned
+    customer policy to produce PASS, REVIEW or BLOCK, and seals the result into a signed evidence
+    packet. Optionally, a 32-byte commitment is attested on a public chain. The artwork never is.
+  </p>
+
+  <h2>How does the solution address the problem?</h2>
+  <div class="grid3">
+    <div class="card lane laneCopy">
+      <h4>Stored-work copy</h4>
+      <p class="small">Learned retrieval nominates; geometry and aligned pixels verify. Answers which registered work is present, and where in the frame.</p>
+    </div>
+    <div class="card lane laneOrigin">
+      <h4>AI origin</h4>
+      <p class="small">C2PA first, then a detector ensemble under stress views, then OCR of visible labels. Answers what evidence of generative involvement exists — and how strong it is.</p>
+    </div>
+    <div class="card lane laneProfile">
+      <h4>Creator profile</h4>
+      <p class="small">Style embeddings against consent-backed profiles, with a content control. Advisory only. Answers resemblance, never authorship.</p>
+    </div>
+  </div>
+  <p>
+    Coverage is reported before any clearance language. Policy belongs to the customer, so two
+    tenants can treat the same findings differently and both have an audit trail. Proof makes the
+    trail portable: a counterparty hashes the packet, checks the signature, and — if anchored —
+    checks a chain nobody in the deal controls.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════ 04 AI -->
+<section id="ai">
+  <div class="sectionHead">
+    <span class="sectionNum">04</span>
+    <h1>AI implementation</h1>
+  </div>
+  <p class="kicker">
+    Official Rules — Submission PDF item 3: models, APIs, agents, data, automation, workflows,
+    limitations.
+  </p>
+
+  <h2>Models</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:34mm">Model</th>
+        <th style="width:32mm">Architecture</th>
+        <th style="width:24mm">Runs</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>SSCD <span class="faint mono">disc_mixup</span></td>
+        <td class="m">ResNet-50 family, 512-d</td>
+        <td class="m">Local · ~95 MB</td>
+        <td>Copy-detection retrieval. Meta AI Research; trained for copies, not generic similarity.</td>
+      </tr>
+      <tr>
+        <td>CSD ViT-L</td>
+        <td class="m">ViT-L, 768-d style</td>
+        <td class="m">Local · ~2.3 GB</td>
+        <td>Creator-profile resemblance. Optional; transparent low-level style fallback if absent.</td>
+      </tr>
+      <tr>
+        <td>Community Forensics</td>
+        <td class="m">ViT-S/16 @ 384px</td>
+        <td class="m">Local · ~84 MB</td>
+        <td>Synthetic-image detector across many generator families. Official eval transform (short side 440, center crop 384).</td>
+      </tr>
+      <tr>
+        <td>Sightengine <span class="faint mono">genai</span></td>
+        <td class="m">Vendor API</td>
+        <td class="m">Cloud · optional</td>
+        <td>Primary origin opinion when configured. Local detectors are fallback, not a second vote to shop for a better score.</td>
+      </tr>
+      <tr>
+        <td>Tesseract OCR 5.3.4</td>
+        <td class="m">LSTM text</td>
+        <td class="m">Local CLI</td>
+        <td>Visible “AI generated” labels. Review signal; never trusted provenance.</td>
+      </tr>
+      <tr>
+        <td><code>c2patool</code> 0.27.7</td>
+        <td class="m">C2PA implementation</td>
+        <td class="m">Local CLI</td>
+        <td>Signed Content Credentials. Pinned binary digest. Absence is unknown, not human.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="small muted">
+    Neural artefacts are pinned by SHA-256 in the model-bundle manifest and validated at startup.
+    A silently swapped weight file is a boot failure, not a mystery later.
+  </p>
+
+  <h2>APIs and agents</h2>
+  <p>
+    There is no autonomous agent that publishes, sues, or “decides infringement.” The product is a
+    request/response evidence service: <code>POST /v1/scans</code> returns a scan id; detection
+    runs asynchronously; the UI polls stages. Optional OpenRouter is an explainer over structured
+    metrics only. Optional remote embedding HTTP services supply SSCD/CSD vectors in the lean
+    Render deployment so the API container does not load PyTorch.
+  </p>
+
+  <h2>Data</h2>
+  <p>
+    Tenant catalogs of registered reference works (fingerprints, cached descriptors, claim state).
+    Consent-backed creator-profile manifests. Candidate bytes retained on a short window.
+    PostgreSQL with RLS for tenant isolation; SQLite for local development; private object storage
+    for media. Evaluation data for the copy benchmark is 14 sources × 26 transforms, produced by
+    us, not a scraped public leaderboard. No personal data is written on chain — only a 32-byte hash.
+  </p>
+
+  <h2>Automation and AI workflows</h2>
+  <ol>
+    <li>Intake: image + catalog + intended use + idempotency key.</li>
+    <li>Copy workflow: regional SSCD nomination → geometric verify (mirror retry if needed) → aligned structure → rule-based fusion.</li>
+    <li>Origin workflow: C2PA → optional Sightengine on original bytes → local detector under ten stress views → OCR → family-aware fusion with abstention.</li>
+    <li>Profile workflow: CSD (or transparent fallback) → CSLS ranking → content confound control → advisory card only.</li>
+    <li>Policy workflow: versioned rules consume typed findings; dry-run available; default informational origin cannot independently flip policy.</li>
+    <li>Proof workflow: canonicalise → sign → Merkle append → optional EAS attest / counterparty co-attest.</li>
+  </ol>
+
+  <h2>Limitations (AI)</h2>
+  <ul class="clean">
+    <li>There is no universal AI-image detector. We refuse to label fused scores as probabilities.</li>
+    <li>High-authority origin outcomes require calibrated independent evidence families. Calibration on a customer domain is not present; the bundle is <code>RUNTIME_READY</code>.</li>
+    <li>Copy accuracy is measured on our transformation harness, not on a publisher’s archive.</li>
+    <li>Style resemblance is not attribution and cannot escalate policy alone.</li>
+    <li>Catalog search is declared-scope only. We do not crawl the web.</li>
+    <li>AI coding assistants (Cursor and frontier models) were used to implement and test. Thresholds, scope boundaries and honesty constraints were human decisions.</li>
+  </ul>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ 05 TECH -->
+<section id="tech">
+  <div class="sectionHead">
+    <span class="sectionNum">05</span>
+    <h1>Product and technical approach</h1>
+  </div>
+  <p class="kicker">Official Rules — Submission PDF item 4. Technologies and how the prototype works.</p>
+
+  <h2>How the prototype works</h2>
+  <p>
+    The browser never holds an API key. Next.js route handlers talk to FastAPI. A scan is accepted
+    immediately, processed in the background, and recovered by id. Reusing an idempotency key with
+    different bytes, catalog or intended use returns <code>409 IDEMPOTENCY_PAYLOAD_MISMATCH</code>
+    rather than a silent stale result. Reviewers see coverage, a bottom line, three lanes, then
+    forensic overlays only when they ask. Proof status distinguishes a local Merkle receipt from a
+    mined EAS anchor and will not conflate them in the UI.
+  </p>
+
+  <h2>Technologies used</h2>
+  <table class="compact">
+    <thead>
+      <tr><th style="width:38mm">Layer</th><th>Technology</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>API</td><td class="m">Python 3.12 · FastAPI · Pydantic v2 · SQLAlchemy · Alembic · uv lockfile</td></tr>
+      <tr><td>Inference</td><td class="m">PyTorch / TorchScript · timm · safetensors · OpenCV · Pillow · NumPy</td></tr>
+      <tr><td>Data</td><td class="m">PostgreSQL + RLS · SQLite (dev) · S3-compatible object storage</td></tr>
+      <tr><td>Web</td><td class="m">Next.js 16.3 · React 19 · TypeScript · tokenised CSS · self-hosted fonts</td></tr>
+      <tr><td>Chain / crypto</td><td class="m">EAS · Base Sepolia · web3.py · Ed25519 · COSE Sign1 · RFC 8785 JCS · RFC 6962 Merkle · EIP-712</td></tr>
+      <tr><td>Provenance</td><td class="m">C2PA via pinned c2patool · Tesseract OCR</td></tr>
+      <tr><td>Operations</td><td class="m">Prometheus-style metrics · stage timelines · signed webhooks · usage meters</td></tr>
+      <tr><td>Deploy (demo)</td><td class="m">Azure VM <a href="https://creatorproof.uaenorth.cloudapp.azure.com/">creatorproof.uaenorth.cloudapp.azure.com</a> · GitHub Actions hygiene</td></tr>
+      <tr><td>Build-time AI tools</td><td class="m">Cursor · frontier LLMs for implementation and critique · ElevenLabs for pitch narration</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ 06 UX -->
+<section id="ux">
+  <div class="sectionHead">
+    <span class="sectionNum">06</span>
+    <h1>User experience</h1>
+  </div>
+  <p class="kicker">Official Rules — Submission PDF item 5. How someone actually uses the product.</p>
+
+  <h2>Creator — Artist portal <span class="mono faint">/artist</span></h2>
+  <ol>
+    <li>Opens the Artist portal. Sees library count, whether a creator profile has enough works (≥3), and asserted claims waiting for corroboration.</li>
+    <li>Drops in a reference image, names the work, states a claimant and catalog.</li>
+    <li>The origin lane runs as an admission gate. If the fused score exceeds the configured threshold, registration is refused and the refusal shows score, threshold and summary — contestable, not a silent 403.</li>
+    <li>On success they hold a registration receipt. The work is now searchable by checkers using that catalog.</li>
+  </ol>
+
+  <h2>Publisher / reviewer — User portal <span class="mono faint">/user</span></h2>
+  <ol>
+    <li>Sees how many works the named catalog currently holds <em>before</em> scanning, so an empty catalog cannot look like a clean bill of health.</li>
+    <li>Drops a candidate (or uses a prepared demo scenario). Stages stream: intake, retrieval, geometry, origin, policy, proof.</li>
+    <li>Reads the bottom line first (policy action + match status), then the three independent question cards.</li>
+    <li>Opens the Evidence Microscope only if they need to disagree with the machine on the same pixels the machine used: inliers, transfer error, aligned region. Connection lines stay quiet until hover unless the reviewer asks for all of them.</li>
+    <li>Opens proof: packet hash, signature, log inclusion, anchor status. Optionally a counterparty co-attests.</li>
+  </ol>
+
+  <p>
+    The experience is built for a producer under time pressure, not for a researcher. Forensic
+    density is progressive disclosure. The product copy on screen matches the legal boundary in
+    this PDF: evidence and policy, not infringement.
+  </p>
+</section>
+
+<!-- ══════════════════════════════════════════════════ 07 RESPONSIBLE AI -->
+<section id="responsible">
+  <div class="sectionHead">
+    <span class="sectionNum">07</span>
+    <h1>Responsible AI</h1>
+  </div>
+  <p class="kicker">
+    Official Rules — Submission PDF item 6: privacy, security, bias, transparency, safety, human
+    oversight.
+  </p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Privacy</h4>
+      <p class="small">Catalog images stay in tenant storage. Chain writes are a hash, never the artwork, never a name. Creator profiles are consent-backed manifests, not a scrape of the internet.</p>
+    </div>
+    <div class="card">
+      <h4>Security</h4>
+      <p class="small">API keys map to tenant + role. RLS denies unbound queries. Browser holds no secrets. Idempotency and crash-safe chain persistence prevent duplicate or lost writes. Credentials are not in the repository.</p>
+    </div>
+    <div class="card">
+      <h4>Bias and error posture</h4>
+      <p class="small">False matches are treated as more damaging than misses. Profile hubness is corrected with CSLS. Tiny catalogs cannot manufacture high-confidence creator attribution. Multiplicity correction applies when many profiles are compared.</p>
+    </div>
+    <div class="card">
+      <h4>Transparency</h4>
+      <p class="small">Every result carries coverage, reason codes, model-bundle identity, and limitations. Scores are not labelled probabilities. Local Merkle is not labelled as blockchain. Origin absence is unknown.</p>
+    </div>
+    <div class="card">
+      <h4>Safety</h4>
+      <p class="small">The system cannot authorise a rights-based pass on uncorroborated claims. Informational origin cannot independently change policy in the default mode. Incomplete scope routes to REVIEW, never to silent PASS.</p>
+    </div>
+    <div class="card">
+      <h4>Human oversight</h4>
+      <p class="small">REVIEW is a first-class outcome. The microscope exists so a human can overrule with shared evidence. Model promotion requires a human record; automatic promotion is disabled. Co-attestation is a human organisation binding its key.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════ 08 PROTOTYPE -->
+<section id="prototype">
+  <div class="sectionHead">
+    <span class="sectionNum">08</span>
+    <h1>Current prototype</h1>
+  </div>
+  <p class="kicker">Official Rules — Submission PDF item 7. What currently works vs what we plan later.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>What currently works</h4>
+      <ul class="small" style="margin-bottom:0">
+        <li>End-to-end register → scan → lanes → policy → packet</li>
+        <li>SSCD retrieval, geometry, mirror recovery, aligned structure</li>
+        <li>C2PA, local origin detector, optional Sightengine, OCR labels</li>
+        <li>Creator-profile resemblance with content control</li>
+        <li>Coverage states; no complete no-match on incomplete scope</li>
+        <li>Artist origin gate with contestable refusal</li>
+        <li>Evidence Microscope and proof panel</li>
+        <li>Ed25519/COSE, Merkle log, EAS pipeline, EIP-712 co-attestation</li>
+        <li>Multi-tenant keys, RLS, idempotency, meters, webhooks, SDKs</li>
+        <li>Public web + API deploy on Azure: <a href="https://creatorproof.uaenorth.cloudapp.azure.com/">creatorproof.uaenorth.cloudapp.azure.com</a></li>
+        <li>Internal copy-detection benchmark with named residual failures</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>What we plan to build later</h4>
+      <ul class="small" style="margin-bottom:0">
+        <li>Domain calibration on a real customer corpus; promotion beyond <code>RUNTIME_READY</code></li>
+        <li>Default-path live testnet transaction in every demo environment (pipeline exists; needs funded key + schema UIDs)</li>
+        <li>Internet-scale catalogs (today: declared catalogs with an explicit completeness bound)</li>
+        <li>Clearance-receipt token minting in the API (Solidity exists locally; not a product feature yet)</li>
+        <li>SSO, private-cloud enterprise deploy, indemnity/procurement pack</li>
+        <li>Pilot-measured review-hour and false-match metrics</li>
+        <li>Video / audio lanes (image-first by design today)</li>
+        <li>Billing provider on top of meters that already exist</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="note warn">
+    <h4>Do not score these as if they already shipped</h4>
+    <p>
+      Live Base Sepolia in the default developer mode, production-qualified accuracy, and customer
+      LOIs are later. Where the UI would be tempted to imply them, it labels the weaker thing
+      instead (local Merkle ≠ chain; not-probability ≠ percent AI; REVIEW ≠ PASS).
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════ 09 IMPACT -->
+<section id="impact">
+  <div class="sectionHead">
+    <span class="sectionNum">09</span>
+    <h1>Impact and future potential</h1>
+  </div>
+  <p class="kicker">Official Rules — Submission PDF item 8. Also video-pitch impact and future beats.</p>
+
+  <h2>Impact</h2>
+  <p>
+    Near-term impact is operational: fewer blind publishes, fewer hours of unstructured reverse
+    image search, and a packet a studio in Dhaka can attach to a delivery for a London client.
+    Creator-side impact is that registration is free and is actually consulted by the organisations
+    who pay — the same incentive design that made content-ID systems work, without claiming we are
+    YouTube.
+  </p>
+  <p>
+    Wider impact, if the packet becomes a habit: commercial image supply chains gain an audit
+    primitive they currently lack, and “no match” stops meaning “we didn’t look.” That is real-world
+    impact under the ideathon theme: measurable, situated in existing jobs, and honest about
+    remaining legal work that still belongs to humans.
+  </p>
+
+  <h2>Future potential</h2>
+  <ul class="clean">
+    <li><strong>Product.</strong> Agency wedge → brand pull-through via the packet → marketplace and stock-platform partnerships.</li>
+    <li><strong>Network.</strong> Shared catalogs and co-attestation turn a vendor into a standard. Leaving means leaving jointly witnessed history.</li>
+    <li><strong>Geography.</strong> Bangladesh as a production hub serving disclosure-heavy Western buyers is a launch market, not a limit.</li>
+    <li><strong>Category.</strong> Evidence infrastructure for creative publishing, analogous to batch records in other industries — not another detector widget.</li>
+  </ul>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ 10 VIDEO -->
+<section id="video">
+  <div class="sectionHead">
+    <span class="sectionNum">10</span>
+    <h1>Video pitch answers</h1>
+  </div>
+  <p class="kicker">
+    Official Rules, Section 7. The public demo video covers these five beats with the working
+    prototype on screen, not slides alone.
+  </p>
+
+  <div class="qa">
+    <p class="q"><small>Video beat 1 · The problem</small>What problem are you solving, and who experiences it?</p>
+    <div class="a">
+      <p>
+        Organisations that publish images cannot currently produce a defensible, scoped record of
+        what they checked. Agencies, brands, marketplaces and publishers experience it as risk;
+        artists experience it as reuse without leverage.
+      </p>
+    </div>
+  </div>
+  <div class="qa">
+    <p class="q"><small>Video beat 2 · The solution</small>What have you built, and how does AI contribute?</p>
+    <div class="a">
+      <p>
+        An evidence API and two portals. AI retrieves likely copies, estimates origin signal, and
+        ranks style resemblance. Classical geometry, customer policy, and cryptography finish the
+        job so the output is evidence, not a vibe.
+      </p>
+    </div>
+  </div>
+  <div class="qa">
+    <p class="q"><small>Video beat 3 · The prototype</small>Demonstrate the main functionality.</p>
+    <div class="a">
+      <p>
+        Register a work; refuse an AI file at the gate; scan a mirrored crop; show lane separation;
+        show correspondences on the pixels; show the receipt. That is the demo.
+      </p>
+    </div>
+  </div>
+  <div class="qa">
+    <p class="q"><small>Video beat 4 · The impact</small>What is the potential value and real-world impact?</p>
+    <div class="a">
+      <p>
+        A check that belongs in the delivery file. Modelled agency value is on the order of tens of
+        thousands of dollars a year before counting retained clients; the deeper impact is that
+        “we looked” becomes something you can prove.
+      </p>
+    </div>
+  </div>
+  <div class="qa">
+    <p class="q"><small>Video beat 5 · The future</small>How could the project develop beyond the ideathon?</p>
+    <div class="a">
+      <p>
+        Calibrate on a real agency corpus, run a paid pilot, turn co-attestation into a network of
+        rights counterparties, and keep the same lanes as the product grows into DAM and marketplace
+        integrations.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ 11 EVENT -->
+<section id="event">
+  <div class="sectionHead">
+    <span class="sectionNum">11</span>
+    <h1>Built during AI Ideathon 2026</h1>
+  </div>
+  <p class="kicker">
+    Official Rules, Section 3. Organizers may request the repository and commit history. This is
+    the account we will give.
+  </p>
+
+  <p>
+    The submitted core is CreatorProof v0.10.0 in
+    <a href="https://github.com/AhnafZ778/CreatorProof">github.com/AhnafZ778/CreatorProof</a>.
+    Public history on this repository runs 10–14 August 2026, from the v0.9.2 publish through
+    model-accuracy hardening, the artist origin gate, multi-party co-attestation, production-shaped
+    platform work (RLS, meters, webhooks), and the Azure demo deployment. Permitted
+    building blocks — open-source models, C2PA, EAS, FastAPI, Next.js, and AI coding assistants —
+    are used as the rules allow. The core solution being judged is this evidence system, not a
+    wrap of a single third-party “detect AI” API.
+  </p>
+  <p>
+    We can walk a judge through what a clone of the repository actually runs: tests, the copy
+    benchmark harness, both portals, and the proof pipeline. We will not claim a live chain
+    transaction in environments where the EAS signer is unset; the UI already refuses to imply one.
+  </p>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════ 12 DEMO -->
+<section id="demo">
+  <div class="sectionHead">
+    <span class="sectionNum">12</span>
+    <h1>Demo, links, and live pitch</h1>
+  </div>
+  <p class="kicker">
+    Official Rules: working project URL, public permissions, 3-minute video, finalist 4+2–3 live
+    format, recorded backup if live demo fails.
+  </p>
+
+  <table class="compact">
+    <tbody>
+      <tr><td style="width:42mm">Live product</td><td class="m"><a href="https://creatorproof.uaenorth.cloudapp.azure.com/">https://creatorproof.uaenorth.cloudapp.azure.com/</a></td></tr>
+      <tr><td>Artist portal</td><td class="m"><a href="https://creatorproof.uaenorth.cloudapp.azure.com/artist">/artist</a> — register and origin gate</td></tr>
+      <tr><td>Checker portal</td><td class="m"><a href="https://creatorproof.uaenorth.cloudapp.azure.com/user">/user</a> — scan, microscope, proof</td></tr>
+      <tr><td>Source</td><td class="m"><a href="https://github.com/AhnafZ778/CreatorProof">https://github.com/AhnafZ778/CreatorProof</a></td></tr>
+      <tr><td>Demo video</td><td>Public URL on the Cognisor portal; prototype footage, not slides-only</td></tr>
+      <tr><td>Finalist backup</td><td>Recorded register → mirrored-crop match → microscope → receipt, for use only if live networking fails</td></tr>
+    </tbody>
+  </table>
+
+  <h2>What we will not misrepresent</h2>
+  <p>
+    Official Rules, Section 10, prohibit misrepresenting prototype functionality or AI use. This
+    project does not determine copyright infringement, certify human origin, search the whole
+    internet, or treat a detector score as a probability. Judges who open the UI will see those
+    boundaries in the product, not only in this PDF.
+  </p>
+
+  <div class="note good">
+    <h4>If you only remember one thing</h4>
+    <p>
+      CreatorProof is infrastructure for a check that already has to happen. AI does the seeing.
+      Policy and proof do the standing-behind. The restraint is the product.
+    </p>
+  </div>
+
+  <div class="footNote">
+    CreatorProof v0.10.0 · AI Ideathon 2026 · Cognisor platform
+    <a href="https://impacthackathons.cognisorai.com/">impacthackathons.cognisorai.com</a>.
+    Figures in §01 / Q3.2 were measured on the authors’ hardware from
+    <code>scripts/copy_detection_bench.py</code> and are reproducible from the repository.
+    CreatorProof produces review evidence, not legal determinations. Team names in this PDF
+    must match the official portal listing.
+  </div>
+</section>
+
+</td></tr></tbody>
+</table>
+
+</body>
+</html>

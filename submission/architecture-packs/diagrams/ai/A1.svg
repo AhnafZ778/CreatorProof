@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A1 · One input, three independent verdicts. They are reported side by side and never fused into a score. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 430" role="img" aria-label="One image fanning out into three independent evidence lanes with separate answers" overflow="visible" width='1600.0' height='430.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#37d4dc"/></marker>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f07ab7"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ffbd59"/></marker>
+  </defs>
+  <rect class="nd" x="20" y="172" width="180" height="86" rx="9"/>
+    <text class="t-title" x="40" y="206">Candidate</text>
+    <text class="t-sub" x="40" y="230">image about to</text>
+    <text class="t-sub" x="40" y="250">be published</text>
+
+    <!-- lane 1 copy -->
+    <rect class="nd-copy" x="248" y="46" width="470" height="104" rx="9"/>
+    <text class="t-lbl fx-copy" x="270" y="74">lane 1 · copy</text>
+    <text class="t-title" x="270" y="104">Does it reuse a registered work?</text>
+    <text class="t-sub" x="270" y="132">learned retrieval → geometry → aligned structure</text>
+
+    <rect class="nd" x="752" y="46" width="400" height="104" rx="9"/>
+    <text class="t-lbl fx-dim" x="774" y="74">answer</text>
+    <text class="t-body fx-txt" x="774" y="104">Work #4471, upper-left region,</text>
+    <text class="t-body fx-txt" x="774" y="128">1 842 verified inliers</text>
+
+    <!-- lane 2 origin -->
+    <rect class="nd-orig" x="248" y="164" width="470" height="104" rx="9"/>
+    <text class="t-lbl fx-orig" x="270" y="192">lane 2 · origin</text>
+    <text class="t-title" x="270" y="222">Was a generative model involved?</text>
+    <text class="t-sub" x="270" y="250">provenance → visible labels → detector families</text>
+
+    <rect class="nd" x="752" y="164" width="400" height="104" rx="9"/>
+    <text class="t-lbl fx-dim" x="774" y="192">answer</text>
+    <text class="t-body fx-txt" x="774" y="222">No C2PA manifest; two families</text>
+    <text class="t-body fx-txt" x="774" y="246">indicate synthesis — indicator only</text>
+
+    <!-- lane 3 profile -->
+    <rect class="nd-prof" x="248" y="282" width="470" height="104" rx="9"/>
+    <text class="t-lbl fx-prof" x="270" y="310">lane 3 · profile</text>
+    <text class="t-title" x="270" y="340">Does it resemble a creator’s work?</text>
+    <text class="t-sub" x="270" y="368">style descriptors → consented profiles only</text>
+
+    <rect class="nd" x="752" y="282" width="400" height="104" rx="9"/>
+    <text class="t-lbl fx-dim" x="774" y="310">answer</text>
+    <text class="t-body fx-txt" x="774" y="340">Close to profile “Rahman”,</text>
+    <text class="t-body fx-txt" x="774" y="364">resemblance — never infringement</text>
+
+    <path class="ar" d="M 204 200 C 228 200 224 100 242 98" marker-end="url(#ac)"/>
+    <path class="ar" d="M 204 215 L 242 215" marker-end="url(#ao)"/>
+    <path class="ar" d="M 204 230 C 228 230 224 332 242 334" marker-end="url(#ap)"/>
+
+    <path class="ar" d="M 722 98 L 746 98" marker-end="url(#a1)"/>
+    <path class="ar" d="M 722 215 L 746 215" marker-end="url(#a1)"/>
+    <path class="ar" d="M 722 334 L 746 334" marker-end="url(#a1)"/>
+
+    <!-- never averaged -->
+    <rect class="nd-bad" x="1186" y="46" width="398" height="158" rx="9"/>
+    <text class="t-lbl fx-bad" x="1208" y="74">what we never do</text>
+    <text class="t-title fx-bad" x="1208" y="106">Average them</text>
+    <text class="t-sub" x="1208" y="134">A single number cannot say which</text>
+    <text class="t-sub" x="1208" y="156">question failed, so a reviewer</text>
+    <text class="t-sub" x="1208" y="178">cannot act on it and a lawyer</text>
+    <text class="t-sub" x="1208" y="198">cannot rely on it.</text>
+
+    <rect class="nd-pass" x="1186" y="228" width="398" height="158" rx="9"/>
+    <text class="t-lbl fx-pass" x="1208" y="256">what we do instead</text>
+    <text class="t-title fx-pass" x="1208" y="288">Report all three</text>
+    <text class="t-sub" x="1208" y="316">Each lane keeps its own finding,</text>
+    <text class="t-sub" x="1208" y="338">its own confidence and its own</text>
+    <text class="t-sub" x="1208" y="360">coverage. Policy combines them</text>
+    <text class="t-sub" x="1208" y="380">afterwards — see sheet A7.</text>
+
+    <path class="ar-dec" d="M 1156 215 L 1180 215" marker-end="url(#a2)"/>
+
+    <g class="cal"><circle cx="224" cy="86" r="17"/><text x="224" y="92">1</text></g>
+    <g class="cal"><circle cx="736" cy="170" r="17"/><text x="736" y="176">2</text></g>
+    <g class="cal"><circle cx="1568" cy="64" r="17"/><text x="1568" y="70">3</text></g>
+    <g class="cal"><circle cx="1568" cy="246" r="17"/><text x="1568" y="252">4</text></g>
+</svg>

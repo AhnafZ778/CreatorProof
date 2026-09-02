@@ -1,9 +1,9 @@
 """Migration helper with backup and rollback evidence.
 
 A destructive migration must be preceded by a restorable backup. For SQLite the
-backup is a file copy; for PostgreSQL the command prints the exact ``pg_dump``
-invocation to run, because the tool refuses to pretend it made a backup it did
-not make.
+backup is a file copy. For PostgreSQL the helper prints a credential-free
+``pg_dump`` template, because deployment logs must never contain a connection
+URL and the tool refuses to pretend it made a backup it did not make.
 """
 
 from __future__ import annotations
@@ -45,7 +45,9 @@ def _backup(database_url: str, backup_dir: Path) -> dict:
     return {
         "performed": False,
         "kind": "postgresql",
-        "required_command": f"pg_dump --format=custom --file={target} '{database_url}'",
+        "required_command": (
+            f'pg_dump --format=custom --file={target} --dbname="$CREATORPROOF_DATABASE_URL"'
+        ),
         "reason": "RUN_PG_DUMP_AND_VERIFY_RESTORE_BEFORE_A_DESTRUCTIVE_MIGRATION",
     }
 

@@ -144,4 +144,7 @@ def source_identity(
 def cache_path_for_debug(container, key: str) -> Path:
     """Resolve a cache key for diagnostics without weakening object-store checks."""
 
-    return (container.storage.root / key).resolve()
+    path = container.storage.local_path(key)
+    if path is None:
+        raise RuntimeError("This object-store backend has no durable local debug path")
+    return path.resolve()

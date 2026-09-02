@@ -981,7 +981,9 @@ class SyntheticDetectorRouter:
         if requested_mode in {"auto", "sightengine", "torchscript"}:
             local_candidates.append(TorchScriptSyntheticDetector(torchscript_model_path, device))
         try:
-            external_specs = json.loads(external_detectors_json)
+            external_specs = (
+                [] if requested_mode == "sightengine_only" else json.loads(external_detectors_json)
+            )
             if not isinstance(external_specs, list):
                 raise TypeError
         except (json.JSONDecodeError, TypeError):
@@ -1001,7 +1003,7 @@ class SyntheticDetectorRouter:
                 api_secret=sightengine_api_secret,
                 timeout_seconds=sightengine_timeout_seconds,
             )
-            if requested_mode in {"auto", "sightengine"}
+            if requested_mode in {"auto", "sightengine", "sightengine_only"}
             else None
         )
         primary_candidates = [self.sightengine] if self.sightengine is not None else []
@@ -1030,7 +1032,9 @@ class SyntheticDetectorRouter:
             if not item.available
         ]
         self.name = (
-            "sightengine-primary-local-fallback-synthetic-router-v1"
+            "sightengine-only-synthetic-router-v1"
+            if requested_mode == "sightengine_only"
+            else "sightengine-primary-local-fallback-synthetic-router-v1"
             if requested_mode in {"auto", "sightengine"}
             else "evidence-family-synthetic-ensemble-v3"
         )
@@ -1087,7 +1091,11 @@ class SyntheticDetectorRouter:
                 ),
                 "primary_state": primary_state,
                 "primary": primary_status,
-                "fallback_policy": "LOCAL_FALLBACK_ON_PRIMARY_OPERATIONAL_FAILURE",
+                "fallback_policy": (
+                    "NO_FALLBACK_FAIL_CLOSED"
+                    if self.mode == "sightengine_only"
+                    else "LOCAL_FALLBACK_ON_PRIMARY_OPERATIONAL_FAILURE"
+                ),
                 "fallback_detectors": [item.name for item in self.fallback_detectors],
                 "local_fallback_available": bool(self.fallback_detectors),
             },

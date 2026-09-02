@@ -4,7 +4,10 @@ from dataclasses import dataclass, field
 from app.core.config import Settings
 from app.db import Base, Database, build_database
 from app.models import Tenant
-from app.providers.ai_retrieval import SSCDVisualEmbeddingProvider
+from app.providers.ai_retrieval import (
+    RemoteSSCDVisualEmbeddingProvider,
+    SSCDVisualEmbeddingProvider,
+)
 from app.providers.aligned_perceptual import AlignedPerceptualVerifier
 from app.providers.counterparty_signature import build_counterparty_verifier
 from app.providers.fingerprints import BaselineFingerprintProvider
@@ -16,6 +19,7 @@ from app.providers.style_retrieval import StyleEmbeddingRouter
 from app.providers.synthetic_detection import SyntheticDetectorRouter
 from app.providers.visible_markers import VisibleAIMarkerProvider
 from app.services.blockchain import BlockchainAnchorService, BlockchainDispatcherThread
+from app.services.bootstrap import ensure_bootstrap_credential
 from app.services.coattestation import CoAttestationService
 from app.services.evidence import process_scan
 from app.services.jobs import (
@@ -39,7 +43,7 @@ from app.services.orchestration import (
 )
 from app.services.policy_store import PolicyStore, ensure_default_policy
 from app.services.signing import build_signer, register_signing_key
-from app.services.storage import LocalObjectStore
+from app.services.storage import ObjectStore, build_object_store
 from app.services.style_profiles import StyleProfileRegistry, load_style_profile_registry
 from app.services.tenancy import bind_tenant_context
 from app.services.transparency import TransparencyLog
@@ -52,9 +56,9 @@ class Container:
     model_bundle: ModelBundle
     model_bundle_runtime: dict
     database: Database
-    storage: LocalObjectStore
+    storage: ObjectStore
     fingerprints: BaselineFingerprintProvider
-    ai_retrieval: SSCDVisualEmbeddingProvider
+    ai_retrieval: SSCDVisualEmbeddingProvider | RemoteSSCDVisualEmbeddingProvider
     style_retrieval: StyleEmbeddingRouter
     style_profiles: StyleProfileRegistry
     geometry: ORBGeometricVerifier
@@ -103,7 +107,11 @@ class Container:
         ]
         # Redis deployments have a dedicated worker process, which owns proof
         # dispatch to avoid every API replica competing for the same signer nonce.
-        if self.blockchain is not None and settings.job_backend != "redis":
+        if (
+            self.blockchain is not None
+            and self.blockchain.configured
+            and settings.job_backend != "redis"
+        ):
             threads.append(
                 BlockchainDispatcherThread(
                     self.blockchain,
@@ -137,6 +145,26 @@ def build_container(settings: Settings) -> Container:
     style_expected_sha256 = (
         settings.style_csd_expected_sha256 or model_bundle.declared_artifact_sha256("style-csd")
     )
+    for digest_setting, selected, digest in (
+        (
+            "CREATORPROOF_SSCD_EXPECTED_SHA256",
+            settings.sscd_provider == "remote",
+            sscd_expected_sha256,
+        ),
+        (
+            "CREATORPROOF_STYLE_CSD_EXPECTED_SHA256",
+            settings.style_provider == "remote",
+            style_expected_sha256,
+        ),
+    ):
+        if selected and (
+            len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest.lower())
+        ):
+            raise RuntimeError(
+                f"{digest_setting} or a valid model-bundle artifact "
+                "digest is required for remote inference"
+            )
     signer = build_signer(settings)
     if settings.trusted_issuer_key_sha256:
         actual_fingerprint = hashlib.sha256(bytes.fromhex(signer.public_key_hex)).hexdigest()
@@ -164,12 +192,24 @@ def build_container(settings: Settings) -> Container:
             include_optional_artifacts=False,
         ),
         database=build_database(settings),
-        storage=LocalObjectStore(settings.storage_root),
+        storage=build_object_store(settings),
         fingerprints=BaselineFingerprintProvider(),
-        ai_retrieval=SSCDVisualEmbeddingProvider(
-            settings.sscd_model_path,
-            settings.sscd_device,
-            expected_sha256=sscd_expected_sha256,
+        ai_retrieval=(
+            RemoteSSCDVisualEmbeddingProvider(
+                endpoint_url=settings.sscd_remote_url,
+                auth_token=settings.sscd_remote_auth_token,
+                expected_sha256=sscd_expected_sha256,
+                timeout_seconds=settings.sscd_remote_timeout_seconds,
+                max_attempts=settings.sscd_remote_max_attempts,
+                retry_backoff_seconds=settings.sscd_remote_retry_backoff_seconds,
+                batch_size=settings.sscd_remote_batch_size,
+            )
+            if settings.sscd_provider == "remote"
+            else SSCDVisualEmbeddingProvider(
+                settings.sscd_model_path,
+                settings.sscd_device,
+                expected_sha256=sscd_expected_sha256,
+            )
         ),
         style_retrieval=StyleEmbeddingRouter(
             mode=settings.style_provider,
@@ -179,6 +219,12 @@ def build_container(settings: Settings) -> Container:
             allow_legacy_pickle=settings.style_allow_legacy_pickle,
             expected_sha256=style_expected_sha256,
             expected_repo_revision=settings.style_csd_expected_repo_revision,
+            remote_url=settings.style_remote_url,
+            remote_auth_token=settings.style_remote_auth_token,
+            remote_timeout_seconds=settings.style_remote_timeout_seconds,
+            remote_max_attempts=settings.style_remote_max_attempts,
+            remote_retry_backoff_seconds=settings.style_remote_retry_backoff_seconds,
+            remote_batch_size=settings.style_remote_batch_size,
         ),
         style_profiles=load_style_profile_registry(
             settings.style_profile_manifest_path,
@@ -327,6 +373,14 @@ def initialize_database(container: Container) -> None:
             # Policy versions are tenant-owned and FORCE RLS is enabled in
             # PostgreSQL. The session-level binding survives PolicyStore commits.
             bind_tenant_context(db, settings.dev_tenant_id)
+            if getattr(settings, "environment", "development") == "production":
+                ensure_bootstrap_credential(
+                    db,
+                    tenant_id=settings.dev_tenant_id,
+                    presented_key=settings.bootstrap_api_key,
+                    pepper=settings.api_key_pepper,
+                    name=settings.bootstrap_credential_name,
+                )
             ensure_default_policy(
                 db,
                 tenant_id=settings.dev_tenant_id,

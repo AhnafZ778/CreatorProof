@@ -8,9 +8,53 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from app.providers.remote_embeddings import RemoteHTTPEmbeddingProvider
+
 
 class AIProviderUnavailable(RuntimeError):
     pass
+
+
+class RemoteSSCDVisualEmbeddingProvider(RemoteHTTPEmbeddingProvider):
+    """Identity-pinned SSCD inference hosted outside the API process."""
+
+    name = "sscd-disc-mixup-remote-http"
+    model_identity = "SSCD_DISC_MIXUP_TORCHSCRIPT_LOCAL_ARTIFACT"
+    preprocessing_identity = "SSCD_RGB_SHORTEST_SIDE_288_IMAGENET_NORMALIZATION_V1"
+    dimensions = 512
+
+    def __init__(
+        self,
+        *,
+        endpoint_url: str,
+        auth_token: str,
+        expected_sha256: str,
+        timeout_seconds: float = 30.0,
+        max_attempts: int = 2,
+        retry_backoff_seconds: float = 0.25,
+        batch_size: int = 1,
+        client=None,
+        sleep=None,
+    ) -> None:
+        kwargs = {}
+        if sleep is not None:
+            kwargs["sleep"] = sleep
+        super().__init__(
+            name=self.name,
+            lane="COPY",
+            endpoint_url=endpoint_url,
+            auth_token=auth_token,
+            model_identity=self.model_identity,
+            preprocessing_identity=self.preprocessing_identity,
+            expected_artifact_sha256=expected_sha256,
+            dimensions=self.dimensions,
+            timeout_seconds=timeout_seconds,
+            max_attempts=max_attempts,
+            retry_backoff_seconds=retry_backoff_seconds,
+            batch_size=batch_size,
+            client=client,
+            **kwargs,
+        )
 
 
 class SSCDVisualEmbeddingProvider:

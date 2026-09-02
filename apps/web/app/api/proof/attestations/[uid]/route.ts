@@ -17,6 +17,6 @@ export async function GET(request: Request, context: { params: Promise<{ uid: st
     ? `?expected_packet_hash_sha256=${encodeURIComponent(expectedPacketHash)}`
     : "";
   return proxyJson(`/v1/proof/attestations/${encodeURIComponent(uid)}${query}`, {
-    timeoutMs: 20_000,
+    timeoutMs: 90_000,
   });
 }

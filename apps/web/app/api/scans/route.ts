@@ -1,29 +1,39 @@
-import { NextResponse } from "next/server";
+import { proxyJson } from "../../lib/backend";
+import { readImageForm, readJsonObject, requestInputErrorResponse } from "../../lib/requestBody";
+import { guardMutation } from "../../lib/requestSecurity";
 
-const backend = () => process.env.CREATORPROOF_API_URL ?? "http://localhost:8000";
-const apiKey = () => process.env.CREATORPROOF_DEV_API_KEY ?? "change-me-before-sharing";
-export const maxDuration = 40;
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
-  const form = await request.formData();
+  const denied = guardMutation(request, { bucket: "scan-create", limit: 12 });
+  if (denied) return denied;
   const idempotency = request.headers.get("Idempotency-Key") ?? crypto.randomUUID();
   try {
-    const response = await fetch(`${backend()}/v1/scans`, {
+    const isJson = request.headers.get("content-type")?.toLowerCase().startsWith("application/json");
+    const input = isJson ? await readJsonObject(request) : await readImageForm(request);
+    if (isJson && typeof (input as Record<string, unknown>).upload_token !== "string") {
+      return Response.json(
+        { detail: "upload_token is required.", error_code: "UPLOAD_TOKEN_REQUIRED" },
+        { status: 400 },
+      );
+    }
+    return proxyJson(isJson ? "/v1/scans/from-upload" : "/v1/scans", {
       method: "POST",
-      headers: { "X-API-Key": apiKey(), "Idempotency-Key": idempotency },
-      body: form,
-      cache: "no-store",
-      signal: AbortSignal.timeout(30_000),
-    });
-    const body = await response.json();
-    return NextResponse.json(body, { status: response.status });
-  } catch {
-    return NextResponse.json(
-      {
-        detail: "The API did not accept the scan in time. Confirm that the local or Redis job backend is active.",
-        error_code: "SCAN_ACCEPT_TIMEOUT",
+      headers: {
+        "Idempotency-Key": idempotency,
+        ...(isJson ? { "Content-Type": "application/json" } : {}),
       },
-      { status: 504 },
+      body: isJson ? JSON.stringify(input) : (input as FormData),
+      timeoutMs: 100_000,
+      // Multipart uses Idempotency-Key; direct completion is bound to the signed
+      // upload nonce. Both paths can safely recover a response lost in transit.
+      retry: true,
+      warmup: true,
+    });
+  } catch (caught) {
+    return requestInputErrorResponse(caught) ?? Response.json(
+      { detail: "The scan request could not be read.", error_code: "SCAN_REQUEST_INVALID" },
+      { status: 400 },
     );
   }
 }

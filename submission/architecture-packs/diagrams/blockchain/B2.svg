@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- B2 · Red dashed lines are refusals of trust. Blue lines are the one record all six parties will read. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 452" role="img" aria-label="The five parties around a publishing decision and the trust gaps between them" overflow="visible" width='1600.0' height='452.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  </defs>
+  <rect class="zone-public" x="556" y="150" width="488" height="152" rx="12"/>
+    <text class="t-lbl fx-a" x="580" y="180">Shared neutral ground</text>
+    <text class="t-big" x="580" y="222">Public commitment layer</text>
+    <text class="t-sub" x="580" y="252">No party controls it, so every party accepts it</text>
+    <text class="t-mono fx-a" x="580" y="282">Base L2 · EAS · registry · receipts</text>
+
+    <!-- creator -->
+    <rect class="nd-prof" x="40" y="34" width="272" height="98" rx="9"/>
+    <text class="t-title fx-prof" x="62" y="68">Creator</text>
+    <text class="t-sub" x="62" y="92">registers work, wants to know</text>
+    <text class="t-sub" x="62" y="114">their catalogue was truly searched</text>
+
+    <!-- agency -->
+    <rect class="nd-copy" x="40" y="176" width="272" height="98" rx="9"/>
+    <text class="t-title fx-copy" x="62" y="210">Agency</text>
+    <text class="t-sub" x="62" y="234">runs the check, must prove</text>
+    <text class="t-sub" x="62" y="256">diligence to its client later</text>
+
+    <!-- brand -->
+    <rect class="nd-copy" x="40" y="318" width="272" height="98" rx="9"/>
+    <text class="t-title fx-copy" x="62" y="352">Brand / publisher</text>
+    <text class="t-sub" x="62" y="376">carries the liability, will not</text>
+    <text class="t-sub" x="62" y="398">take the agency’s word for it</text>
+
+    <!-- marketplace -->
+    <rect class="nd" x="1288" y="34" width="272" height="98" rx="9"/>
+    <text class="t-title" x="1310" y="68">Marketplace</text>
+    <text class="t-sub" x="1310" y="92">must act on takedowns without</text>
+    <text class="t-sub" x="1310" y="114">re-running every check itself</text>
+
+    <!-- regulator -->
+    <rect class="nd-pass" x="1288" y="176" width="272" height="98" rx="9"/>
+    <text class="t-title fx-pass" x="1310" y="210">Regulator / court</text>
+    <text class="t-sub" x="1310" y="234">arrives years later, needs an</text>
+    <text class="t-sub" x="1310" y="256">account nobody could have edited</text>
+
+    <!-- insurer -->
+    <rect class="nd" x="1288" y="318" width="272" height="98" rx="9"/>
+    <text class="t-title" x="1310" y="352">Insurer</text>
+    <text class="t-sub" x="1310" y="376">prices the risk, needs proof of</text>
+    <text class="t-sub" x="1310" y="398">process rather than assertion</text>
+
+    <!-- platform in the middle bottom -->
+    <rect class="nd-a" x="612" y="352" width="376" height="80" rx="9"/>
+    <text class="t-title fx-a" x="634" y="384">CreatorProof platform</text>
+    <text class="t-sub" x="634" y="408">produces the evidence · an interested party</text>
+
+    <!-- broken-trust arcs -->
+    <path class="ar-bad" d="M 320 214 C 430 214 430 372 604 380"/>
+    <path class="ar-bad" d="M 320 356 C 440 356 470 392 604 396"/>
+    <path class="ar-bad" d="M 1284 372 C 1160 372 1120 396 996 396"/>
+    <text class="t-mono fx-bad" x="338" y="326">will not accept a self-reported record</text>
+
+    <!-- everyone reads the neutral layer -->
+    <path class="ar-pub" d="M 320 96 C 440 96 460 200 548 214" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1284 96 C 1160 96 1140 200 1052 214" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1284 222 L 1052 222" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1284 360 C 1150 360 1120 264 1052 240" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 800 348 L 800 310" marker-end="url(#a4)"/>
+
+    <g class="cal"><circle cx="470" cy="272" r="17"/><text x="470" y="278">1</text></g>
+    <g class="cal"><circle cx="800" cy="330" r="17"/><text x="800" y="336">2</text></g>
+    <g class="cal"><circle cx="474" cy="146" r="17"/><text x="474" y="152">3</text></g>
+    <g class="cal"><circle cx="1130" cy="146" r="17"/><text x="1130" y="152">4</text></g>
+</svg>

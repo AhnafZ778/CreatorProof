@@ -17,6 +17,7 @@
 import {
   coverageBreakdown,
   laneMetrics,
+  originEvidenceQuality,
   usableMetric,
   type LaneMetric,
 } from "@/app/lib/laneMetrics";
@@ -29,7 +30,7 @@ import {
 } from "@/app/lib/laneStatus";
 import { isPublicBlockchainProof } from "@/app/lib/verifyStatement";
 
-import { CoverageDonut, ScoreRing, type DonutSegment } from "./EvidenceCharts";
+import { CoverageDonut, MetricBar, ScoreRing, type DonutSegment } from "./EvidenceCharts";
 
 type Record_ = Record<string, unknown>;
 
@@ -152,6 +153,7 @@ export default function ScanVerdict({
 
   const lanes = laneStatusList(scan);
   const metrics = laneMetrics(scan);
+  const quality = originEvidenceQuality(scan);
   const breakdown = coverageBreakdown(scan);
 
   const segments: DonutSegment[] = [
@@ -267,6 +269,14 @@ export default function ScanVerdict({
               </div>
               <footer>
                 <span>{ringCaption(lane, metric)}</span>
+                {/* Only meaningful next to a signal score it qualifies. */}
+                {lane.key === "origin" && metric.value !== null && quality.value !== null && (
+                  <MetricBar
+                    label="Evidence quality"
+                    value={quality.value}
+                    display={`${quality.display}/100`}
+                  />
+                )}
               </footer>
             </article>
           );

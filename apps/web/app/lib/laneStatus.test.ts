@@ -155,6 +155,207 @@ test("creator-profile resemblance stays advisory and never becomes a finding", (
   assert.match(profile.headline, /A\. Maker/);
 });
 
+test("a stored consent-gated resemblance packet remains visible as advisory context", () => {
+  // Older packets replaced a review-worthy evidence tier with ADVISORY_ONLY
+  // when the claimant grouping was not consent-backed. That gate controls
+  // policy escalation; it must not turn measured resemblance into a clean card.
+  const profile = laneStatuses(
+    scan({
+      packet: {
+        style_analysis: {
+          learned_provider_active: true,
+          decision: {
+            evidence_tier: "ADVISORY_ONLY",
+            classification: "PROFILE_ENROLLMENT_NOT_CONSENT_BACKED",
+            review_recommended: false,
+            reason_codes: [
+              "STYLE_RESEMBLANCE_REVIEW_RECOMMENDED",
+              "PROFILE_CONSENT_NOT_CONFIRMED",
+              "STYLE_POLICY_ESCALATION_SUPPRESSED",
+            ],
+          },
+          top_profiles: [
+            {
+              creator: "A. Maker",
+              sample_count: 1,
+              profile_strength: "SINGLE_WORK_WEAK",
+              profile_authorized: false,
+            },
+          ],
+        },
+      },
+    }),
+  ).profile;
+
+  assert.equal(profile.state, "advisory");
+  assert.match(profile.headline, /A\. Maker/);
+  assert.match(profile.answer, /unconfirmed profile grouping/i);
+  assert.match(profile.note, /only one exemplar/i);
+  assert.doesNotMatch(profile.answer, /no profile resemblance/i);
+});
+
+test("a separated evidence REVIEW stays advisory when policy escalation is unauthorized", () => {
+  // New packets keep the measured evidence decision and policy eligibility in
+  // separate fields. A policy gate may suppress escalation, never presentation.
+  const profile = laneStatuses(
+    scan({
+      packet: {
+        style_analysis: {
+          learned_provider_active: true,
+          decision: {
+            evidence_tier: "REVIEW",
+            evidence_review_recommended: true,
+            policy_review_recommended: false,
+            policy_escalation_authorized: false,
+          },
+          top_profiles: [
+            {
+              creator: "A. Maker",
+              sample_count: 3,
+              profile_strength: "MULTI_WORK_PROFILE",
+              profile_authorized: false,
+            },
+          ],
+        },
+      },
+    }),
+  ).profile;
+
+  assert.equal(profile.state, "advisory");
+  assert.match(profile.answer, /visual resemblance was found/i);
+  assert.match(profile.answer, /unconfirmed profile grouping/i);
+  assert.match(profile.note, /cannot affect policy/i);
+});
+
+test("a diluted profile still surfaces strong selected-exemplar evidence", () => {
+  const profile = laneStatuses(
+    scan({
+      packet: {
+        style_analysis: {
+          learned_provider_active: true,
+          decision: {
+            evidence_tier: "REVIEW",
+            evidence_basis: "STRONGEST_EXEMPLAR_CROSS_CONTENT",
+            evidence_review_recommended: true,
+            policy_escalation_authorized: false,
+            reason_codes: [
+              "PROFILE_AGGREGATE_DILUTION_DETECTED",
+              "SELECTED_EXEMPLAR_REVIEW_ONLY",
+            ],
+          },
+          top_profiles: [
+            {
+              creator: "Artist",
+              sample_count: 10,
+              profile_strength: "MULTI_WORK_PROFILE",
+              profile_authorized: false,
+            },
+          ],
+        },
+      },
+    }),
+  ).profile;
+
+  assert.equal(profile.state, "advisory");
+  assert.match(profile.headline, /Artist/);
+  assert.match(profile.note, /one exemplar/i);
+  assert.match(profile.note, /10-work/i);
+  assert.doesNotMatch(profile.headline, /No strong resemblance/i);
+});
+
+test("an exact stored work defers creator-style interpretation to the copy lane", () => {
+  const profile = laneStatuses(
+    scan({
+      scan: { match_status: "MATCH_FOUND" },
+      packet: {
+        matches: [{ exact_sha256: true, title: "Registered original" }],
+        style_analysis: {
+          learned_provider_active: true,
+          decision: {
+            evidence_tier: "LOW",
+            classification: "LOW_STYLE_RESEMBLANCE_EVIDENCE",
+          },
+          top_profiles: [{ creator: "Artist", sample_count: 10 }],
+        },
+      },
+    }),
+  ).profile;
+
+  assert.equal(profile.state, "unchecked");
+  assert.match(profile.headline, /registered work itself/i);
+  assert.match(profile.note, /Work Match/i);
+  assert.doesNotMatch(profile.answer, /did not reach/i);
+});
+
+test("unavailable, diagnostic, and no-corpus profile states never render as clear", () => {
+  const cases: Array<[string, Json]> = [
+    [
+      "UNAVAILABLE",
+      {
+        learned_provider_active: true,
+        decision: { evidence_tier: "UNAVAILABLE", classification: "STYLE_ANALYSIS_UNAVAILABLE" },
+        top_profiles: [],
+      },
+    ],
+    [
+      "DIAGNOSTIC",
+      {
+        learned_provider_active: false,
+        decision: {
+          evidence_tier: "DIAGNOSTIC",
+          classification: "DIAGNOSTIC_STYLE_RESEMBLANCE_ONLY",
+        },
+        top_profiles: [{ creator: "A. Maker", sample_count: 3 }],
+      },
+    ],
+    [
+      "NO_REFERENCE_CORPUS",
+      {
+        learned_provider_active: true,
+        decision: { evidence_tier: "LOW", classification: "NO_STYLE_REFERENCE_CORPUS" },
+        top_profiles: [],
+      },
+    ],
+  ];
+
+  for (const [label, styleAnalysis] of cases) {
+    const profile = laneStatuses(
+      scan({ packet: { style_analysis: styleAnalysis } }),
+    ).profile;
+    assert.equal(profile.state, "unchecked", `${label} was presented as a clean result`);
+    assert.doesNotMatch(profile.answer, /above threshold/i);
+  }
+});
+
+test("an explicit learned LOW result with a profile is the only quiet profile result", () => {
+  const profile = laneStatuses(
+    scan({
+      packet: {
+        style_analysis: {
+          learned_provider_active: true,
+          decision: {
+            evidence_tier: "LOW",
+            classification: "LOW_STYLE_RESEMBLANCE_EVIDENCE",
+            review_recommended: false,
+          },
+          top_profiles: [
+            {
+              creator: "A. Maker",
+              sample_count: 3,
+              profile_strength: "MULTI_WORK_PROFILE",
+              profile_authorized: true,
+            },
+          ],
+        },
+      },
+    }),
+  ).profile;
+
+  assert.equal(profile.state, "clear");
+  assert.match(profile.headline, /No strong resemblance to A\. Maker/);
+  assert.match(profile.answer, /review threshold/i);
+});
+
 test("a profile lane with no registered profile asks for one instead of passing", () => {
   assert.equal(laneStatuses(scan()).profile.state, "unchecked");
 });

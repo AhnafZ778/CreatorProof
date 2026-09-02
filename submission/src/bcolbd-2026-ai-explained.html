@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — How the AI actually works</title>
+<link rel="stylesheet" href="../assets/explain.css">
+</head>
+<body>
+
+<div class="cover">
+  <p class="mark">CreatorProof · BCOLBD 2026 · AI · how to say it</p>
+  <h1>How you’d explain the AI<em>to a person.</em></h1>
+  <p class="lead">
+    Read this out loud. If a sentence sounds like a datasheet, skip it. These are the words
+    you’d use with a smart friend who has never trained a model.
+  </p>
+  <div class="foot">
+    The dark architecture pack is for pointing. This is for your mouth.
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+
+<section class="keep">
+  <h2><span class="n">01</span>Start with a person, not a model</h2>
+  <div class="story">
+    <b>The scene</b>
+    <p>
+      A brand is about to post a picture. Legal walks over and asks: is this safe? That sounds
+      like one question. It isn’t. It’s three different questions, and they need three different
+      answers — because the next move is different for each one.
+    </p>
+  </div>
+  <p>
+    If they already licensed the photo, that’s paperwork. If a generator probably made it, that’s
+    a disclosure problem. If it just <em>feels like</em> someone’s drawing style, that’s a
+    conversation, not a lawsuit. Smash those into one percentage and nobody can act. So we don’t.
+  </p>
+  <div class="lanes">
+    <div class="lane" style="--tone:#0e7c82">
+      <b>Copy</b>
+      <p>Is this the same picture as one we already have on file — and which bit of it?</p>
+    </div>
+    <div class="lane" style="--tone:#a4467a">
+      <b>Origin</b>
+      <p>Did a generator leave fingerprints, or a signed note, that it helped make this?</p>
+    </div>
+    <div class="lane" style="--tone:#9a6b12">
+      <b>Style</b>
+      <p>Does this look a lot like a creator who asked us to watch? Looking like them is not stealing.</p>
+    </div>
+  </div>
+  <div class="say">
+    <b>Say this</b>
+    <p>Everyone else hands you a percentage. A percentage can’t tell you which question failed. We answer all three, separately, and we also tell you if we never actually looked.</p>
+  </div>
+</section>
+
+
+<section>
+  <h2><span class="n">02</span>What happens when someone uses the site</h2>
+  <p>
+    They open the website, drop in a picture, hit scan. The page doesn’t sit there grinding.
+    It says “got it” almost immediately, and the slow work happens in the back. Think restaurant:
+    the waiter takes the order in ten seconds. The kitchen takes a couple of minutes. If the
+    fryer dies, the dining room doesn’t close — the tickets just wait.
+  </p>
+  <p>
+    When it’s done you don’t get a vibe. You get three cards: was AI used, does it reuse a work,
+    does it resemble a creator. You can open the microscope and see the actual overlapping patch,
+    with little matching points drawn on. Then a rulebook the customer wrote — not the model —
+    says pass, send to a human, or block. After that we freeze the answer so nobody can quietly
+    edit it later. That’s the blockchain half.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">03</span>The trick all the neural nets share</h2>
+  <p>
+    Forget ChatGPT. Nothing here writes a paragraph. Every picture gets squeezed into a long
+    list of numbers — like a fingerprint, or the GPS coordinates of a song. Pictures the model
+    thinks are “the same kind of thing” land near each other. Distance is a ranking, not a
+    percentage of guilt. Nobody should ever say “this is 87% stolen.”
+  </p>
+  <p>
+    Why not one giant brain that just tells you the answer? Because that brain says it slightly
+    differently every time you ask. You can’t stamp a sentence that won’t sit still. So we use
+    small specialist fingerprints, each trained for one job, each returning the same kind of
+    answer if you run it twice.
+  </p>
+  <div class="def">
+    <b>When they say “is that a transformer?”</b>
+    <p>
+      Yeah. A vision transformer chops the picture into a grid of little tiles and lets every
+      tile look at every other tile. Fancy name, simple idea: the model isn’t scanning left to
+      right like a person reading. It’s asking “how do all the bits relate.” We use two different
+      ones. They do not share a brain. One is for “same photo?”, one is for “same drawing style?”,
+      one smaller one is for “does this look generated?”
+    </p>
+  </div>
+</section>
+
+
+<section>
+  <h2><span class="n">04</span>Copy, part one — the librarian (SSCD)</h2>
+  <p>
+    First job: rummage the catalog really fast. The model is called <strong>SSCD</strong>. Ugly
+    name. What it was trained to do is the whole point: not “this is a cat.” It was trained on
+    pictures that had been cropped, jpeg’d, recolored, slapped with a logo — and it still had to
+    say “that’s the same photo.” That’s what an infringer actually does. So it’s good at finding
+    abused copies, and bad at being a general art critic. Fine. That’s the job.
+  </p>
+  <p>
+    It turns the picture into about five hundred numbers, and also looks at the middle and the
+    four corners, because a stolen logo usually lives in a corner, not the whole poster. Then it
+    picks the eight closest things in the catalog. Eight suspects. That’s it. The librarian is
+    not allowed to accuse anyone. Librarians are fast and a bit sloppy. We like them for fetching.
+    We do not let them testify.
+  </p>
+  <div class="say">
+    <b>If they say “so it’s reverse image search”</b>
+    <p>Google looks at the whole internet and says “similar vibes.” We look at the pictures this company is actually allowed to use, and then we still have to prove it the old-fashioned way. Similar is not copied.</p>
+  </div>
+</section>
+
+
+<section>
+  <h2><span class="n">05</span>Copy, part two — the lineup (this is not AI)</h2>
+  <p>
+    Here’s the part that makes the copy answer believable. We stop using the neural net. We do
+    what computers did in 2004. We hunt for little landmarks in both pictures — a window corner,
+    a speck of paint, a zip on a jacket — a couple of thousand of them. Then we ask: do a bunch
+    of those landmarks line up under one honest warp? Cropped, rotated, resized, even flipped
+    in a mirror — still one warp. If they don’t line up, it’s not a copy. Two photos of the same
+    beach at sunset will “feel” similar to the librarian and then fail this test, which is
+    exactly what you want.
+  </p>
+  <p>
+    We need at least a dozen landmarks agreeing, spread around, not all hiding in one corner.
+    If that passes, we actually bend one picture onto the other and ask: in the overlap, do the
+    pixels agree, or did we just get unlucky with a few corners? Both have to say yes. Same file
+    down to the last byte is the only shortcut. Everything else has to survive the lineup
+    <em>and</em> the pixel check.
+  </p>
+  <div class="say">
+    <b>Say this</b>
+    <p>You can trick the librarian with a weird noise pattern. You cannot invent twelve landmarks that all line up with a picture you never copied. That’s why the neural net fetches, and the old geometry accuses.</p>
+  </div>
+</section>
+
+
+<section>
+  <h2><span class="n">06</span>Origin — a signed note beats a vibe detector</h2>
+  <p>
+    Everyone knows “AI detectors” are messy. So we don’t start there. Best evidence is a signed
+    note stuffed inside the file by the camera or the generator — C2PA, same idea as a wax seal
+    on a letter. If the seal checks out, we’re done arguing. If there’s no seal, that doesn’t
+    mean a human made it. It just means nobody signed it. A lot of real photos have no seal.
+    A lot of fake ones don’t either.
+  </p>
+  <p>
+    Next we literally read the picture, including the four corners, for printed text like
+    “AI generated.” That’s where watermarks sit, and where people crop them off. No text means
+    nothing. Text means a human should look.
+  </p>
+  <p>
+    Only then the vibe detectors. We run more than one, from different families, and they have
+    to agree. If they argue, we say we don’t know — we do not pick a winner. And by default this
+    whole lane is advice. It cannot block a post on its own. If a customer wants it to be a
+    gate, they turn that on. You’re not going to stand on stage and pretend detectors are
+    magic. You’re going to say we treated them as the weakest evidence, on purpose.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">07</span>Style — handwriting, not the words (CSD)</h2>
+  <p>
+    Style is not copyright. We say that first, every time, or a judge will eat you. This lane
+    exists because a creator whose look is getting cloned at scale still deserves a heads-up.
+  </p>
+  <p>
+    Different fingerprint. About seven hundred numbers, trained to care about <em>how</em> it was
+    made and ignore <em>what</em> it depicts. Same illustrator, two different cats: should be
+    close. Two photographs of the same building, different photographers: should not. That’s
+    <strong>CSD</strong>. Think handwriting, not the sentence.
+  </p>
+  <p>
+    We don’t score against a random person. The creator has to opt in, with at least a few of
+    their works, before we even run the numbers. If they never confirmed, or they revoked, we
+    produce nothing. And some styles sit in the middle of the room and look a bit like everyone —
+    that’s a known trap — so we knock those “popular” profiles down instead of letting them win
+    every comparison. We also check the copy fingerprint on the side: if it’s the same building,
+    that’s content, not style. We don’t want to confuse those.
+  </p>
+  <p>
+    Ceiling of this lane, said plainly: we can ask a human to look. We cannot say they stole it.
+    We cannot change the copy answer. If you oversell this in the room, you deserve the follow-up.
+  </p>
+  <div class="say">
+    <b>Say this</b>
+    <p>Copy is “same photo.” Style is “same handwriting.” Handwriting isn’t illegal. We only look if the writer asked us to, and the loudest thing we can do is tap someone on the shoulder.</p>
+  </div>
+</section>
+
+
+<section class="keep">
+  <h2><span class="n">08</span>The models don’t get to be the boss</h2>
+  <p>
+    This is the bit most products skip, and it’s why theirs quietly go feral. The models report
+    what they saw. They cannot see the customer’s licences. They cannot press the block button.
+    A written rulebook the customer owns — a document, not a vibe — turns those findings into
+    pass, review, or block. When they upgrade a model next year, the rulebook doesn’t secretly
+    rewrite itself. You can replay last March’s scan against today’s rules and see what would
+    change. That’s the difference between a detector and something a lawyer can live with.
+  </p>
+  <p>
+    Same honesty on failure. If the detector times out, we do not draw a green tick. “We
+    couldn’t look” is a different sentence from “we looked and found nothing.” A green tick
+    you didn’t earn is how people get sued.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">09</span>The names, if someone actually asks</h2>
+  <p class="muted">Don’t lead with these. Have them in your pocket.</p>
+  <table class="plain">
+    <thead><tr><th>If they say</th><th>You say</th></tr></thead>
+    <tbody>
+      <tr><td>SSCD</td><td>The copy librarian. Fingerprint of the photo itself, even after it’s been beaten up. Fetches eight suspects. Cannot accuse.</td></tr>
+      <tr><td>SIFT / MAGSAC</td><td>The lineup. Old-school landmarks. At least a dozen have to agree on one warp. That’s the proof.</td></tr>
+      <tr><td>C2PA</td><td>The signed note inside the file. Beats any detector.</td></tr>
+      <tr><td>Community Forensics / Sightengine</td><td>Two different “does this look generated” tools. They have to agree or we shrug.</td></tr>
+      <tr><td>CSD</td><td>The handwriting fingerprint. Opt-in only. Can tap a shoulder, never call it theft.</td></tr>
+    </tbody>
+  </table>
+  <p>
+    We don’t train these on customer pictures. Their art is not our homework. We only learn a
+    tiny calibration curve on held-out scores, and a little average of works a creator actually
+    enrolled.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">10</span>Ten minutes, in this order</h2>
+  <ol>
+    <li>One question that’s secretly three. Point at the three cards.</li>
+    <li>Librarian then lineup. Point at the overlapping patch in the microscope.</li>
+    <li>Origin: signed note first, detectors last, and they can’t block by default.</li>
+    <li>Style: handwriting, opt-in, tap on the shoulder.</li>
+    <li>Models don’t press the button. Timeout is not a pass.</li>
+    <li>Then we freeze the answer. That’s the other booklet.</li>
+  </ol>
+  <div class="say">
+    <b>Walk off on this</b>
+    <p>Most teams built a detector. We built the rest of the sentence: what we checked, what we couldn’t, who decided, and when.</p>
+  </div>
+</section>
+
+
+</td></tr></tbody></table>
+</body>
+</html>

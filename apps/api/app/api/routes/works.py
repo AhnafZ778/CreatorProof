@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi.responses import RedirectResponse
 from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -16,7 +17,7 @@ from app.core.security import AuthContext
 from app.domain.enums import ClaimState, RightsPath
 from app.domain.platform import AuditEventType, CredentialScope, DeletionReceiptState, LicenseState
 from app.models import AssetVersion, Catalog, Claim, DeletionReceipt, License, Work, new_id
-from app.schemas import DeletionReceiptRead, WorkRead
+from app.schemas import DeletionReceiptRead, WorkFromUploadRequest, WorkRead
 from app.services.ai_index import persist_reference_embedding
 from app.services.audit import record_audit_event
 from app.services.blockchain import append_integrity_event, prepare_integrity_event
@@ -26,6 +27,7 @@ from app.services.metering import Meter, record_usage
 from app.services.policy_store import claim_integrity_projection, license_integrity_projection
 from app.services.registration_gate import REFUSAL_CODE, screen_registration_origin
 from app.services.storage import work_prefix
+from app.services.upload_tokens import UploadGrantError, load_verified_upload, verify_upload_token
 
 router = APIRouter(prefix="/v1/works", tags=["works"])
 logger = logging.getLogger("creatorproof.works")
@@ -53,6 +55,7 @@ def _register_bytes(
     allowed_uses: list[str],
     claimant: str | None,
     claim_state: ClaimState,
+    work_id: str | None = None,
 ) -> Work:
     """Register one set of bytes as a work, asset version and catalog member."""
     tenant_id = auth.tenant_id
@@ -92,7 +95,7 @@ def _register_bytes(
         )
 
     fingerprints = container.fingerprints.compute(raw, image)
-    work_id = new_id("wrk")
+    work_id = work_id or new_id("wrk")
     key = f"references/{tenant_id}/{catalog_id}/{work_id}/source.bin"
     work = Work(
         id=work_id,
@@ -234,7 +237,20 @@ def _register_bytes(
         )
     ai_embedding_key: str | None = None
     try:
-        container.storage.put(key, raw)
+        media_type = (
+            image.get_format_mimetype() or "application/octet-stream"
+            if hasattr(image, "get_format_mimetype")
+            else "application/octet-stream"
+        )
+        container.storage.put_bytes(
+            key,
+            raw,
+            content_type=media_type,
+            metadata={
+                "creatorproof-sha256": fingerprints.sha256,
+                "creatorproof-byte-size": str(len(raw)),
+            },
+        )
         if container.ai_retrieval.available:
             try:
                 ai_embedding_key = persist_reference_embedding(container, key, image)
@@ -317,6 +333,102 @@ async def register_work(
         claimant=claimant,
         claim_state=claim_state,
     )
+
+
+@router.post("/from-upload", response_model=WorkRead, status_code=status.HTTP_201_CREATED)
+def register_work_from_upload(
+    payload: WorkFromUploadRequest,
+    auth: Annotated[AuthContext, Depends(require_scope(CredentialScope.WORKS_WRITE))],
+    db: Annotated[Session, Depends(get_db)],
+    container: Annotated[Container, Depends(get_container)],
+) -> Work:
+    """Register a private object uploaded directly by the browser."""
+
+    try:
+        rights_path = RightsPath(payload.rights_path)
+        claim_state = ClaimState(payload.claim_state)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "code": "WORK_METADATA_INVALID",
+                "message": "rights_path or claim_state is unsupported.",
+            },
+        ) from exc
+    allowed_uses = (
+        _allowed_uses(payload.allowed_uses)
+        if isinstance(payload.allowed_uses, str)
+        else sorted({value.strip() for value in payload.allowed_uses if value.strip()})
+    )
+    try:
+        claims = verify_upload_token(
+            payload.upload_token,
+            container.settings.upload_token_secret,
+            tenant_id=auth.tenant_id,
+            purpose="work",
+        )
+    except UploadGrantError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={"code": exc.code, "message": exc.message},
+        ) from exc
+
+    direct_work_id = "wrk_upl_" + hashlib.sha256(claims.nonce.encode()).hexdigest()[:40]
+    existing = db.get(Work, direct_work_id)
+    if existing is not None:
+        expected_claimant = payload.claimant.strip() if payload.claimant else None
+        if (
+            existing.tenant_id == auth.tenant_id
+            and existing.title == payload.title.strip()
+            and existing.catalog_id == payload.catalog_id
+            and existing.rights_path == str(rights_path)
+            and list(existing.allowed_uses or []) == allowed_uses
+            and existing.claimant == expected_claimant
+            and existing.claim_state == str(claim_state)
+        ):
+            container.storage.delete(claims.key)
+            return existing
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "IDEMPOTENCY_PAYLOAD_MISMATCH",
+                "message": "This upload token is already bound to a different work registration.",
+                "existing_work_id": existing.id,
+            },
+        )
+
+    try:
+        raw = load_verified_upload(
+            container.storage,
+            claims,
+            max_bytes=container.settings.max_upload_bytes,
+        )
+    except UploadGrantError as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail={"code": exc.code, "message": exc.message},
+        ) from exc
+    try:
+        work = _register_bytes(
+            raw=raw,
+            title=payload.title,
+            catalog_id=payload.catalog_id,
+            auth=auth,
+            db=db,
+            container=container,
+            rights_path=rights_path,
+            allowed_uses=allowed_uses,
+            claimant=payload.claimant,
+            claim_state=claim_state,
+            work_id=direct_work_id,
+        )
+    except HTTPException as exc:
+        if exc.status_code < 500:
+            container.storage.delete(claims.key)
+        raise
+    else:
+        container.storage.delete(claims.key)
+        return work
 
 
 @router.post("/bulk", status_code=status.HTTP_207_MULTI_STATUS)
@@ -428,6 +540,34 @@ def get_work_media(
                 "code": "REFERENCE_ASSET_VERSION_MISSING",
                 "message": "The work has no immutable asset version and cannot be served.",
             },
+        )
+    object_metadata = container.storage.head(asset_version.storage_key)
+    if object_metadata is None:
+        raise HTTPException(status_code=404, detail="Registered media object not found")
+    stored_metadata = {
+        str(key).lower(): str(value) for key, value in object_metadata.get("metadata", {}).items()
+    }
+    if int(object_metadata["size_bytes"]) != asset_version.byte_size or (
+        stored_metadata.get("creatorproof-sha256")
+        and stored_metadata["creatorproof-sha256"] != asset_version.sha256
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "REFERENCE_ASSET_INTEGRITY_MISMATCH",
+                "message": "Stored media does not match its immutable registered identity.",
+                "asset_version_id": asset_version.id,
+            },
+        )
+    signed_download = container.storage.presign_get(
+        asset_version.storage_key,
+        expires_seconds=300,
+    )
+    if signed_download is not None and stored_metadata.get("creatorproof-sha256"):
+        return RedirectResponse(
+            url=signed_download["url"],
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+            headers={"Cache-Control": "private, no-store"},
         )
     try:
         raw = container.storage.read(asset_version.storage_key)

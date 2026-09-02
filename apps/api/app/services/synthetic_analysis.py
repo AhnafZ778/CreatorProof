@@ -918,9 +918,13 @@ def analyze_synthetic_origin(
             member_rows.append(primary_row)
             routing["primary_succeeded"] = True
         else:
-            routing["fallback_activated"] = True
-            routing["fallback_reason"] = "PRIMARY_OPERATIONAL_FAILURE"
             fallback_detectors = list(getattr(detector_router, "fallback_detectors", []))
+            routing["fallback_activated"] = bool(fallback_detectors)
+            routing["fallback_reason"] = (
+                "PRIMARY_OPERATIONAL_FAILURE"
+                if fallback_detectors
+                else "PRIMARY_OPERATIONAL_FAILURE_NO_FALLBACK"
+            )
             routing["fallback_providers"] = [item.name for item in fallback_detectors]
             for detector in fallback_detectors:
                 row = _run_multiview_detector(

@@ -1,0 +1,855 @@
+/**
+ * CreatorProof architecture pack stylesheet.
+ *
+ * Print target is A4 landscape. Diagrams are hand-authored inline SVG rather
+ * than raster exports so the PDF stays vector at any zoom and the whole pack
+ * fits inside the 20 MB BCOLBD limit with room to spare.
+ *
+ * The palette and the meaning attached to each hue come from
+ * architecture-packs/DESIGN_PHILOSOPHY.md: cyan is copied-work evidence,
+ * magenta is origin evidence, amber is creator-profile evidence, green carries
+ * policy outcomes, electric blue identifies public proof. Line weight and dash
+ * pattern separate data movement from decisions, signatures and public
+ * commitments, so an arrow is never decoration.
+ */
+
+@font-face {
+  font-family: "Geist";
+  src: url("fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+}
+
+:root {
+  --bg: #05070c;
+  --panel: rgba(255, 255, 255, 0.042);
+  --panel-raised: rgba(255, 255, 255, 0.072);
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+
+/**
+ * Page frame.
+ *
+ * Chrome will not extend a page background into the @page margin box, so a
+ * dark document printed with margins shows white gutters on every sheet. A
+ * zero-margin page plus one wrapper table fixes it: Chrome repeats thead and
+ * tfoot on every page, so those empty rows become the vertical margin and the
+ * cell padding becomes the horizontal one. Landscape margins are tighter than
+ * the portrait documents because diagrams need the width.
+ */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+html {
+  background: var(--bg);
+}
+
+table.pageFrame,
+table.pageFrame > thead > tr > td,
+table.pageFrame > tfoot > tr > td,
+table.pageFrame > tbody > tr > td {
+  margin: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  break-inside: auto;
+}
+
+table.pageFrame {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.pageFrame > thead > tr > td,
+table.pageFrame > tfoot > tr > td {
+  height: 11mm;
+  padding: 0;
+}
+
+table.pageFrame > tbody > tr > td {
+  padding: 0 14mm;
+  vertical-align: top;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-2);
+  font-family: var(--sans);
+  font-size: 9.4pt;
+  line-height: 1.55;
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- cover */
+
+.cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 297mm;
+  height: 209.4mm;
+  padding: 16mm 18mm 13mm;
+  overflow: hidden;
+  background:
+    radial-gradient(62% 70% at 10% 2%, rgba(96, 165, 250, 0.24), transparent 62%),
+    radial-gradient(54% 62% at 94% 98%, rgba(165, 180, 252, 0.16), transparent 60%),
+    #05070c;
+  break-after: page;
+}
+
+.cover::after {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 34px 34px;
+  content: "";
+  pointer-events: none;
+}
+
+.cover > * {
+  position: relative;
+  z-index: 1;
+}
+
+.coverMark {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--text-4);
+  font: 600 8.2pt/1 var(--mono);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.coverMark b {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+
+.coverMark span {
+  width: 26px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.coverBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4mm 0;
+}
+
+.coverTitle {
+  max-width: 200mm;
+  margin: 0 0 6mm;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 44pt;
+  font-weight: 500;
+  line-height: 1.03;
+  letter-spacing: -0.032em;
+}
+
+/* A gradient clipped to text rasterises with a visible layer edge in Chrome's
+   PDF pipeline, so the second line takes a solid accent instead. */
+.coverTitle em {
+  display: block;
+  color: #7fb3ff;
+  font-style: normal;
+}
+
+.coverLead {
+  max-width: 168mm;
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12pt;
+  line-height: 1.52;
+}
+
+.coverLanes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3.6mm;
+  margin-bottom: 7mm;
+}
+
+.coverLane {
+  padding: 4.4mm 4.4mm 5mm;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--tone, var(--accent));
+  border-radius: 2.6mm;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.coverLane b {
+  display: block;
+  margin-bottom: 1.8mm;
+  color: var(--tone, var(--accent));
+  font: 600 7.4pt/1 var(--mono);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.coverLane span {
+  color: var(--text-2);
+  font-size: 8.8pt;
+  line-height: 1.44;
+}
+
+.coverFoot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 10mm;
+  padding-top: 5mm;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
+  font: 500 8pt/1.6 var(--mono);
+  letter-spacing: 0.05em;
+}
+
+.coverFoot b {
+  display: block;
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- slides */
+
+/* One diagram per sheet. Unlike the portrait documents these do force a break,
+   because a diagram that straddles two pages cannot be pointed at. */
+.slide {
+  break-before: page;
+  break-inside: avoid;
+}
+
+.slide:first-of-type {
+  break-before: auto;
+}
+
+.slideHead {
+  display: flex;
+  align-items: baseline;
+  gap: 5mm;
+  margin-bottom: 2.6mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--line);
+  break-after: avoid;
+}
+
+.slideNum {
+  color: var(--accent);
+  font: 600 9pt/1 var(--mono);
+  letter-spacing: 0.14em;
+}
+
+.slideHead h1 {
+  flex: 1;
+  margin: 0;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 19pt;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.022em;
+}
+
+.slideHead em {
+  flex-shrink: 0;
+  color: var(--text-4);
+  font: 600 7.4pt/1 var(--mono);
+  font-style: normal;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.kicker {
+  max-width: 236mm;
+  margin: 0 0 2.8mm;
+  color: var(--text-2);
+  font-size: 9.8pt;
+  line-height: 1.46;
+}
+
+.kicker strong {
+  color: var(--text);
+}
+
+h2 {
+  margin: 5mm 0 2.4mm;
+  color: var(--text);
+  font-size: 12pt;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  break-after: avoid;
+}
+
+h4 {
+  margin: 3mm 0 1.4mm;
+  color: var(--text-2);
+  font: 600 7.8pt/1.3 var(--mono);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  break-after: avoid;
+}
+
+p {
+  margin: 0 0 2.6mm;
+}
+
+strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+code {
+  padding: 0.4mm 1.1mm;
+  border-radius: 1mm;
+  background: rgba(255, 255, 255, 0.07);
+  color: #cfe3ff;
+  font-family: var(--mono);
+  font-size: 0.87em;
+}
+
+/* --------------------------------------------------------------- diagram */
+
+figure.dia {
+  margin: 0 0 2.8mm;
+  padding: 2.4mm 2.8mm;
+  border: 1px solid var(--line);
+  border-radius: 2.6mm;
+  background: rgba(255, 255, 255, 0.022);
+  break-inside: avoid;
+}
+
+figure.dia svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+figure.dia figcaption {
+  margin-top: 1.8mm;
+  padding-top: 1.6mm;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
+  font: 500 7.2pt/1.4 var(--mono);
+  letter-spacing: 0.05em;
+}
+
+/**
+ * SVG vocabulary.
+ *
+ * Styling the shapes here rather than inline keeps the diagram markup close to
+ * pure structure, which matters when a single sheet carries forty elements.
+ * Coordinates are authored against a 1600-unit-wide viewBox; at a 267 mm text
+ * column one unit is about 0.167 mm, so 20 units reads as roughly 9.5 pt.
+ */
+
+svg text {
+  font-family: var(--sans);
+  fill: var(--text-2);
+}
+
+/* node containers */
+svg .nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+svg .nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+svg .nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+svg .nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+svg .nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+svg .nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+svg .nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+svg .nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+svg .nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+
+/* zones: the large regions a diagram is divided into */
+svg .zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+svg .zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+svg .zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+
+/* type scale */
+svg .t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+svg .t-sub { font-size: 16.5px; fill: var(--text-3); }
+svg .t-body { font-size: 17.5px; fill: var(--text-2); }
+svg .t-lbl {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--text-4);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+svg .t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+svg .t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+
+svg .fx-a { fill: var(--accent); }
+svg .fx-copy { fill: var(--copy); }
+svg .fx-orig { fill: var(--origin); }
+svg .fx-prof { fill: var(--profile); }
+svg .fx-pass { fill: var(--pass); }
+svg .fx-warn { fill: var(--review); }
+svg .fx-bad { fill: var(--block); }
+svg .fx-dim { fill: var(--text-4); }
+svg .fx-txt { fill: var(--text); }
+
+/**
+ * Arrow grammar. Four line styles, four meanings, used consistently in every
+ * diagram in both packs so a judge learns the legend once.
+ *   ar      thin solid  - data movement
+ *   ar-dec  solid accent - a decision or control instruction
+ *   ar-sig  dashed       - a signature or cryptographic binding
+ *   ar-pub  thick blue   - an irreversible public commitment
+ */
+svg .ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+svg .ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+svg .ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+svg .ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+svg .ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+svg .ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+
+svg .rule { stroke: var(--line-strong); stroke-width: 1.2; }
+svg .rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+
+/* numbered callout badge, the thing the presenter points at */
+svg .cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+svg .cal text {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--accent);
+  text-anchor: middle;
+}
+
+/* -------------------------------------------------------------- callouts */
+
+ol.callouts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.7mm 4.6mm;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  break-inside: avoid;
+}
+
+ol.callouts.two { grid-template-columns: repeat(2, 1fr); }
+ol.callouts.four { grid-template-columns: repeat(4, 1fr); }
+
+ol.callouts li {
+  display: flex;
+  gap: 2.2mm;
+  align-items: flex-start;
+  font-size: 8.5pt;
+  line-height: 1.4;
+}
+
+ol.callouts li > b {
+  flex-shrink: 0;
+  width: 4.6mm;
+  height: 4.6mm;
+  margin-top: 0.5mm;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font: 700 7pt/4.4mm var(--mono);
+  text-align: center;
+}
+
+ol.callouts li strong {
+  color: var(--text);
+}
+
+/* -------------------------------------------------------- speaking cue */
+
+.say {
+  margin: 2.6mm 0 0;
+  padding: 2.6mm 3.2mm;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--pass);
+  border-radius: 0 2.2mm 2.2mm 0;
+  background: rgba(52, 211, 153, 0.05);
+  break-inside: avoid;
+}
+
+.say b {
+  display: block;
+  margin-bottom: 1.2mm;
+  color: var(--pass);
+  font: 600 7.4pt/1 var(--mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.say p {
+  margin: 0;
+  color: var(--text);
+  font-size: 9.3pt;
+  line-height: 1.46;
+}
+
+.say p + p {
+  margin-top: 1.6mm;
+}
+
+/* the pre-loaded rebuttal that sits under a speaking cue */
+.parry {
+  margin: 2.6mm 0 0;
+  padding: 2.6mm 3.2mm;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--review);
+  border-radius: 0 2.2mm 2.2mm 0;
+  background: rgba(251, 191, 36, 0.05);
+  break-inside: avoid;
+}
+
+.parry b {
+  display: block;
+  margin-bottom: 1.2mm;
+  color: var(--review);
+  font: 600 7.4pt/1 var(--mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.parry p {
+  margin: 0 0 1.2mm;
+  font-size: 8.6pt;
+  line-height: 1.42;
+}
+
+.parry p:last-child { margin-bottom: 0; }
+.parry q { color: var(--text); font-style: italic; }
+.parry q::before, .parry q::after { content: none; }
+
+/* ----------------------------------------------------------------- grids */
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3.6mm; margin: 0 0 3mm; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.2mm; margin: 0 0 3mm; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 0 0 3mm; }
+.grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.8mm; margin: 0 0 3mm; }
+
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; align-items: start; }
+.split.wide { grid-template-columns: 1.35fr 1fr; }
+
+.card {
+  padding: 3.6mm;
+  border: 1px solid var(--line);
+  border-radius: 2.4mm;
+  background: var(--panel);
+  break-inside: avoid;
+}
+
+.card h4 { margin-top: 0; }
+.card p:last-child, .card ul:last-child { margin-bottom: 0; }
+.card.lane { border-top: 2px solid var(--tone); }
+.card.lane h4 { color: var(--tone); }
+
+.laneCopy { --tone: var(--copy); }
+.laneOrigin { --tone: var(--origin); }
+.laneProfile { --tone: var(--profile); }
+.laneProof { --tone: var(--accent); }
+
+.stat {
+  padding: 3.2mm;
+  border: 1px solid var(--line);
+  border-radius: 2.4mm;
+  background: var(--panel);
+  break-inside: avoid;
+}
+
+.stat b {
+  display: block;
+  margin-bottom: 0.8mm;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 17pt;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.stat span { display: block; color: var(--text-3); font-size: 7.9pt; line-height: 1.38; }
+.stat.pass b { color: var(--pass); }
+.stat.accent b { color: var(--accent); }
+.stat.copy b { color: var(--copy); }
+
+/* ---------------------------------------------------------------- tables */
+
+table.data {
+  width: 100%;
+  margin: 2mm 0 3mm;
+  border-collapse: collapse;
+  font-size: 8.4pt;
+  break-inside: avoid;
+}
+
+table.data thead th {
+  padding: 1.8mm 2.4mm;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--text-3);
+  font: 600 7.1pt/1.3 var(--mono);
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  vertical-align: bottom;
+}
+
+table.data tbody td {
+  padding: 2mm 2.4mm;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  line-height: 1.44;
+  vertical-align: top;
+}
+
+table.data tbody tr:last-child td { border-bottom: none; }
+table.data tbody td:first-child { color: var(--text); font-weight: 500; }
+table.data td.m, table.data th.m { font-family: var(--mono); font-size: 7.9pt; }
+table.data td.win { color: var(--pass); }
+table.data td.lose { color: var(--block); }
+
+/* ----------------------------------------------------------------- lists */
+
+ul { margin: 0 0 2.6mm; padding-left: 4.8mm; }
+li { margin-bottom: 1.2mm; padding-left: 0.8mm; }
+li::marker { color: var(--text-4); }
+
+ul.clean { padding-left: 0; list-style: none; }
+ul.clean li { position: relative; padding-left: 5.4mm; }
+ul.clean li::before {
+  position: absolute;
+  left: 0;
+  top: 1.9mm;
+  width: 2.4mm;
+  height: 2.4mm;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  content: "";
+}
+
+ul.tick { padding-left: 0; list-style: none; }
+ul.tick li { position: relative; padding-left: 5.4mm; }
+ul.tick li::before {
+  position: absolute;
+  left: 0;
+  color: var(--pass);
+  font-weight: 700;
+  content: "+";
+}
+ul.tick li.no::before { color: var(--block); content: "\2013"; }
+
+/* -------------------------------------------------------------- verdicts */
+
+.pill {
+  display: inline-block;
+  padding: 0.5mm 1.8mm;
+  border: 1px solid currentColor;
+  border-radius: 6mm;
+  font: 600 6.8pt/1.5 var(--mono);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.pill.pass { color: var(--pass); }
+.pill.review { color: var(--review); }
+.pill.block { color: var(--block); }
+.pill.neutral { color: var(--text-3); }
+.pill.copy { color: var(--copy); }
+.pill.origin { color: var(--origin); }
+.pill.profile { color: var(--profile); }
+
+/* --------------------------------------------------------------- codeish */
+
+pre {
+  margin: 2mm 0 3mm;
+  padding: 3mm;
+  border: 1px solid var(--line);
+  border-radius: 2.2mm;
+  background: rgba(0, 0, 0, 0.42);
+  color: #cfe3ff;
+  font-family: var(--mono);
+  font-size: 7.6pt;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  break-inside: avoid;
+}
+
+pre .c { color: var(--text-4); }
+pre .k { color: var(--origin); }
+pre .s { color: var(--pass); }
+
+/* ------------------------------------------------------------ armory Q&A */
+
+.armory {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5mm 4.6mm;
+  break-inside: avoid;
+}
+
+.qa {
+  padding: 2.6mm 3.2mm;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 2.2mm 2.2mm 0;
+  background: rgba(96, 165, 250, 0.045);
+  break-inside: avoid;
+}
+
+.qa .q {
+  margin: 0 0 1.6mm;
+  color: var(--text);
+  font-size: 9.4pt;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.qa .q small {
+  display: block;
+  margin-bottom: 1mm;
+  color: var(--accent);
+  font: 600 6.9pt/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.qa .a { margin: 0; font-size: 8.7pt; line-height: 1.42; }
+
+.qa .pt {
+  display: block;
+  margin-top: 1.6mm;
+  padding-top: 1.4mm;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
+  font: 600 7.1pt/1.35 var(--mono);
+  letter-spacing: 0.09em;
+}
+
+.qa .pt b { color: var(--accent); font-weight: 700; }
+
+/* -------------------------------------------------------------- helpers */
+
+.lead { color: var(--text); font-size: 11pt; line-height: 1.5; }
+.small { font-size: 8.3pt; line-height: 1.46; }
+.muted { color: var(--text-3); }
+.faint { color: var(--text-4); }
+.mono { font-family: var(--mono); }
+.avoid { break-inside: avoid; }
+.nb { break-before: page; }
+.center { text-align: center; }
+
+hr { height: 0; margin: 4mm 0; border: none; border-top: 1px solid var(--line); }
+
+.footNote {
+  margin-top: 2.6mm;
+  padding-top: 2mm;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
+  font-size: 7.7pt;
+  line-height: 1.46;
+}
+
+/* legend strip reproduced on the contents sheet */
+.legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3mm;
+  margin: 2mm 0 3mm;
+}
+
+.legend div {
+  display: flex;
+  gap: 2.4mm;
+  align-items: center;
+  font-size: 8.3pt;
+}
+
+.legend svg { flex-shrink: 0; }
+
+.toc { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2mm 7mm; margin: 0 0 2mm; }
+
+.toc a {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  padding: 1.7mm 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 8.8pt;
+}
+
+.toc a b {
+  flex-shrink: 0;
+  color: var(--accent);
+  font: 600 7.4pt/1.4 var(--mono);
+  letter-spacing: 0.12em;
+}
+
+.toc a span { flex: 1; }
+
+.toc a i {
+  flex-shrink: 0;
+  color: var(--text-4);
+  font: 500 7.2pt/1.4 var(--mono);
+  font-style: normal;
+}

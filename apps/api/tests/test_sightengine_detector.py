@@ -12,9 +12,15 @@ from app.providers.synthetic_detection import SightengineDetector, SyntheticDete
 from app.services.synthetic_analysis import analyze_synthetic_origin
 
 
-def _router(tmp_path, *, api_user: str = "mock_u", api_secret: str = "mock_s"):
+def _router(
+    tmp_path,
+    *,
+    api_user: str = "mock_u",
+    api_secret: str = "mock_s",
+    mode: str = "sightengine",
+):
     return SyntheticDetectorRouter(
-        mode="sightengine",
+        mode=mode,
         sightengine_api_user=api_user,
         sightengine_api_secret=api_secret,
         community_model_path=tmp_path / "community-not-installed",
@@ -365,3 +371,59 @@ def test_unconfigured_sightengine_status_is_explicit_and_secret_free(tmp_path):
     assert status["routing"]["primary"]["credential_values_exposed"] is False
     assert "api_user" not in json.dumps(status).lower()
     assert "api_secret" not in json.dumps(status).lower()
+
+
+def test_sightengine_only_never_constructs_or_advertises_a_local_fallback(tmp_path):
+    with (
+        patch("app.providers.synthetic_detection.CommunityForensicsDetector") as community,
+        patch("app.providers.synthetic_detection.TorchScriptSyntheticDetector") as torchscript,
+        patch("app.providers.synthetic_detection.ExternalJsonSyntheticDetector") as external,
+    ):
+        router = SyntheticDetectorRouter(
+            mode="sightengine_only",
+            sightengine_api_user="remote-user",
+            sightengine_api_secret="remote-secret",
+            community_model_path=tmp_path / "community-model",
+            torchscript_model_path=tmp_path / "torchscript-model.pt",
+            device="cpu",
+            # It is deliberately invalid: sightengine_only must not even parse or
+            # instantiate an operator-local external command fallback.
+            external_detectors_json="not-json",
+            evidence_family_registry_path=tmp_path / "families.json",
+            calibration_path=tmp_path / "calibration.json",
+            min_calibration_samples=100,
+            min_calibration_class_samples=25,
+        )
+
+    community.assert_not_called()
+    torchscript.assert_not_called()
+    external.assert_not_called()
+    assert router.detectors == [router.sightengine]
+    assert router.fallback_detectors == []
+    status = router.status()
+    assert status["routing"]["mode"] == "sightengine_only"
+    assert status["routing"]["fallback_policy"] == "NO_FALLBACK_FAIL_CLOSED"
+    assert status["routing"]["local_fallback_available"] is False
+    assert status["configuration_warning"] is None
+
+
+def test_sightengine_only_operational_failure_stays_unavailable_without_fallback(tmp_path):
+    router = _router(tmp_path, mode="sightengine_only")
+
+    with patch("httpx.Client.post", return_value=MagicMock(status_code=429)):
+        result = analyze_synthetic_origin(
+            image=Image.new("RGB", (160, 160), color="white"),
+            detector_router=router,
+            provenance=_provenance(),
+            settings=_settings(synthetic_spatial_crops=False),
+            source_media=b"private-original-media",
+            source_filename="candidate.png",
+        )
+
+    assert result["runtime"]["routing"]["primary_succeeded"] is False
+    assert result["runtime"]["routing"]["fallback_activated"] is False
+    assert (
+        result["runtime"]["routing"]["fallback_reason"] == "PRIMARY_OPERATIONAL_FAILURE_NO_FALLBACK"
+    )
+    assert result["runtime"]["routing"]["fallback_providers"] == []
+    assert result["classification"] == "SYNTHETIC_ORIGIN_ANALYSIS_UNAVAILABLE"

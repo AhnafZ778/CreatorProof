@@ -35,6 +35,43 @@ class WorkRead(BaseModel):
     created_at: datetime
 
 
+class DirectUploadCreateRequest(BaseModel):
+    purpose: Literal["scan", "work"]
+    filename: str = Field(min_length=1, max_length=255)
+    content_type: Literal["image/jpeg", "image/png", "image/webp"]
+    size_bytes: int = Field(gt=0)
+
+
+class DirectUploadInstruction(BaseModel):
+    method: Literal["PUT"]
+    url: str
+    headers: dict[str, str]
+    expires_seconds: int
+    max_bytes: int
+    max_bytes_enforced: bool = False
+
+
+class DirectUploadCreatedRead(BaseModel):
+    upload_token: str
+    upload: DirectUploadInstruction
+
+
+class ScanFromUploadRequest(BaseModel):
+    upload_token: str = Field(min_length=32, max_length=8192)
+    catalog_id: str = Field(min_length=1, max_length=120)
+    intended_use: str = Field(min_length=1, max_length=160)
+
+
+class WorkFromUploadRequest(BaseModel):
+    upload_token: str = Field(min_length=32, max_length=8192)
+    title: str = Field(min_length=1, max_length=240)
+    catalog_id: str = Field(min_length=1, max_length=120)
+    rights_path: str = "NO_LICENSE_INFO"
+    allowed_uses: list[str] | str = Field(default_factory=list)
+    claimant: str | None = Field(default=None, max_length=240)
+    claim_state: str = "ASSERTED"
+
+
 class CapabilityCoverageRead(BaseModel):
     model_config = ConfigDict(extra="allow")
 

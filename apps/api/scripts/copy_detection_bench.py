@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import math
 import sys
 from collections.abc import Callable
 from dataclasses import asdict
@@ -79,7 +78,9 @@ def _letterbox(image: Image.Image) -> Image.Image:
         target_h = image.height
         target_w = max(1, int(image.height * 16 / 9))
     canvas = Image.new("RGB", (target_w, target_h), (0, 0, 0))
-    canvas.paste(image.convert("RGB"), ((target_w - image.width) // 2, (target_h - image.height) // 2))
+    canvas.paste(
+        image.convert("RGB"), ((target_w - image.width) // 2, (target_h - image.height) // 2)
+    )
     return canvas
 
 
@@ -177,8 +178,7 @@ def evaluate(container, settings, query: Image.Image, reference: Image.Image) ->
     # Same gate the scan applies, so the benchmark measures the shipped policy
     # rather than a more generous one.
     escalate = (
-        ai_similarity is not None
-        and ai_similarity >= settings.copy_alignment_escalation_similarity
+        ai_similarity is not None and ai_similarity >= settings.copy_alignment_escalation_similarity
     )
     raw_geometry = asdict(container.geometry.verify(query, reference, escalate=escalate))
     alignment = (
@@ -198,7 +198,13 @@ def evaluate(container, settings, query: Image.Image, reference: Image.Image) ->
         key: value
         for key, value in raw_geometry.items()
         if key
-        not in {"query_size", "reference_size", "correspondences", "regions", "homography_query_to_reference"}
+        not in {
+            "query_size",
+            "reference_size",
+            "correspondences",
+            "regions",
+            "homography_query_to_reference",
+        }
     }
 
     phash = _phash_similarity(container, _encode(query), _encode(reference), query, reference)
@@ -308,7 +314,13 @@ def main() -> int:
             if left == right:
                 continue
             negative_pairs.append(
-                (left, f"hard_crop_vs_{left}", _crop(_jpeg(images[left], 70), 0.7), right, images[right])
+                (
+                    left,
+                    f"hard_crop_vs_{left}",
+                    _crop(_jpeg(images[left], 70), 0.7),
+                    right,
+                    images[right],
+                )
             )
             negative_pairs.append(
                 (left, f"hard_scale_vs_{left}", _scale(images[left], 0.55), right, images[right])
@@ -359,12 +371,14 @@ def main() -> int:
             entry["missed"] += 1
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.out).write_text(json.dumps({"summary": summary, "by_case": by_case, "rows": rows}, indent=2))
+    Path(args.out).write_text(
+        json.dumps({"summary": summary, "by_case": by_case, "rows": rows}, indent=2)
+    )
 
     print("\n=== SUMMARY ===")
     print(json.dumps(summary, indent=2))
     print("\n=== BY TRANSFORM (match/review/missed of n) ===")
-    for case, entry in sorted(by_case.items(), key=lambda kv: (kv[1]["match"] / max(1, kv[1]["n"]))):
+    for case, entry in sorted(by_case.items(), key=lambda kv: kv[1]["match"] / max(1, kv[1]["n"])):
         flag = "  <-- WEAK" if entry["match"] < entry["n"] else ""
         print(
             f"{case:22s} {entry['match']:>2}/{entry['n']:<2} match  "

@@ -2,6 +2,7 @@
   "name": "creatorproof-web",
   "version": "0.10.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/finalize-standalone.mjs",

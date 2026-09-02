@@ -14,9 +14,11 @@ Content-Type: application/json
 {"url": "https://example.com/hooks/creatorproof", "event_types": ["scan.completed"]}
 ```
 
-The response contains a `secret` **exactly once**. It is stored hashed and cannot
-be recovered; if you lose it, create a new endpoint. An empty `event_types` array
-subscribes to every event.
+The response exposes a `secret` **exactly once**. CreatorProof must retain that
+secret server-side to produce future HMAC signatures, so it is not a password
+hash; endpoint read APIs never return it again. Protect database access and
+backups accordingly, and create a replacement endpoint if the subscriber loses
+or exposes its copy. An empty `event_types` array subscribes to every event.
 
 Endpoints resolving to private, loopback or link-local addresses are refused
 unless `CREATORPROOF_WEBHOOK_ALLOW_PRIVATE_HOSTS=true`, which exists for local

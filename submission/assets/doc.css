@@ -814,3 +814,115 @@ hr {
   font-size: 8pt;
   line-height: 1.5;
 }
+
+/* -------------------------------------------------------- judging Q&A */
+
+.toc {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2mm 8mm;
+  margin: 0 0 2mm;
+}
+
+.toc a {
+  display: flex;
+  justify-content: space-between;
+  gap: 4mm;
+  padding: 2.2mm 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 9.2pt;
+}
+
+.toc a b {
+  color: var(--accent);
+  font: 600 7.6pt/1.4 var(--mono);
+  letter-spacing: 0.12em;
+}
+
+.criterion {
+  margin-top: 8mm;
+  padding-top: 0;
+}
+
+.criterionBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6mm;
+  margin: 0 0 4mm;
+  padding: 3.6mm 4.6mm;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 2.4mm 2.4mm 0;
+  background: rgba(96, 165, 250, 0.06);
+  break-after: avoid;
+  break-inside: avoid;
+}
+
+.criterionBanner b {
+  color: var(--text);
+  font-family: var(--display);
+  font-size: 13.5pt;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+.criterionBanner em {
+  flex-shrink: 0;
+  color: var(--accent);
+  font: 600 8pt/1 var(--mono);
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.qa {
+  margin: 0 0 4.2mm;
+  padding: 0 0 4.2mm;
+  border-bottom: 1px solid var(--line);
+  break-inside: avoid;
+}
+
+.qa:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.qa .q {
+  margin: 0 0 2mm;
+  color: var(--text);
+  font-size: 10.6pt;
+  font-weight: 600;
+  line-height: 1.38;
+}
+
+.qa .q small {
+  display: block;
+  margin-bottom: 1.2mm;
+  color: var(--accent);
+  font: 600 7.2pt/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.qa .a {
+  margin: 0;
+  color: var(--text-2);
+}
+
+.qa .a p:last-child {
+  margin-bottom: 0;
+}
+
+.weightRow {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2.4mm;
+  margin: 3mm 0 5mm;
+}
+
+.weightRow .stat b {
+  font-size: 16pt;
+}

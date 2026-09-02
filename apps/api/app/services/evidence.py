@@ -260,6 +260,32 @@ def _evidence_policy_baseline(
     )
 
 
+def _style_evidence_review_recommended(style_decision: dict) -> bool:
+    return bool(
+        style_decision.get(
+            "evidence_review_recommended",
+            style_decision.get("review_recommended"),
+        )
+    )
+
+
+def _style_policy_review_recommended(style_decision: dict) -> bool:
+    if style_decision.get("policy_escalation_authorized") is False:
+        return False
+    return bool(
+        style_decision.get(
+            "policy_review_recommended",
+            style_decision.get("review_recommended"),
+        )
+    )
+
+
+def _style_policy_evidence_tier(style_decision: dict) -> str | None:
+    if style_decision.get("policy_escalation_authorized") is False:
+        return None
+    return style_decision.get("evidence_tier")
+
+
 def _apply_style_policy_overlay(
     *,
     match_status: MatchStatus,
@@ -271,7 +297,7 @@ def _apply_style_policy_overlay(
 ) -> tuple[PolicyAction, list[str], bool]:
     origin_policy_mode = OriginPolicyMode(origin_policy_mode)
     style_decision = style_analysis.get("decision") or {}
-    review_recommended = bool(style_decision.get("review_recommended"))
+    review_recommended = _style_policy_review_recommended(style_decision)
     synthetic_analysis = synthetic_analysis or {}
     synthetic_classification = synthetic_analysis.get("classification")
     origin_requires_policy_review = bool(
@@ -279,7 +305,7 @@ def _apply_style_policy_overlay(
         and synthetic_classification
         and synthetic_classification != "NO_AI_ORIGIN_EVIDENCE_DETECTED"
     )
-    style_tier = style_decision.get("evidence_tier")
+    style_tier = _style_policy_evidence_tier(style_decision)
     strong_ai_origin = synthetic_classification in {
         "AI_PROVENANCE_CONFIRMED",
         "AI_PROVENANCE_ASSERTED_UNTRUSTED_SIGNER",
@@ -632,10 +658,14 @@ def build_evidence_packet(
         max_pixels=settings.max_image_pixels,
     )
     record_duration("image_decode", (time.perf_counter() - stage_started) * 1000)
-    candidate_path = container.storage.root / scan.candidate_storage_key
     report("CHECKING_SOURCE", "Checking source information", 12)
     stage_started = time.perf_counter()
-    provenance = container.provenance.inspect(candidate_path)
+    # Provenance tools require a filesystem path. Durable object stores provide a
+    # short-lived private materialization; local development reuses the stored path.
+    with container.storage.materialized_path(
+        scan.candidate_storage_key, raw=candidate_raw
+    ) as candidate_path:
+        provenance = container.provenance.inspect(candidate_path)
     record_duration("provenance", (time.perf_counter() - stage_started) * 1000)
     report("CHECKING_VISIBLE_LABELS", "Looking for visible AI labels", 20)
     report("CHECKING_AI_SIGNALS", "Checking AI-use signals", 32)
@@ -687,6 +717,10 @@ def build_evidence_packet(
             "diagnostics": None,
             "decision": {
                 "review_recommended": False,
+                "evidence_review_recommended": False,
+                "policy_review_recommended": False,
+                "policy_escalation_authorized": False,
+                "policy_classification": "STYLE_POLICY_NO_REVIEW",
                 "classification": "STYLE_ANALYSIS_UNAVAILABLE",
                 "evidence_tier": "UNAVAILABLE",
                 "reason_codes": [f"STYLE_ANALYSIS_FAILED:{type(exc).__name__}"],
@@ -726,7 +760,9 @@ def build_evidence_packet(
             # descriptor already says this is likely the same work. Ranking a
             # mirrored or flat-art repost is something SSCD does well; aligning
             # one is what it cannot do.
-            nomination = item.ai_similarity if item.ai_similarity is not None else item.retrieval_score
+            nomination = (
+                item.ai_similarity if item.ai_similarity is not None else item.retrieval_score
+            )
             raw_geometry = asdict(
                 container.geometry.verify(
                     query_image,
@@ -855,7 +891,9 @@ def build_evidence_packet(
         coverage_reason_codes=snapshot.get("coverage_reason_codes") or [],
     )
     style_decision = style_analysis.get("decision") or {}
-    style_review_recommended = bool(style_decision.get("review_recommended"))
+    style_evidence_review_recommended = _style_evidence_review_recommended(style_decision)
+    style_policy_review_recommended = _style_policy_review_recommended(style_decision)
+    style_policy_evidence_tier = _style_policy_evidence_tier(style_decision)
 
     # The exact immutable policy selected when the scan was accepted owns this
     # decision. Missing/deleted policy state fails closed rather than silently
@@ -903,9 +941,9 @@ def build_evidence_packet(
             rights_path=baseline_rights_path,
             rights_facts=rights_facts,
             ai_origin_classification=synthetic_analysis.get("classification"),
-            creator_profile_tier=style_decision.get("evidence_tier"),
+            creator_profile_tier=style_policy_evidence_tier,
             origin_policy_mode=str(origin_policy_mode),
-            style_review_recommended=style_review_recommended,
+            style_review_recommended=style_policy_review_recommended,
         )
         policy_identity = policy_version.id
 
@@ -918,6 +956,15 @@ def build_evidence_packet(
         "origin_policy_mode": str(origin_policy_mode),
         "intended_use": scan.intended_use,
         "matched_work_id": matched_work.id if matched_work is not None else None,
+        "style_governance": {
+            "evidence_review_recommended": style_evidence_review_recommended,
+            "policy_review_recommended": style_policy_review_recommended,
+            "policy_escalation_authorized": bool(
+                style_decision.get("policy_escalation_authorized", True)
+            ),
+            "evidence_tier": style_decision.get("evidence_tier"),
+            "policy_evidence_tier": style_policy_evidence_tier,
+        },
         "evidence_baseline": {
             "policy_action": str(baseline_action),
             "rights_path": str(baseline_rights_path),
@@ -964,7 +1011,7 @@ def build_evidence_packet(
         outputs={
             "policy_action": str(policy_action),
             "rights_path": str(rights_path),
-            "style_review_recommended": style_review_recommended,
+            "style_review_recommended": style_policy_review_recommended,
             "authorizing_license_id": policy_evaluation.get("authorizing_license_id"),
         },
         matched_rule_codes=list(policy_evaluation.get("matched_rules") or []),
@@ -1090,9 +1137,17 @@ def build_evidence_packet(
             "policy_evaluation": policy_evaluation,
             "rights_facts_snapshot_digest_sha256": rights_facts.get("snapshot_digest_sha256"),
             "authorizing_license_id": policy_evaluation.get("authorizing_license_id"),
-            "style_review_recommended": style_review_recommended,
+            # The legacy field remains policy-scoped for replay compatibility.
+            "style_review_recommended": style_policy_review_recommended,
+            "style_evidence_review_recommended": style_evidence_review_recommended,
+            "style_policy_review_recommended": style_policy_review_recommended,
+            "style_policy_escalation_authorized": bool(
+                style_decision.get("policy_escalation_authorized", True)
+            ),
             "style_evidence_tier": style_decision.get("evidence_tier"),
+            "style_policy_evidence_tier": style_policy_evidence_tier,
             "style_classification": style_decision.get("classification"),
+            "style_policy_classification": style_decision.get("policy_classification"),
             "synthetic_origin_classification": synthetic_analysis.get("classification"),
             "synthetic_origin_policy_mode": str(origin_policy_mode),
             "coverage_status": snapshot.get("coverage_status"),

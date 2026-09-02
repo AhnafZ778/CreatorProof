@@ -1,0 +1,18 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://YOUR-PRODUCTION-PROJECT.vercel.app"
+    ],
+    "AllowedMethods": [
+      "PUT"
+    ],
+    "AllowedHeaders": [
+      "Content-Type",
+      "x-amz-meta-*"
+    ],
+    "ExposeHeaders": [
+      "ETag"
+    ],
+    "MaxAgeSeconds": 900
+  }
+]

@@ -32,6 +32,37 @@ router = APIRouter(prefix="/v1/policies", tags=["policies"])
 logger = logging.getLogger("creatorproof.policies")
 
 
+def _recorded_style_policy_inputs(decision: dict) -> tuple[str | None, bool]:
+    """Return only the consent-gated style projection used for policy replay."""
+
+    recorded_inputs = decision.get("policy_inputs") or {}
+    style_governance = recorded_inputs.get("style_governance") or {}
+    style_policy_authorized = decision.get(
+        "style_policy_escalation_authorized",
+        style_governance.get("policy_escalation_authorized"),
+    )
+    style_policy_tier = decision.get(
+        "style_policy_evidence_tier",
+        style_governance.get("policy_evidence_tier"),
+    )
+    if style_policy_tier is None and style_policy_authorized is not False:
+        # Historical packets predate the evidence/policy split. Their stored
+        # tier was already consent-gated, so it remains the safe replay input.
+        style_policy_tier = decision.get("style_evidence_tier")
+    style_policy_review = bool(
+        decision.get(
+            "style_policy_review_recommended",
+            style_governance.get(
+                "policy_review_recommended",
+                decision.get("style_review_recommended", False),
+            ),
+        )
+    )
+    if style_policy_authorized is False:
+        style_policy_review = False
+    return style_policy_tier, style_policy_review
+
+
 @router.post("", response_model=PolicyRead, status_code=status.HTTP_201_CREATED)
 def create_policy_version(
     payload: PolicyCreateRequest,
@@ -122,6 +153,7 @@ def dry_run_policies(
         intended_use=scan.intended_use,
     )
     recorded_inputs = decision.get("policy_inputs") or {}
+    style_policy_tier, style_policy_review = _recorded_style_policy_inputs(decision)
     evidence_baseline = recorded_inputs.get("evidence_baseline") or {}
     baseline_action = evidence_baseline.get("policy_action") or decision.get("policy_action")
     baseline_reason_codes = list(
@@ -151,9 +183,9 @@ def dry_run_policies(
             rights_path=RightsPath(str(baseline_rights_path)),
             rights_facts=rights_facts,
             ai_origin_classification=decision.get("synthetic_origin_classification"),
-            creator_profile_tier=decision.get("style_evidence_tier"),
+            creator_profile_tier=style_policy_tier,
             origin_policy_mode=decision.get("synthetic_origin_policy_mode"),
-            style_review_recommended=bool(decision.get("style_review_recommended")),
+            style_review_recommended=style_policy_review,
         )
         evaluations.append(
             {

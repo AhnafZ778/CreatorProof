@@ -1,0 +1,176 @@
+# CreatorProof's lean demo deployment: one API process plus PostgreSQL.
+# The Git repository root is the parent of `creatorproof`, so this rootDir is
+# deliberately repository-relative even though this Blueprint lives below it.
+services:
+  - type: web
+    name: creatorproof-api
+    runtime: docker
+    plan: free
+    rootDir: creatorproof/apps/api
+    # Unlike commands, Render resolves both Docker paths from the Git repo root,
+    # not from rootDir.
+    dockerContext: ./creatorproof/apps/api
+    dockerfilePath: ./creatorproof/apps/api/Dockerfile
+    dockerCommand: python -m scripts.render_start
+    healthCheckPath: /readyz
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 300
+    envVars:
+      - key: CREATORPROOF_ENVIRONMENT
+        value: production
+      - key: CREATORPROOF_LOG_FORMAT
+        value: json
+
+      # A free web service has no pre-deploy command. render_start serializes
+      # migrations, provisions the restricted RLS runtime role, then starts one
+      # Uvicorn worker with only that role's database URL.
+      - key: CREATORPROOF_MIGRATION_DATABASE_URL
+        fromDatabase:
+          name: creatorproof-db
+          property: connectionString
+      - key: CREATORPROOF_RUN_MIGRATIONS_ON_START
+        value: "true"
+      - key: CREATORPROOF_RUNTIME_DATABASE_USER
+        value: creatorproof_app
+      - key: CREATORPROOF_RUNTIME_DATABASE_PASSWORD
+        generateValue: true
+      - key: CREATORPROOF_ENABLE_POSTGRES_RLS
+        value: "true"
+
+      # Production authentication. Generate the correlated bootstrap API key,
+      # signing seed and public fingerprint with the repository helper; never
+      # invent or commit placeholder values for these three inputs.
+      - key: CREATORPROOF_DEV_AUTH_ENABLED
+        value: "false"
+      - key: CREATORPROOF_DEV_API_KEY
+        generateValue: true
+      - key: CREATORPROOF_API_KEY_PEPPER
+        generateValue: true
+      - key: CREATORPROOF_BOOTSTRAP_API_KEY
+        sync: false
+      - key: CREATORPROOF_STATEMENT_SIGNING_ENABLED
+        value: "true"
+      - key: CREATORPROOF_STATEMENT_SIGNING_KID
+        value: creatorproof-render-ed25519-1
+      - key: CREATORPROOF_STATEMENT_SIGNING_PRIVATE_KEY_HEX
+        sync: false
+      - key: CREATORPROOF_TRUSTED_ISSUER_KEY_SHA256
+        sync: false
+      - key: CREATORPROOF_UPLOAD_TOKEN_SECRET
+        generateValue: true
+      - key: CREATORPROOF_UPLOAD_TOKEN_TTL_SECONDS
+        value: "900"
+
+      # Render's filesystem is ephemeral. AWS S3 may leave ENDPOINT_URL empty;
+      # R2/MinIO must provide their HTTPS S3-compatible endpoint.
+      - key: CREATORPROOF_STORAGE_PROVIDER
+        value: s3
+      - key: CREATORPROOF_S3_BUCKET
+        sync: false
+      - key: CREATORPROOF_S3_REGION
+        sync: false
+      - key: CREATORPROOF_S3_ENDPOINT_URL
+        sync: false
+      - key: CREATORPROOF_S3_ACCESS_KEY_ID
+        sync: false
+      - key: CREATORPROOF_S3_SECRET_ACCESS_KEY
+        sync: false
+
+      # One in-process scan at a time is intentional on Render's 0.1 CPU free
+      # instance. PostgreSQL stores orchestration state and startup recovers jobs.
+      - key: CREATORPROOF_JOB_BACKEND
+        value: local
+      - key: CREATORPROOF_LOCAL_JOB_WORKERS
+        value: "1"
+      # The heartbeat setting is not a separate timer; long CPU sections renew at
+      # evidence checkpoints. A generous lease avoids reclaiming a healthy scan
+      # on a throttled 0.1-CPU instance.
+      - key: CREATORPROOF_STAGE_LEASE_SECONDS
+        value: "1200"
+      - key: CREATORPROOF_SCAN_DEADLINE_SECONDS
+        value: "1800"
+      - key: CREATORPROOF_UPLOAD_CONCURRENCY_LIMIT
+        value: "1"
+      - key: CREATORPROOF_TENANT_SCAN_QUOTA_PER_DAY
+        value: "100"
+      - key: CREATORPROOF_RATE_LIMIT_REQUESTS_PER_MINUTE
+        value: "60"
+      - key: CREATORPROOF_RATE_LIMIT_BURST
+        value: "20"
+      - key: CREATORPROOF_MAX_UPLOAD_BYTES
+        value: "4000000"
+      - key: CREATORPROOF_MAX_IMAGE_PIXELS
+        value: "6000000"
+      - key: CREATORPROOF_CANDIDATE_RETENTION_SECONDS
+        value: "0"
+
+      # Learned descriptors are served by an external inference endpoint. The
+      # API rejects identity drift, non-unit vectors and artifact hash mismatch.
+      - key: CREATORPROOF_SSCD_PROVIDER
+        value: remote
+      - key: CREATORPROOF_SSCD_REMOTE_URL
+        sync: false
+      - key: CREATORPROOF_SSCD_REMOTE_AUTH_TOKEN
+        sync: false
+      - key: CREATORPROOF_SSCD_EXPECTED_SHA256
+        value: 9f26bd4c848cc19b73d2ae92eea6e04886f61a7b764ceb7a13aeee62e6a6db56
+      - key: CREATORPROOF_SSCD_REMOTE_TIMEOUT_SECONDS
+        value: "30"
+      - key: CREATORPROOF_SSCD_REMOTE_MAX_ATTEMPTS
+        value: "2"
+      - key: CREATORPROOF_SSCD_REMOTE_BATCH_SIZE
+        value: "1"
+      - key: CREATORPROOF_COPY_RETRIEVAL_REQUIREMENT
+        value: LEARNED_REQUIRED
+
+      - key: CREATORPROOF_STYLE_PROVIDER
+        value: remote
+      - key: CREATORPROOF_STYLE_REMOTE_URL
+        sync: false
+      - key: CREATORPROOF_STYLE_REMOTE_AUTH_TOKEN
+        sync: false
+      - key: CREATORPROOF_STYLE_CSD_EXPECTED_SHA256
+        value: 40e92fad63a361b8136100cd234c42d401ef9b34ff1748234318929ebcc7e7a1
+      - key: CREATORPROOF_STYLE_REMOTE_TIMEOUT_SECONDS
+        value: "30"
+      - key: CREATORPROOF_STYLE_REMOTE_MAX_ATTEMPTS
+        value: "2"
+      - key: CREATORPROOF_STYLE_REMOTE_BATCH_SIZE
+        value: "1"
+
+      # Sightengine is the sole passive AI-origin model in this profile. A vendor
+      # failure is reported as unavailable; no large local fallback is loaded.
+      - key: CREATORPROOF_SYNTHETIC_DETECTOR
+        value: sightengine_only
+      - key: CREATORPROOF_SIGHTENGINE_API_USER
+        sync: false
+      - key: CREATORPROOF_SIGHTENGINE_API_SECRET
+        sync: false
+      - key: CREATORPROOF_SIGHTENGINE_TIMEOUT_SECONDS
+        value: "20"
+      - key: CREATORPROOF_SYNTHETIC_POLICY_MODE
+        value: INFORMATIONAL
+
+      # Keep optional binaries and every blockchain component out of this lean
+      # profile. Signed statements remain enabled above and are not blockchain.
+      - key: CREATORPROOF_C2PA_MODE
+        value: "off"
+      - key: CREATORPROOF_VISIBLE_AI_MARKER_MODE
+        value: "off"
+      - key: CREATORPROOF_PROOF_ANCHOR_MODE
+        value: none
+      - key: CREATORPROOF_PROOF_REQUIRE_CHAIN
+        value: "false"
+      - key: CREATORPROOF_BLOCKCHAIN_DOMAIN_ANCHORING_ENABLED
+        value: "false"
+      - key: CREATORPROOF_BLOCKCHAIN_COUNTERPARTY_ATTESTATION_ENABLED
+        value: "false"
+      - key: CREATORPROOF_MODEL_BUNDLE_STRICT
+        value: "false"
+
+databases:
+  - name: creatorproof-db
+    plan: free
+    databaseName: creatorproof
+    user: creatorproof
+    ipAllowList: []

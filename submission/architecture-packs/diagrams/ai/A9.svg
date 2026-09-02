@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A9 · Cheap filters run on everything, expensive proof runs on almost nothing. That ratio is what makes the economics work. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 412" role="img" aria-label="Three tier retrieval funnel with costs and candidate counts at each tier" overflow="visible" width='1600.0' height='412.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#37d4dc"/></marker>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f07ab7"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ffbd59"/></marker>
+  </defs>
+  <rect class="nd" x="4" y="46" width="240" height="300" rx="9"/>
+    <text class="t-lbl fx-dim" x="26" y="74">catalogue</text>
+    <text class="t-big" x="26" y="118">10 000 000</text>
+    <text class="t-sub" x="26" y="148">registered works in</text>
+    <text class="t-sub" x="26" y="170">the declared scope</text>
+    <text class="t-sub" x="26" y="214">Vectors are computed</text>
+    <text class="t-sub" x="26" y="236">once at registration,</text>
+    <text class="t-sub" x="26" y="258">then cached by content</text>
+    <text class="t-sub" x="26" y="280">hash plus model id.</text>
+    <text class="t-sub" x="26" y="316">An upgrade invalidates</text>
+    <text class="t-sub" x="26" y="338">that cache by design.</text>
+
+    <!-- tier 1 -->
+    <rect class="nd-a" x="272" y="46" width="410" height="132" rx="9"/>
+    <text class="t-lbl fx-a" x="294" y="74">tier 1 · exact identity</text>
+    <text class="t-title" x="294" y="106">SHA-256 and 64-bit pHash</text>
+    <text class="t-sub" x="294" y="136">A B-tree and a Hamming lookup.</text>
+    <text class="t-sub" x="294" y="158">Catches the re-upload case instantly.</text>
+    <text class="t-mono fx-a" x="598" y="136">&lt;5 ms</text>
+
+    <!-- tier 2 -->
+    <rect class="nd-copy" x="272" y="196" width="410" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="294" y="224">tier 2 · approximate recall</text>
+    <text class="t-title" x="294" y="256">HNSW over SSCD vectors</text>
+    <text class="t-sub" x="294" y="286">Sub-linear graph search, sharded by</text>
+    <text class="t-sub" x="294" y="308">workspace so scope is a hard boundary.</text>
+    <text class="t-mono fx-copy" x="294" y="336">recall@10 stays flat as the shard grows</text>
+
+    <!-- tier 3 -->
+    <rect class="nd-copy" x="710" y="46" width="410" height="300" rx="9"/>
+    <text class="t-lbl fx-copy" x="732" y="74">tier 3 · proof</text>
+    <text class="t-title" x="732" y="106">Geometry + structure</text>
+    <text class="t-sub" x="732" y="138">Runs on the eight shortlisted works</text>
+    <text class="t-sub" x="732" y="160">only — never on the catalogue.</text>
+    <text class="t-sub" x="732" y="196">Roughly 40 ms per candidate on CPU,</text>
+    <text class="t-sub" x="732" y="218">parallelised across the shortlist.</text>
+    <text class="t-mono fx-dim" x="732" y="258">small catalogues skip the funnel:</text>
+    <text class="t-mono fx-dim" x="732" y="280">at 64 works or fewer we verify every</text>
+    <text class="t-mono fx-dim" x="732" y="302">single one and report COMPLETE</text>
+    <text class="t-mono fx-copy" x="732" y="336">≈ 8 candidates at any scale</text>
+
+    <path class="ar" d="M 248 112 L 266 112" marker-end="url(#a1)"/>
+    <path class="ar" d="M 248 268 L 266 268" marker-end="url(#ac)"/>
+    <path class="ar" d="M 686 112 C 700 112 698 180 704 186" marker-end="url(#ac)"/>
+    <path class="ar" d="M 686 268 L 704 268" marker-end="url(#ac)"/>
+    <path class="ar" d="M 1124 196 L 1142 196" marker-end="url(#a2)"/>
+
+    <!-- economics -->
+    <rect class="nd-pass" x="1148" y="46" width="448" height="300" rx="9"/>
+    <text class="t-lbl fx-pass" x="1170" y="74">what the funnel buys</text>
+    <text class="t-big fx-pass" x="1170" y="122">2.4 s</text>
+    <text class="t-sub" x="1170" y="148">median end-to-end scan, cold cache</text>
+    <text class="t-big fx-pass" x="1170" y="204">O(log n)</text>
+    <text class="t-sub" x="1170" y="230">catalogue growth cost, not linear</text>
+    <text class="t-big fx-pass" x="1170" y="286">1 GPU</text>
+    <text class="t-sub" x="1170" y="312">serves roughly 40 000 scans a day,</text>
+    <text class="t-sub" x="1170" y="334">so unit cost stays in fractions of a cent</text>
+
+    <rect class="nd" x="4" y="368" width="1592" height="40" rx="7"/>
+    <text class="t-mono fx-dim" x="26" y="394">scope is enforced at the index, not filtered afterwards — a workspace cannot retrieve a vector belonging to another tenant, and row-level security repeats that boundary</text>
+
+    <g class="cal"><circle cx="658" cy="68" r="17"/><text x="658" y="74">1</text></g>
+    <g class="cal"><circle cx="658" cy="218" r="17"/><text x="658" y="224">2</text></g>
+    <g class="cal"><circle cx="1096" cy="68" r="17"/><text x="1096" y="74">3</text></g>
+    <g class="cal"><circle cx="1572" cy="68" r="17"/><text x="1572" y="74">4</text></g>
+</svg>

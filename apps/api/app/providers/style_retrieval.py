@@ -11,11 +11,71 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
+from app.providers.remote_embeddings import RemoteHTTPEmbeddingProvider
 from app.providers.style_signature import DiagnosticStyleEmbeddingProvider
 
 
 class StyleProviderUnavailable(RuntimeError):
     pass
+
+
+class RemoteCSDStyleEmbeddingProvider(RemoteHTTPEmbeddingProvider):
+    """Identity-pinned CSD style inference hosted outside the API process."""
+
+    name = "csd-vit-l-remote-http"
+    learned = True
+    upstream = "https://github.com/learn2phoenix/CSD"
+    checkpoint_status = "UPSTREAM_WEIGHTS_DISCREPANCY_UNDER_INVESTIGATION"
+    model_identity = "CSD_VIT_L_EXTERNAL_CHECKPOINT"
+    preprocessing_identity = "UPSTREAM_CSD_TRANSFORMS_BRANCH0"
+    dimensions = 768
+
+    def __init__(
+        self,
+        *,
+        endpoint_url: str,
+        auth_token: str,
+        expected_sha256: str,
+        timeout_seconds: float = 30.0,
+        max_attempts: int = 2,
+        retry_backoff_seconds: float = 0.25,
+        batch_size: int = 1,
+        client=None,
+        sleep=None,
+    ) -> None:
+        kwargs = {}
+        if sleep is not None:
+            kwargs["sleep"] = sleep
+        super().__init__(
+            name=self.name,
+            lane="STYLE",
+            endpoint_url=endpoint_url,
+            auth_token=auth_token,
+            model_identity=self.model_identity,
+            preprocessing_identity=self.preprocessing_identity,
+            expected_artifact_sha256=expected_sha256,
+            dimensions=self.dimensions,
+            timeout_seconds=timeout_seconds,
+            max_attempts=max_attempts,
+            retry_backoff_seconds=retry_backoff_seconds,
+            batch_size=batch_size,
+            client=client,
+            **kwargs,
+        )
+
+    def status(self) -> dict:
+        return {
+            **super().status(),
+            "checkpoint_status": self.checkpoint_status,
+            "upstream": self.upstream,
+            "repo_path": None,
+            "model_path": None,
+            "expected_repo_revision": None,
+            "actual_repo_revision": None,
+            "artifact_identity_state": (
+                "REMOTE_IDENTITY_PINNED" if self.available else "INTEGRITY_REQUIREMENTS_NOT_MET"
+            ),
+        }
 
 
 class CSDStyleEmbeddingProvider:
@@ -293,9 +353,15 @@ class StyleEmbeddingRouter:
         allow_legacy_pickle: bool = False,
         expected_sha256: str = "",
         expected_repo_revision: str = "",
+        remote_url: str = "",
+        remote_auth_token: str = "",
+        remote_timeout_seconds: float = 30.0,
+        remote_max_attempts: int = 2,
+        remote_retry_backoff_seconds: float = 0.25,
+        remote_batch_size: int = 1,
     ) -> None:
         self.mode = mode
-        self.primary = CSDStyleEmbeddingProvider(
+        self.local_primary = CSDStyleEmbeddingProvider(
             csd_repo_path,
             csd_model_path,
             device,
@@ -303,13 +369,23 @@ class StyleEmbeddingRouter:
             expected_sha256=expected_sha256,
             expected_repo_revision=expected_repo_revision,
         )
+        self.remote_primary = RemoteCSDStyleEmbeddingProvider(
+            endpoint_url=remote_url,
+            auth_token=remote_auth_token,
+            expected_sha256=expected_sha256,
+            timeout_seconds=remote_timeout_seconds,
+            max_attempts=remote_max_attempts,
+            retry_backoff_seconds=remote_retry_backoff_seconds,
+            batch_size=remote_batch_size,
+        )
+        self.primary = self.remote_primary if mode == "remote" else self.local_primary
         self.fallback = DiagnosticStyleEmbeddingProvider()
         self._primary_failed_reason: str | None = None
 
     @property
     def _use_primary(self) -> bool:
         return (
-            self.mode in {"auto", "csd"}
+            self.mode in {"auto", "csd", "remote"}
             and self._primary_failed_reason is None
             and self.primary.available
         )
@@ -352,16 +428,17 @@ class StyleEmbeddingRouter:
             "reason": self.fallback_reason,
             "requested_provider": self.mode,
             "primary_provider": self.primary.name,
-            "primary_checkpoint_status": self.primary.checkpoint_status,
+            "primary_checkpoint_status": getattr(self.primary, "checkpoint_status", None),
             "primary_identity": {
                 "model_identity": primary_status["model_identity"],
                 "preprocessing_identity": primary_status["preprocessing_identity"],
-                "model_path": primary_status["model_path"],
-                "expected_artifact_sha256": primary_status["expected_artifact_sha256"],
-                "actual_artifact_sha256": primary_status["actual_artifact_sha256"],
-                "expected_repo_revision": primary_status["expected_repo_revision"],
-                "actual_repo_revision": primary_status["actual_repo_revision"],
-                "artifact_identity_state": primary_status["artifact_identity_state"],
+                "model_path": primary_status.get("model_path"),
+                "endpoint_url": primary_status.get("endpoint_url"),
+                "expected_artifact_sha256": primary_status.get("expected_artifact_sha256"),
+                "actual_artifact_sha256": primary_status.get("actual_artifact_sha256"),
+                "expected_repo_revision": primary_status.get("expected_repo_revision"),
+                "actual_repo_revision": primary_status.get("actual_repo_revision"),
+                "artifact_identity_state": primary_status.get("artifact_identity_state"),
             },
         }
 
@@ -370,7 +447,12 @@ class StyleEmbeddingRouter:
             try:
                 return self.primary.embed(image)
             except Exception as exc:
-                self._primary_failed_reason = f"CSD_RUNTIME_FALLBACK:{type(exc).__name__}"
+                prefix = (
+                    "CSD_REMOTE_RUNTIME_FALLBACK"
+                    if self.mode == "remote"
+                    else "CSD_RUNTIME_FALLBACK"
+                )
+                self._primary_failed_reason = f"{prefix}:{type(exc).__name__}"
         return self.fallback.embed(image)
 
     def embed_many(self, images: list[Image.Image]) -> list[np.ndarray]:
@@ -378,7 +460,12 @@ class StyleEmbeddingRouter:
             try:
                 return self.primary.embed_many(images)
             except Exception as exc:
-                self._primary_failed_reason = f"CSD_RUNTIME_FALLBACK:{type(exc).__name__}"
+                prefix = (
+                    "CSD_REMOTE_RUNTIME_FALLBACK"
+                    if self.mode == "remote"
+                    else "CSD_RUNTIME_FALLBACK"
+                )
+                self._primary_failed_reason = f"{prefix}:{type(exc).__name__}"
         return self.fallback.embed_many(images)
 
     def force_fallback(self, reason: str) -> None:

@@ -12,13 +12,19 @@ from app.api.routes import (
     review,
     rights,
     scans,
+    uploads,
     usage,
     webhooks,
     works,
 )
 from app.container import Container, build_container, initialize_database
 from app.core.config import Settings, get_settings
-from app.middleware import CorrelationMiddleware, RateLimitMiddleware, TokenBucketLimiter
+from app.middleware import (
+    CorrelationMiddleware,
+    RateLimitMiddleware,
+    TokenBucketLimiter,
+    UploadConcurrencyMiddleware,
+)
 from app.observability import configure_logging
 
 
@@ -62,10 +68,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             burst=resolved_settings.rate_limit_burst,
         ),
     )
+    app.add_middleware(
+        UploadConcurrencyMiddleware,
+        limit=resolved_settings.upload_concurrency_limit,
+    )
     app.add_middleware(CorrelationMiddleware)
     app.include_router(health.router)
     app.include_router(works.router)
     app.include_router(scans.router)
+    app.include_router(uploads.router)
     app.include_router(rights.router)
     app.include_router(policies.router)
     app.include_router(review.router)

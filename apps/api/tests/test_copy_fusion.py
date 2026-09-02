@@ -141,9 +141,7 @@ def _flat_repetitive_image() -> Image.Image:
 
 
 def _verified(query: Image.Image, reference: Image.Image, *, escalate: bool) -> tuple[dict, dict]:
-    geometry = asdict(
-        ORBGeometricVerifier().verify(query, reference, escalate=escalate)
-    )
+    geometry = asdict(ORBGeometricVerifier().verify(query, reference, escalate=escalate))
     alignment = (
         geometry["homography_query_to_reference"]
         if geometry["alignment_grade"] in {"STRICT", "CORROBORATION_REQUIRED"}

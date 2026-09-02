@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 import { DEFAULT_CATALOG_ID, readCatalogWorks } from "@/app/lib/catalog";
 import { buildScenario, type DemoScenario } from "@/app/lib/demoScenarios";
+import { submitImageForm, UploadValidationError } from "@/app/lib/uploadClient";
 
 import CoAttestationPanel from "./CoAttestationPanel";
 import DemoScenarioPicker from "./DemoScenarioPicker";
@@ -132,7 +133,7 @@ export default function UserScanDesk() {
       try {
         const response = await fetch(`/api/scans/${encodeURIComponent(scanId)}`, {
           cache: "no-store",
-          signal: AbortSignal.timeout(8_000),
+          signal: AbortSignal.timeout(85_000),
         });
         if (!response.ok) continue;
         const body = (await response.json()) as ApiResult;
@@ -158,7 +159,7 @@ export default function UserScanDesk() {
         try {
           const poll = await fetch(`/api/scans/${encodeURIComponent(scanId)}`, {
             cache: "no-store",
-            signal: AbortSignal.timeout(10_000),
+            signal: AbortSignal.timeout(85_000),
           });
           const body = (await poll.json()) as ApiResult;
           if (!poll.ok) throw new Error(`SCAN_POLL_${poll.status}`);
@@ -208,11 +209,11 @@ export default function UserScanDesk() {
     setScanProgress({ stage: "UPLOADING", label: "Uploading the image", percent: 0 });
     if (candidateFile) setCandidatePreview(preview(candidateFile));
     try {
-      const response = await fetch("/api/scans", {
-        method: "POST",
+      const response = await submitImageForm({
+        endpoint: "/api/scans",
+        purpose: "scan",
+        form,
         headers: { "Idempotency-Key": crypto.randomUUID() },
-        body: form,
-        signal: AbortSignal.timeout(35_000),
       });
       const body = (await response.json()) as ApiResult;
       if (!response.ok) {
@@ -233,8 +234,10 @@ export default function UserScanDesk() {
       await pollScan(body.id);
     } catch (caught) {
       const message =
-        caught instanceof Error && caught.name === "TimeoutError"
-          ? "The API did not accept the scan within 35 seconds. Check that the local backend is active."
+        caught instanceof UploadValidationError
+          ? caught.message
+          : caught instanceof Error && caught.name === "TimeoutError"
+          ? "The API did not accept the scan before the deployment timeout. It may still be waking."
           : "The scan request was interrupted. Check the API connection and try again.";
       setError(message);
       setBusy(false);
@@ -273,7 +276,11 @@ export default function UserScanDesk() {
         registration.append("claimant", reference.claimant);
         registration.append("catalog_id", scenarioCatalogId);
         registration.append("claim_state", "ASSERTED");
-        const response = await fetch("/api/works", { method: "POST", body: registration });
+        const response = await submitImageForm({
+          endpoint: "/api/works",
+          purpose: "work",
+          form: registration,
+        });
         if (!response.ok) {
           throw new Error(`The demo reference could not be registered (${response.status}).`);
         }
@@ -350,7 +357,7 @@ export default function UserScanDesk() {
                 required
                 name="file"
                 label="Candidate image"
-                hint="PNG, JPG, or WEBP — the asset you plan to publish"
+                hint="PNG, JPG, or WEBP · max 4 MB / 6 MP"
               />
             </div>
             <label className="portalField">

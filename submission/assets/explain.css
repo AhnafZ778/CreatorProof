@@ -1,0 +1,300 @@
+/**
+ * Study-booklet stylesheet for the plain-English architecture explainers.
+ * Light paper, readable type, almost no decoration. Portrait A4.
+ */
+
+@font-face {
+  font-family: "Geist";
+  src: url("fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+
+:root {
+  --paper: #f6f3ec;
+  --ink: #1c1915;
+  --muted: #5c564c;
+  --line: #d9d2c4;
+  --card: #fffdf8;
+  --copy: #0e7c82;
+  --origin: #a4467a;
+  --profile: #9a6b12;
+  --ok: #1f7a4d;
+  --accent: #1f4f8a;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+html, body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 11pt;
+  line-height: 1.55;
+}
+
+table.pageFrame { width: 100%; border-collapse: collapse; }
+table.pageFrame td { border: none; padding: 0; }
+table.pageFrame > thead > tr > td,
+table.pageFrame > tfoot > tr > td { height: 14mm; }
+table.pageFrame > tbody > tr > td { padding: 0 16mm; vertical-align: top; }
+
+.cover {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 22mm 18mm 16mm;
+  background: var(--paper);
+  break-after: page;
+}
+
+.cover .mark {
+  color: var(--muted);
+  font: 600 8pt/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cover h1 {
+  max-width: 160mm;
+  margin: 28mm 0 8mm;
+  font-family: var(--display);
+  font-size: 34pt;
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+}
+
+.cover h1 em {
+  display: block;
+  color: var(--accent);
+  font-style: normal;
+}
+
+.cover .lead {
+  max-width: 148mm;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5pt;
+  line-height: 1.5;
+}
+
+.cover .foot {
+  position: absolute;
+  bottom: 18mm;
+  left: 18mm;
+  right: 18mm;
+  padding-top: 5mm;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 9pt;
+}
+
+section { margin: 0 0 8mm; break-inside: auto; }
+section.keep { break-inside: avoid; }
+
+.def {
+  margin: 0 0 3.2mm;
+  padding: 2.8mm 3.6mm;
+  border: 1px solid var(--line);
+  background: var(--card);
+  break-inside: avoid;
+}
+.def b {
+  display: block;
+  margin-bottom: 1mm;
+  font-size: 10.6pt;
+}
+.def p:last-child { margin-bottom: 0; }
+
+h2 {
+  margin: 0 0 3.5mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--display);
+  font-size: 15.5pt;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  break-after: avoid;
+}
+
+h2 .n {
+  margin-right: 2.5mm;
+  color: var(--accent);
+  font: 600 9pt/1 var(--mono);
+}
+
+h3 {
+  margin: 4mm 0 1.6mm;
+  color: var(--ink);
+  font-size: 11.2pt;
+  font-weight: 600;
+  break-after: avoid;
+}
+
+p { margin: 0 0 2.8mm; }
+p.muted { color: var(--muted); }
+strong { font-weight: 600; }
+
+ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+li { margin-bottom: 1.6mm; }
+
+.story {
+  margin: 0 0 4mm;
+  padding: 3.6mm 4.2mm;
+  border-left: 3px solid var(--accent);
+  background: var(--card);
+}
+
+.story b {
+  display: block;
+  margin-bottom: 1.2mm;
+  color: var(--accent);
+  font: 600 7.4pt/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.story p:last-child { margin-bottom: 0; }
+
+.lanes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 3mm;
+  margin: 0 0 4mm;
+}
+
+.lane {
+  padding: 3.2mm 3.4mm 3.6mm;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tone);
+  background: var(--card);
+}
+
+.lane b {
+  display: block;
+  margin-bottom: 1.4mm;
+  color: var(--tone);
+  font: 600 7.4pt/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lane p { margin: 0; font-size: 9.8pt; line-height: 1.42; color: var(--muted); }
+
+.steps { margin: 0 0 4mm; padding: 0; list-style: none; }
+.steps li {
+  display: grid;
+  grid-template-columns: 7mm 1fr;
+  gap: 3mm;
+  margin: 0 0 2.4mm;
+  break-inside: avoid;
+}
+.steps .num {
+  color: var(--accent);
+  font: 600 10pt/1.4 var(--mono);
+}
+.steps p { margin: 0; }
+.steps strong { display: block; margin-bottom: 0.4mm; }
+
+table.plain {
+  width: 100%;
+  margin: 0 0 4mm;
+  border-collapse: collapse;
+  font-size: 9.6pt;
+  break-inside: avoid;
+}
+
+table.plain th {
+  padding: 1.8mm 2.2mm;
+  border-bottom: 1px solid var(--ink);
+  color: var(--muted);
+  font: 600 7.2pt/1.3 var(--mono);
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+table.plain td {
+  padding: 2.2mm;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+table.plain td:first-child { font-weight: 600; width: 38mm; }
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3.2mm;
+  margin: 0 0 4mm;
+}
+
+.box {
+  padding: 3.4mm 3.8mm;
+  border: 1px solid var(--line);
+  background: var(--card);
+  break-inside: avoid;
+}
+
+.box.bad { border-top: 3px solid #b42318; }
+.box.good { border-top: 3px solid var(--ok); }
+
+.box h3 { margin-top: 0; }
+.box p:last-child { margin-bottom: 0; }
+
+.say {
+  margin: 0 0 4mm;
+  padding: 3.2mm 3.8mm;
+  border: 1px solid var(--line);
+  background: #eef4ea;
+  break-inside: avoid;
+}
+
+.say b {
+  display: block;
+  margin-bottom: 1.2mm;
+  color: var(--ok);
+  font: 600 7.4pt/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.say p { margin: 0; }
+.say p + p { margin-top: 1.6mm; }
+
+code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  background: #ece7dc;
+  padding: 0 1mm;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 9.4pt;
+}

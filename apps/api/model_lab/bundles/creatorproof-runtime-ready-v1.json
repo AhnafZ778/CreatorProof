@@ -2,8 +2,8 @@
   "schema": "creatorproof.model_bundle.v1",
   "bundle_id": "creatorproof-runtime-ready-evidence-v1",
   "qualification_state": "RUNTIME_READY",
-  "application_revision": "creatorproof-source-tree-sha256:c7b7f44565c96bb21c18c92030c2b8647ee231f9d702d2b93ea8066ea54194be",
-  "runtime_lock_digest": "0c492a92766e77720547d68b22720cfc620585e45861ca3d5676355bd4c92d84",
+  "application_revision": "creatorproof-source-tree-sha256:c0230210aedd54d19ba01472acbf60099ae24a29fcf3c0ddd82eaeecd328d43e",
+  "runtime_lock_digest": "fe607b658b8c125f618905b4c41f24c02cbceac37f53bb9b8b99a37277eefc36",
   "runtime_environment": {
     "python_major_minor": "3.12",
     "observed_python": "3.12.3",

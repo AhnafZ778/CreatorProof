@@ -1,8 +1,14 @@
+from dataclasses import asdict
+
 import numpy as np
 
 from app.core.config import Settings
 from app.domain.enums import MatchStatus, OriginPolicyMode, PolicyAction
 from app.services.evidence import _apply_style_policy_overlay
+from app.services.style_analysis import (
+    _apply_profile_authorization_gate,
+    _should_surface_selected_exemplar,
+)
 from app.services.style_fusion import fuse_style_evidence
 from app.services.style_readout import (
     aggregated_discrimination_gaps,
@@ -69,6 +75,117 @@ def test_uncalibrated_style_fusion_cannot_claim_high_confidence():
     assert result.false_match_control_supported is False
     assert result.content_confound_state == "STYLE_EXCEEDS_CONTENT_CONTROL"
     assert "STYLE_EXCEEDS_CONTENT_CONTROL" in result.reason_codes
+
+
+def test_supplied_pair_review_evidence_survives_profile_authorization_gate():
+    result = fuse_style_evidence(
+        learned_provider_active=True,
+        raw_style_similarity=0.814099,
+        factors={
+            "palette": 0.387711,
+            "tone": 0.601349,
+            "stroke_orientation": 0.916873,
+            "texture": 0.915943,
+        },
+        tile_map=_tile_map(0.637477),
+        content_similarity=0.493601,
+        sample_count=1,
+        discrimination_gap=None,
+        catalog_margin=None,
+        settings=Settings(),
+    )
+
+    assert result.learned_style_similarity == 0.814099
+    assert result.mechanics_similarity == 0.816279
+    assert result.tile_consistency == 0.637477
+    assert result.content_similarity == 0.493601
+    assert result.evidence_index == 0.789074
+    assert result.evidence_tier == "REVIEW"
+    assert result.review_recommended is True
+
+    gated = _apply_profile_authorization_gate(
+        asdict(result),
+        {"profile_authorized": False, "consent_state": "NOT_CONFIRMED"},
+    )
+
+    assert gated["evidence_tier"] == "REVIEW"
+    assert gated["classification"] == "UNCALIBRATED_STYLE_RESEMBLANCE_REVIEW_CANDIDATE"
+    assert gated["review_recommended"] is True
+    assert gated["evidence_review_recommended"] is True
+    assert gated["policy_review_recommended"] is False
+    assert gated["policy_escalation_authorized"] is False
+
+
+def test_supplied_pair_is_not_diluted_by_unrelated_claimant_group_members():
+    settings = Settings()
+    factors = {
+        "palette": 0.387711,
+        "tone": 0.601349,
+        "stroke_orientation": 0.916873,
+        "texture": 0.915943,
+    }
+    # These are the exact live-scan values after ten unrelated works had been
+    # grouped under the generic claimant name "Artist". The group mean is weak,
+    # even though the selected original is a strong cross-content style match.
+    profile = fuse_style_evidence(
+        learned_provider_active=True,
+        raw_style_similarity=0.241309,
+        factors=factors,
+        tile_map=_tile_map(0.637477),
+        content_similarity=0.077867,
+        sample_count=10,
+        discrimination_gap=None,
+        catalog_margin=None,
+        settings=settings,
+    )
+    exemplar = fuse_style_evidence(
+        learned_provider_active=True,
+        raw_style_similarity=0.814098,
+        factors=factors,
+        tile_map=_tile_map(0.637477),
+        content_similarity=0.493601,
+        sample_count=1,
+        discrimination_gap=None,
+        catalog_margin=None,
+        settings=settings,
+    )
+
+    assert profile.evidence_index == 0.467777
+    assert profile.evidence_tier == "LOW"
+    assert exemplar.evidence_index == 0.789073
+    assert exemplar.evidence_tier == "REVIEW"
+    assert _should_surface_selected_exemplar(profile, exemplar, settings=settings) is True
+
+
+def test_exact_copy_does_not_manufacture_selected_exemplar_style_review():
+    settings = Settings()
+    profile = fuse_style_evidence(
+        learned_provider_active=True,
+        raw_style_similarity=0.24,
+        factors={"palette": 1.0, "tone": 1.0, "stroke_orientation": 1.0, "texture": 1.0},
+        tile_map=_tile_map(1.0),
+        content_similarity=0.10,
+        sample_count=10,
+        discrimination_gap=None,
+        catalog_margin=None,
+        settings=settings,
+    )
+    exact_pair = fuse_style_evidence(
+        learned_provider_active=True,
+        raw_style_similarity=1.0,
+        factors={"palette": 1.0, "tone": 1.0, "stroke_orientation": 1.0, "texture": 1.0},
+        tile_map=_tile_map(1.0),
+        content_similarity=1.0,
+        sample_count=1,
+        discrimination_gap=None,
+        catalog_margin=None,
+        settings=settings,
+    )
+
+    assert profile.evidence_tier == "LOW"
+    assert exact_pair.evidence_tier == "REVIEW"
+    assert exact_pair.content_confound_state == "STYLE_AND_CONTENT_CONFOUNDED"
+    assert _should_surface_selected_exemplar(profile, exact_pair, settings=settings) is False
 
 
 def test_catalog_calibration_can_promote_well_supported_style_evidence():

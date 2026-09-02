@@ -2,6 +2,7 @@ import json
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -30,7 +31,17 @@ class Settings(BaseSettings):
     app_name: str = "CreatorProof API"
     environment: Literal["development", "test", "production"] = "development"
     database_url: str = "sqlite:///./creatorproof.db"
+    storage_provider: Literal["local", "s3"] = "local"
     storage_root: Path = Path("./data")
+    s3_bucket: str = ""
+    s3_region: str = ""
+    s3_endpoint_url: str = ""
+    s3_access_key_id: str = Field(default="", repr=False)
+    s3_secret_access_key: str = Field(default="", repr=False)
+    upload_token_secret: str = Field(
+        default="creatorproof-development-upload-token-secret", min_length=32, repr=False
+    )
+    upload_token_ttl_seconds: int = Field(default=900, ge=60, le=3600)
     job_backend: Literal["inline", "local", "redis"] = "local"
     local_job_workers: int = Field(default=1, ge=1, le=4)
     redis_url: str = Field(default="redis://localhost:6379/0", repr=False)
@@ -60,6 +71,8 @@ class Settings(BaseSettings):
     # S13 authentication and tenancy. `dev_auth_enabled` is refused in production so a
     # demo key can never be mistaken for a production credential boundary.
     api_key_pepper: str = Field(default="creatorproof-development-pepper", min_length=8, repr=False)
+    bootstrap_api_key: str = Field(default="", repr=False)
+    bootstrap_credential_name: str = "Vercel gateway"
     dev_auth_enabled: bool = True
     enable_postgres_rls: bool = True
     rate_limit_requests_per_minute: int = Field(default=120, ge=1, le=100_000)
@@ -115,9 +128,16 @@ class Settings(BaseSettings):
     # is up to two more verifications per candidate this similar and unaligned.
     copy_alignment_escalation_similarity: float = Field(default=0.55, ge=0.0, le=1.0)
     candidate_retention_seconds: int = 0
+    sscd_provider: Literal["local", "remote"] = "local"
     sscd_model_path: Path = Path("./models/sscd_disc_mixup.torchscript.pt")
     sscd_device: Literal["auto", "cpu", "cuda"] = "auto"
     sscd_expected_sha256: str = ""
+    sscd_remote_url: str = ""
+    sscd_remote_auth_token: str = Field(default="", repr=False)
+    sscd_remote_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
+    sscd_remote_max_attempts: int = Field(default=2, ge=1, le=5)
+    sscd_remote_retry_backoff_seconds: float = Field(default=0.25, ge=0.0, le=10.0)
+    sscd_remote_batch_size: int = Field(default=1, ge=1, le=16)
     sscd_match_similarity: float = 0.75
     sscd_review_similarity: float = 0.60
     # v0.5 evidence-fusion operating points. These are intentionally exposed and
@@ -140,10 +160,16 @@ class Settings(BaseSettings):
     copy_conclusive_inlier_ratio: float = Field(default=0.90, ge=0.0, le=1.0)
     copy_global_review_similarity: float = 0.80
     copy_phash_review_similarity: float = 0.90
-    style_provider: Literal["auto", "csd", "diagnostic"] = "auto"
+    style_provider: Literal["auto", "csd", "remote", "diagnostic"] = "auto"
     style_csd_repo_path: Path = Path("./vendor/CSD")
     style_csd_model_path: Path = Path("./models/csd-vit-l/pytorch_model.bin")
     style_device: Literal["auto", "cpu", "cuda"] = "auto"
+    style_remote_url: str = ""
+    style_remote_auth_token: str = Field(default="", repr=False)
+    style_remote_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
+    style_remote_max_attempts: int = Field(default=2, ge=1, le=5)
+    style_remote_retry_backoff_seconds: float = Field(default=0.25, ge=0.0, le=10.0)
+    style_remote_batch_size: int = Field(default=1, ge=1, le=16)
     style_top_k: int = 5
     # v0.6 CSD+ readout and corroborated style-evidence operating points. CSLS is
     # used for catalog ranking; the evidence thresholds remain prototype defaults
@@ -172,7 +198,9 @@ class Settings(BaseSettings):
     # endpoint the primary detector. Locally installed detectors are invoked only
     # if that primary request is unavailable or fails; they are not blended into a
     # healthy vendor result.
-    synthetic_detector: Literal["auto", "sightengine", "community", "torchscript", "off"] = "auto"
+    synthetic_detector: Literal[
+        "auto", "sightengine", "sightengine_only", "community", "torchscript", "off"
+    ] = "auto"
     sightengine_api_user: str = Field(default="", repr=False)
     sightengine_api_secret: str = Field(default="", repr=False)
     sightengine_timeout_seconds: float = Field(default=20.0, ge=1.0, le=120.0)
@@ -319,7 +347,81 @@ class Settings(BaseSettings):
         env_prefix="CREATORPROOF_",
         env_file=".env",
         extra="ignore",
+        hide_input_in_errors=True,
     )
+
+    @model_validator(mode="after")
+    def _validate_object_storage(self) -> "Settings":
+        """Refuse an incomplete or unsafe durable-storage selection at startup."""
+
+        if self.storage_provider == "local":
+            return self
+        missing = [
+            name
+            for name, value in (
+                ("CREATORPROOF_S3_BUCKET", self.s3_bucket),
+                ("CREATORPROOF_S3_REGION", self.s3_region),
+                ("CREATORPROOF_S3_ACCESS_KEY_ID", self.s3_access_key_id),
+                ("CREATORPROOF_S3_SECRET_ACCESS_KEY", self.s3_secret_access_key),
+            )
+            if not value.strip()
+        ]
+        if missing:
+            raise ValueError(
+                "S3 storage is selected but required configuration is missing: "
+                + ", ".join(missing)
+            )
+        if self.s3_endpoint_url:
+            parsed = urlsplit(self.s3_endpoint_url.strip())
+            if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                raise ValueError("CREATORPROOF_S3_ENDPOINT_URL must be an absolute HTTP(S) URL")
+            if parsed.username or parsed.password or parsed.query or parsed.fragment:
+                raise ValueError(
+                    "CREATORPROOF_S3_ENDPOINT_URL must not contain credentials, "
+                    "a query string, or a fragment"
+                )
+            if self.environment == "production" and parsed.scheme != "https":
+                raise ValueError("CREATORPROOF_S3_ENDPOINT_URL must use HTTPS in production")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_remote_embedding_endpoints(self) -> "Settings":
+        """Fail startup when a selected remote model is unprotected or ambiguous."""
+
+        selected = []
+        if self.sscd_provider == "remote":
+            selected.append(
+                (
+                    "CREATORPROOF_SSCD_REMOTE_URL",
+                    self.sscd_remote_url,
+                    "CREATORPROOF_SSCD_REMOTE_AUTH_TOKEN",
+                    self.sscd_remote_auth_token,
+                )
+            )
+        if self.style_provider == "remote":
+            selected.append(
+                (
+                    "CREATORPROOF_STYLE_REMOTE_URL",
+                    self.style_remote_url,
+                    "CREATORPROOF_STYLE_REMOTE_AUTH_TOKEN",
+                    self.style_remote_auth_token,
+                )
+            )
+        for url_name, url, token_name, token in selected:
+            if not url.strip():
+                raise ValueError(f"{url_name} is required when its remote provider is selected")
+            if not token.strip():
+                raise ValueError(f"{token_name} is required when its remote provider is selected")
+            parsed = urlsplit(url.strip())
+            if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                raise ValueError(f"{url_name} must be an absolute HTTP(S) URL")
+            if parsed.username or parsed.password or parsed.query or parsed.fragment:
+                raise ValueError(
+                    f"{url_name} must not contain credentials, a query string, or a fragment"
+                )
+            if self.environment == "production" and parsed.scheme != "https":
+                raise ValueError(f"{url_name} must use HTTPS in production")
+        return self
 
     @model_validator(mode="after")
     def _refuse_development_credentials_in_production(self) -> "Settings":
@@ -414,6 +516,8 @@ class Settings(BaseSettings):
             problems.append("CREATORPROOF_DEV_API_KEY is still the published development value")
         if self.api_key_pepper == "creatorproof-development-pepper":
             problems.append("CREATORPROOF_API_KEY_PEPPER must be set to a private value")
+        if self.upload_token_secret == "creatorproof-development-upload-token-secret":
+            problems.append("CREATORPROOF_UPLOAD_TOKEN_SECRET must be set to a private value")
         if not self.statement_signing_enabled:
             problems.append("CREATORPROOF_STATEMENT_SIGNING_ENABLED must be true in production")
         elif not self.statement_signing_private_key_hex:
@@ -427,6 +531,11 @@ class Settings(BaseSettings):
             problems.append("CREATORPROOF_ENABLE_POSTGRES_RLS must be true in production")
         if not self.database_url.startswith("postgresql"):
             problems.append("SQLite is a development convenience; production requires PostgreSQL")
+        if self.storage_provider != "s3":
+            problems.append(
+                "CREATORPROOF_STORAGE_PROVIDER must be s3 in production; "
+                "the local filesystem is ephemeral"
+            )
         if self.proof_anchor_mode == "auto":
             problems.append(
                 "CREATORPROOF_PROOF_ANCHOR_MODE must be explicit in production; "

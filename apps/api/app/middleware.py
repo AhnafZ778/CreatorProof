@@ -8,6 +8,7 @@ implying this is a distributed quota.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from collections import defaultdict
@@ -23,6 +24,15 @@ logger = logging.getLogger("creatorproof.http")
 
 CORRELATION_HEADER = "X-Correlation-Id"
 _EXEMPT_PATHS = frozenset({"/healthz", "/readyz", "/metrics", "/openapi.json", "/docs"})
+_UPLOAD_PROCESSING_PATHS = frozenset(
+    {
+        "/v1/scans",
+        "/v1/scans/from-upload",
+        "/v1/works",
+        "/v1/works/from-upload",
+        "/v1/works/bulk",
+    }
+)
 
 
 class TokenBucketLimiter:
@@ -134,3 +144,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 },
             )
         return await call_next(request)
+
+
+class UploadConcurrencyMiddleware(BaseHTTPMiddleware):
+    """Bound simultaneous image decode/registration work before reading bodies."""
+
+    def __init__(self, app, *, limit: int) -> None:
+        super().__init__(app)
+        if limit < 1:
+            raise ValueError("upload concurrency limit must be positive")
+        self._slots = asyncio.Semaphore(limit)
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        if request.method != "POST" or request.url.path not in _UPLOAD_PROCESSING_PATHS:
+            return await call_next(request)
+        async with self._slots:
+            return await call_next(request)

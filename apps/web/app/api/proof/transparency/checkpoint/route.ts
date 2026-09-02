@@ -1,5 +1,5 @@
 import { proxyJson } from "../../../../lib/backend";
 
 export async function GET() {
-  return proxyJson("/v1/proof/transparency/checkpoint", { timeoutMs: 8_000 });
+  return proxyJson("/v1/proof/transparency/checkpoint", { timeoutMs: 75_000 });
 }

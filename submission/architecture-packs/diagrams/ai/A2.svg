@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A2 · The API layer is stateless and cheap; only the worker tier needs GPUs, and only that tier scales with load. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 400" role="img" aria-label="Request path from browser through API to GPU inference workers and storage" overflow="visible" width='1600.0' height='400.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#37d4dc"/></marker>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f07ab7"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ffbd59"/></marker>
+  </defs>
+  <rect class="nd" x="16" y="56" width="230" height="104" rx="9"/>
+    <text class="t-title" x="38" y="90">Browser</text>
+    <text class="t-sub" x="38" y="114">artist portal ·</text>
+    <text class="t-sub" x="38" y="136">reviewer desk</text>
+
+    <rect class="nd" x="284" y="56" width="248" height="104" rx="9"/>
+    <text class="t-title" x="306" y="90">Next.js proxy</text>
+    <text class="t-sub" x="306" y="114">server-side only —</text>
+    <text class="t-sub" x="306" y="136">API key never in browser</text>
+
+    <rect class="nd-a" x="570" y="56" width="266" height="104" rx="9"/>
+    <text class="t-lbl fx-a" x="592" y="84">FastAPI</text>
+    <text class="t-title" x="592" y="114">Accept &amp; enqueue</text>
+    <text class="t-mono fx-dim" x="592" y="140">202 in &lt;120 ms</text>
+
+    <rect class="nd-a" x="874" y="56" width="230" height="104" rx="9"/>
+    <text class="t-lbl fx-a" x="896" y="84">Redis Streams</text>
+    <text class="t-title" x="896" y="114">Durable queue</text>
+    <text class="t-mono fx-dim" x="896" y="140">at-least-once</text>
+
+    <path class="ar" d="M 250 108 L 278 108" marker-end="url(#a1)"/>
+    <path class="ar" d="M 536 108 L 564 108" marker-end="url(#a1)"/>
+    <path class="ar" d="M 840 108 L 868 108" marker-end="url(#a1)"/>
+
+    <!-- workers -->
+    <rect class="zone" x="1142" y="40" width="442" height="200" rx="10"/>
+    <text class="t-lbl fx-a" x="1164" y="30">GPU inference workers · autoscaled</text>
+    <rect class="nd-copy" x="1164" y="60" width="398" height="48" rx="7"/>
+    <text class="t-body" x="1186" y="90">SSCD copy embeddings · 512-d</text>
+    <rect class="nd-orig" x="1164" y="118" width="398" height="48" rx="7"/>
+    <text class="t-body" x="1186" y="148">Community Forensics ViT · 384px</text>
+    <rect class="nd-prof" x="1164" y="176" width="398" height="48" rx="7"/>
+    <text class="t-body" x="1186" y="206">CSD style descriptors · 768-d</text>
+    <path class="ar" d="M 1108 108 L 1136 108" marker-end="url(#a1)"/>
+
+    <!-- cpu stages -->
+    <rect class="nd" x="570" y="196" width="534" height="88" rx="9"/>
+    <text class="t-lbl fx-dim" x="592" y="222">CPU stages · same worker pool</text>
+    <text class="t-body" x="592" y="252">SIFT / ORB geometry · MAGSAC homography · aligned SSIM</text>
+    <text class="t-body" x="592" y="274">pHash · SHA-256 · Tesseract OCR · c2patool</text>
+    <path class="ar" d="M 1136 200 C 1120 200 1120 232 1110 236" marker-end="url(#a1)"/>
+
+    <!-- storage -->
+    <rect class="nd" x="16" y="196" width="248" height="88" rx="9"/>
+    <text class="t-title" x="38" y="228">S3 object store</text>
+    <text class="t-sub" x="38" y="252">media + cached</text>
+    <text class="t-sub" x="38" y="274">embedding vectors</text>
+
+    <rect class="nd" x="296" y="196" width="248" height="88" rx="9"/>
+    <text class="t-title" x="318" y="228">PostgreSQL 17</text>
+    <text class="t-sub" x="318" y="252">catalogue, scans,</text>
+    <text class="t-sub" x="318" y="274">row-level security</text>
+
+    <path class="ar" d="M 268 240 L 290 240" marker-end="url(#a1)"/>
+    <path class="ar" d="M 564 240 L 550 240" marker-end="url(#a1)"/>
+
+    <!-- results -->
+    <rect class="nd-pass" x="16" y="312" width="1568" height="72" rx="9"/>
+    <text class="t-lbl fx-pass" x="38" y="338">completion</text>
+    <text class="t-body" x="176" y="338">Evidence packet written · signed webhook delivered · client polls or receives push · median end-to-end 2.4 s for a 50 000-work catalogue</text>
+    <text class="t-mono fx-dim" x="176" y="366">a slow model degrades throughput, never availability — the API never blocks on inference</text>
+
+    <g class="cal"><circle cx="424" cy="38" r="17"/><text x="424" y="44">1</text></g>
+    <g class="cal"><circle cx="990" cy="38" r="17"/><text x="990" y="44">2</text></g>
+    <g class="cal"><circle cx="1568" cy="258" r="17"/><text x="1568" y="264">3</text></g>
+    <g class="cal"><circle cx="1548" cy="338" r="17"/><text x="1548" y="344">4</text></g>
+</svg>

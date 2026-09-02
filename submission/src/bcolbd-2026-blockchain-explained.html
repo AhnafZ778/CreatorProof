@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — How the blockchain actually works</title>
+<link rel="stylesheet" href="../assets/explain.css">
+</head>
+<body>
+
+<div class="cover">
+  <p class="mark">CreatorProof · BCOLBD 2026 · Blockchain · how to say it</p>
+  <h1>How you’d explain the chain<em>to a person.</em></h1>
+  <p class="lead">
+    The question is going to be: why not a database? If you can tell that story like you’re
+    explaining it at a table, you’re fine. The fancy names come after the story, not before.
+  </p>
+  <div class="foot">
+    The dark architecture pack is for pointing. This is for your mouth.
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+
+<section class="keep">
+  <h2><span class="n">01</span>You’re not protecting a picture. You’re protecting a date.</h2>
+  <div class="story">
+    <b>The scene</b>
+    <p>
+      Two years later, a brand gets sued over an image. Their defence is: we checked it on
+      2 September, it was clear. That defence is a date. The date is sitting on our servers.
+      We are the vendor they paid. If we can quietly move the date, the defence is a story
+      we told about ourselves.
+    </p>
+  </div>
+  <p>
+    The AI answers “what’s true about this picture?” The chain answers a ruder question:
+    what can nobody change about what we already said — including us?
+  </p>
+  <p>
+    We do not put the picture on a blockchain. That would be insane. We don’t put the
+    customer’s name up there either. We put a wax seal of the answer. Tiny. Meaningless
+    without the letter. Impossible to fake if you’ve got the letter in your hand.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">02</span>The school register vs the noticeboard</h2>
+  <div class="compare">
+    <div class="box bad">
+      <h3>A database is the school register</h3>
+      <p>
+        We hold the only pen. We can mark someone present. We can also, in October, change
+        it to September and nobody walking in can tell the difference. That’s not Postgres
+        being evil. That’s what a database is: a notebook with an owner.
+      </p>
+    </div>
+    <div class="box good">
+      <h3>The chain is the public noticeboard</h3>
+      <p>
+        Once it’s pinned, copies exist all over the place. We don’t have a master eraser.
+        An opposing lawyer doesn’t have to like us, or log into us. They read the board.
+      </p>
+    </div>
+  </div>
+  <div class="say">
+    <b>The two sentences</b>
+    <p>A database answers “what do you say happened?” A chain answers “what can you no longer change about what you said?”</p>
+    <p>Our customer’s defence is a date, and we’re the ones getting paid to hold it. We need a witness that isn’t us.</p>
+  </div>
+</section>
+
+
+<section>
+  <h2><span class="n">03</span>The three follow-ups, answered like a human</h2>
+  <h3>“Just make the table append-only.”</h3>
+  <p>
+    Cute. We hold the password that makes it append-only, so we also hold the password that
+    turns that off. You’ve moved the trust into our ops team. A stranger cannot audit our
+    ops team. They can read a public chain.
+  </p>
+  <h3>“You’re only storing a hash, that’s nothing.”</h3>
+  <p>
+    That’s the point. Because the seal is tiny, we can stamp every check when it happens —
+    not later, when the lawsuit starts, when a backdated seal is worthless. Cheap is what
+    lets us be honest all the time instead of honest when it’s convenient.
+  </p>
+  <h3>“Why not your own chain / Hyperledger / a server in Dhaka?”</h3>
+  <p>
+    A chain we run is still a notebook with our pen, just with extra ceremony. The whole
+    reason we’re doing this is that <em>we</em> are the party whose word is in doubt.
+    Settlement on Ethereum — we write cheaply on Base, which dumps a summary down to
+    Ethereum — means undoing a stamp means fighting Ethereum, not phoning our intern.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">04</span>The wax seal</h2>
+  <p>
+    You take the whole answer — what we found, what we couldn’t check, which rules we used —
+    and you freeze the wording so it comes out the same every time. Then you run it through
+    a blender that always spits out the same tiny seal if the letter is the same, and a
+    totally different seal if anyone so much as moved a comma. That’s a hash. You cannot
+    read the letter from the seal. You cannot make a second letter that accidentally gets
+    the same seal. Anyone who later has the letter can blend it themselves and see if the
+    wax matches the board.
+  </p>
+  <p>
+    That’s also why the AI isn’t allowed to write an essay. Essays fidget. Seals need a
+    letter that sits still.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">05</span>The tournament bracket (why one stamp covers a thousand checks)</h2>
+  <p>
+    Pinning every seal one-by-one would get expensive and fiddly. So we do a tournament.
+    Each check is a player. Every round, two seals combine into a parent seal, all the way
+    up to one champion seal. We pin the champion. Later, to prove your match was in that
+    tournament, you only show the path of scores up to the final — a handful of siblings,
+    not the other 999 letters. Strangers can replay that path against the champion that’s
+    already on the board. They never need our filing cabinet.
+  </p>
+  <p>
+    People who work on this call it a Merkle tree. Same shape as the log that proves which
+    HTTPS certificates exist. You don’t have to say RFC numbers unless someone is showing
+    off. You do have to say: one public stamp, many private letters, and a short proof that
+    your letter was in the batch.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">06</span>We used the public form, not a homemade one</h2>
+  <p>
+    There’s already a standard on Base for “someone attested this blob at this time.” It’s
+    called EAS — Ethereum Attestation Service. Think of it as a public notary form everyone
+    already knows how to read. We didn’t invent our own weird “store 32 bytes” contract,
+    because then a stranger would have to trust our homework. With EAS they can use the
+    public explorer like anyone else.
+  </p>
+  <p>
+    We only wrap it to say who is allowed to stamp. Membership can be paused. Old stamps
+    stay. You don’t get to rewrite September by firing someone in November.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">07</span>Two signatures, and a receipt you can’t sell</h2>
+  <p>
+    A stamp we make alone proves we <em>said</em> it. It doesn’t prove the other party agreed.
+    So the other party can sign the same letter in their wallet, looking at a readable
+    summary — not a blob of hex a phishing site could swap. Their key never comes to us.
+    Two signatures beat a diary entry.
+  </p>
+  <p>
+    We can also mint a receipt that means “this named company ran this check.” It is not a
+    coin. It cannot be transferred. If you can buy someone else’s homework, it stopped
+    being homework. If a judge asks where the token is, you say: there isn’t one, on
+    purpose.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">08</span>Why Base, without a TED talk</h2>
+  <p>
+    Ethereum itself is expensive if you write on it all day. Base is the cheap notebook
+    that still hands the final copy to Ethereum. If Base tries to publish a lie, anyone
+    can challenge it on Ethereum during the window. After that, changing a stamp means
+    attacking Ethereum, not guessing our admin password. That’s the whole “why not a
+    private chain” answer, dressed in one extra sentence.
+  </p>
+  <p>
+    We sign the letter with one kind of key in our software, and we pay for the stamp with
+    a different Ethereum key in a vault. Steal one, you don’t get the other. Old stamps
+    don’t die if we rotate a key. New contract versions get new addresses — nobody silently
+    swaps the rules under an old seal.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">09</span>How a stranger checks without logging into us</h2>
+  <ol>
+    <li>They get the letter (from the customer, a lawyer, an export — not from our login wall).</li>
+    <li>They blend it themselves. Same blender, same frozen wording.</li>
+    <li>They look at the noticeboard. Is that seal there, at that time?</li>
+    <li>If it was part of a batch, they check the little path up to the champion seal.</li>
+    <li>If the other party co-signed, they check that signature too.</li>
+    <li>If they want to argue about truth, not tampering, they can re-run the AI. That’s a different fight.</li>
+  </ol>
+  <p>
+    If the check requires our website, it isn’t independent. Don’t build a story that
+    needs us in the room.
+  </p>
+</section>
+
+
+<section>
+  <h2><span class="n">10</span>Say it in this order</h2>
+  <ol>
+    <li>The defence is a date. We’re paid to hold the date. That’s a conflict.</li>
+    <li>Postgres is our pen. The chain is a noticeboard we don’t own.</li>
+    <li>Append-only is still our password. A private chain is the same trick.</li>
+    <li>We pin a wax seal, not the picture, so we can stamp every check, not just the lawsuits.</li>
+    <li>Tournament of seals, one public champion, short proof you were in the draw.</li>
+    <li>Public notary form (EAS), not a homemade contract. Optional second signature. No coin.</li>
+    <li>Anyone can check without logging into us.</li>
+  </ol>
+  <div class="say">
+    <b>If you remember one line</b>
+    <p>We need a witness with no privileged writer. That’s the one thing a database cannot be.</p>
+  </div>
+</section>
+
+
+</td></tr></tbody></table>
+</body>
+</html>

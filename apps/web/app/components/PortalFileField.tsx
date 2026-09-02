@@ -12,7 +12,7 @@ type PortalFileFieldProps = {
 
 export default function PortalFileField({
   name,
-  accept = "image/*",
+  accept = "image/png,image/jpeg,image/webp",
   required,
   label,
   hint = "PNG, JPG, or WEBP",

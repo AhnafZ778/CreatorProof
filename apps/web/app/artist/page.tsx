@@ -7,6 +7,7 @@ import PortalFileField from "@/app/components/PortalFileField";
 import PortalNav from "@/app/components/PortalNav";
 import { DEFAULT_CATALOG_ID } from "@/app/lib/catalog";
 import { readPortalSession } from "@/app/lib/portalSession";
+import { submitImageForm } from "@/app/lib/uploadClient";
 
 type RegisteredWork = {
   id: string;
@@ -135,7 +136,11 @@ function ArtistPortal() {
     if (!form.get("catalog_id")) form.set("catalog_id", DEFAULT_CATALOG_ID);
     if (!form.get("claim_state")) form.set("claim_state", "ASSERTED");
     try {
-      const response = await fetch("/api/works", { method: "POST", body: form });
+      const response = await submitImageForm({
+        endpoint: "/api/works",
+        purpose: "work",
+        form,
+      });
       const body = (await response.json()) as Record<string, unknown>;
       if (!response.ok) {
         // A refusal is a result, not a fault: the form keeps what the artist
@@ -237,7 +242,7 @@ function ArtistPortal() {
               required
               name="file"
               label="Reference image"
-              hint="PNG, JPG, or WEBP — used as your protected reference"
+              hint="PNG, JPG, or WEBP · max 4 MB / 6 MP"
             />
             <label className="portalField">
               <span className="portalFieldLabel">Title</span>

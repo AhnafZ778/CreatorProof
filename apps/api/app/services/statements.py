@@ -132,6 +132,20 @@ def _findings_section(packet: dict) -> dict:
             "classification": (style.get("decision") or {}).get("classification"),
             "evidence_tier": (style.get("decision") or {}).get("evidence_tier"),
             "review_recommended": (style.get("decision") or {}).get("review_recommended"),
+            "evidence_review_recommended": (style.get("decision") or {}).get(
+                "evidence_review_recommended",
+                (style.get("decision") or {}).get("review_recommended"),
+            ),
+            "policy_review_recommended": (style.get("decision") or {}).get(
+                "policy_review_recommended",
+                (style.get("decision") or {}).get("review_recommended"),
+            ),
+            "policy_escalation_authorized": (style.get("decision") or {}).get(
+                "policy_escalation_authorized"
+            ),
+            "policy_classification": (style.get("decision") or {}).get(
+                "policy_classification"
+            ),
             "advisory_only": True,
         },
         "provenance": {

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- B4 · Eight categories of sensitive data on the left, one opaque number on the right. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 428" role="img" aria-label="Data that stays off-chain versus the single 32-byte value written on-chain" overflow="visible" width='1600.0' height='428.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  </defs>
+  <rect class="zone-private" x="6" y="42" width="884" height="346" rx="12"/>
+    <text class="t-lbl" x="26" y="32">Off-chain · Postgres with row-level security, S3 object store</text>
+
+    <g>
+      <rect class="nd" x="30" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="48" y="104">Image bytes</text><text class="t-mono fx-dim" x="48" y="124">encrypted at rest</text>
+      <rect class="nd" x="242" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="260" y="104">Creator identity</text><text class="t-mono fx-dim" x="260" y="124">personal data</text>
+      <rect class="nd" x="454" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="472" y="104">Detector scores</text><text class="t-mono fx-dim" x="472" y="124">commercially secret</text>
+      <rect class="nd" x="666" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="684" y="104">Catalogue contents</text><text class="t-mono fx-dim" x="684" y="124">customer property</text>
+
+      <rect class="nd" x="30" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="48" y="178">Policy thresholds</text><text class="t-mono fx-dim" x="48" y="198">tenant configuration</text>
+      <rect class="nd" x="242" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="260" y="178">Licence terms</text><text class="t-mono fx-dim" x="260" y="198">contract data</text>
+      <rect class="nd" x="454" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="472" y="178">Reviewer notes</text><text class="t-mono fx-dim" x="472" y="198">employee data</text>
+      <rect class="nd" x="666" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="684" y="178">Client IP + agent</text><text class="t-mono fx-dim" x="684" y="198">access logs</text>
+    </g>
+
+    <rect class="nd-a" x="30" y="240" width="832" height="76" rx="9"/>
+    <text class="t-lbl fx-a" x="52" y="268">Sealed evidence packet</text>
+    <text class="t-body" x="52" y="296">canonicalised, hashed, Ed25519-signed — still entirely off-chain</text>
+
+    <rect class="nd-pass" x="30" y="330" width="832" height="46" rx="8"/>
+    <text class="t-body fx-pass" x="52" y="359">Erasure request → rows deleted → the on-chain value becomes an unresolvable number</text>
+
+    <!-- the boundary -->
+    <line class="rule-hot" x1="928" y1="42" x2="928" y2="388"/>
+    <text class="t-lbl fx-a" transform="rotate(-90 928 132)" x="928" y="132" text-anchor="middle" dy="-9">trust boundary</text>
+
+    <path class="ar-pub" d="M 866 278 L 984 278" marker-end="url(#a4)"/>
+    <text class="t-mono fx-a" x="874" y="306">32 bytes</text>
+
+    <!-- public side -->
+    <rect class="zone-public" x="966" y="42" width="628" height="346" rx="12"/>
+    <text class="t-lbl fx-a" x="986" y="32">On-chain · Base, world-readable, permanent</text>
+
+    <rect class="nd-a" x="992" y="76" width="576" height="200" rx="9"/>
+    <text class="t-lbl fx-a" x="1014" y="104">the complete attestation record</text>
+    <line class="rule" x1="992" y1="116" x2="1568" y2="116"/>
+    <text class="t-mono" x="1014" y="146">schema</text><text class="t-mono fx-txt" x="1200" y="146">0x7f1e…</text>
+    <text class="t-mono" x="1014" y="176">attester</text><text class="t-mono fx-txt" x="1200" y="176">0xA13c…  (CreatorProof)</text>
+    <text class="t-mono" x="1014" y="206">time</text><text class="t-mono fx-txt" x="1200" y="206">block timestamp</text>
+    <text class="t-mono" x="1014" y="236">data</text><text class="t-mono fx-txt" x="1200" y="236">bytes32 packetHash</text>
+    <text class="t-mono fx-dim" x="1014" y="264">no media · no names · no scores · no policy</text>
+
+    <rect class="nd" x="992" y="292" width="576" height="84" rx="9"/>
+    <text class="t-body" x="1014" y="320">A hash cannot be reversed and carries no personal data,</text>
+    <text class="t-body" x="1014" y="346">so nothing on chain is ever within scope of an erasure order.</text>
+
+    <g class="cal"><circle cx="826" cy="268" r="17"/><text x="826" y="274">1</text></g>
+    <g class="cal"><circle cx="928" cy="410" r="17"/><text x="928" y="416">2</text></g>
+    <g class="cal"><circle cx="1280" cy="60" r="17"/><text x="1280" y="66">3</text></g>
+    <g class="cal"><circle cx="826" cy="353" r="17"/><text x="826" y="359">4</text></g>
+</svg>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- B1 · Same operator, same credentials, same evidence. Only the right-hand record is one the operator cannot revise. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 470" role="img" aria-label="Comparison of a mutable database record against an immutable public commitment" overflow="visible" width='1600.0' height='470.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  </defs>
+  <!-- ───────────────────────── LEFT: the database -->
+    <rect class="zone" x="6" y="34" width="752" height="424" rx="12"/>
+    <text class="t-lbl" x="26" y="24">Conventional database  ·  the record has an owner</text>
+
+    <rect class="nd" x="40" y="66" width="250" height="66" rx="9"/>
+    <text class="t-title" x="60" y="98">CreatorProof</text>
+    <text class="t-sub" x="60" y="120">holds the credentials</text>
+
+    <rect class="nd" x="40" y="196" width="330" height="176" rx="9"/>
+    <text class="t-lbl" x="62" y="226">scan_records</text>
+    <line class="rule" x1="40" y1="240" x2="370" y2="240"/>
+    <text class="t-body" x="62" y="270">image_hash</text><text class="t-mono" x="230" y="270">0x9f2c…</text>
+    <text class="t-body" x="62" y="304">verdict</text><text class="t-mono fx-pass" x="230" y="304">PASS</text>
+    <text class="t-body" x="62" y="338">checked_at</text><text class="t-mono fx-warn" x="230" y="338">2 Sep 2026</text>
+
+    <path class="ar-bad" d="M 165 132 L 165 190" marker-end="url(#a5)"/>
+    <text class="t-mono fx-bad" x="180" y="168">UPDATE · DELETE · ALTER</text>
+
+    <rect class="nd-ghost" x="40" y="392" width="330" height="46" rx="8"/>
+    <text class="t-body fx-dim" x="62" y="421">…or 2 Oct 2026, written yesterday</text>
+
+    <rect class="nd" x="472" y="196" width="248" height="106" rx="9"/>
+    <text class="t-title" x="492" y="230">Opposing party</text>
+    <text class="t-sub" x="492" y="254">creator, insurer, court</text>
+    <text class="t-sub" x="492" y="278">must simply believe us</text>
+
+    <path class="ar" d="M 380 262 L 464 250" marker-end="url(#a1)"/>
+    <text class="t-big fx-bad" x="404" y="352">?</text>
+    <text class="t-mono fx-bad" x="436" y="342">the two rows are</text>
+    <text class="t-mono fx-bad" x="436" y="364">indistinguishable</text>
+
+    <g class="cal"><circle cx="106" cy="161" r="17"/><text x="106" y="167">1</text></g>
+    <g class="cal"><circle cx="424" cy="416" r="17"/><text x="424" y="422">2</text></g>
+
+    <!-- ───────────────────────── RIGHT: the commitment -->
+    <rect class="zone-public" x="842" y="34" width="752" height="424" rx="12"/>
+    <text class="t-lbl" x="862" y="24">Public commitment  ·  the record has no owner</text>
+
+    <rect class="nd" x="876" y="66" width="250" height="66" rx="9"/>
+    <text class="t-title" x="896" y="98">CreatorProof</text>
+    <text class="t-sub" x="896" y="120">operator — same credentials</text>
+
+    <rect class="nd-a" x="876" y="196" width="250" height="94" rx="9"/>
+    <text class="t-lbl fx-a" x="898" y="226">32-byte commitment</text>
+    <text class="t-mono fx-txt" x="898" y="258">0x9f2c4e…b71a</text>
+    <text class="t-sub" x="898" y="280">hash of the sealed packet</text>
+
+    <path class="ar-bad" d="M 1001 132 L 1001 190" marker-end="url(#a5)"/>
+    <circle cx="1001" cy="161" r="19" fill="#05070c" stroke="#f87171" stroke-width="2.4"/>
+    <path d="M 992 152 L 1010 170 M 1010 152 L 992 170" stroke="#f87171" stroke-width="2.6"/>
+    <text class="t-mono fx-bad" x="1030" y="167">no write path exists</text>
+
+    <path class="ar-pub" d="M 1132 243 L 1216 243" marker-end="url(#a4)"/>
+
+    <rect class="nd-a" x="1232" y="182" width="330" height="122" rx="9"/>
+    <text class="t-lbl fx-a" x="1254" y="212">Base L2 → Ethereum L1</text>
+    <g fill="rgba(127,179,255,0.16)" stroke="#7fb3ff" stroke-width="1.4">
+      <rect x="1254" y="228" width="52" height="46" rx="5"/>
+      <rect x="1316" y="228" width="52" height="46" rx="5"/>
+      <rect x="1378" y="228" width="52" height="46" rx="5"/>
+      <rect x="1440" y="228" width="52" height="46" rx="5"/>
+    </g>
+    <path class="ar-soft" d="M 1500 251 L 1546 251" marker-end="url(#a1)"/>
+    <text class="t-sub" x="1254" y="294">block ordering · independent replicas</text>
+
+    <rect class="nd-pass" x="1232" y="336" width="330" height="102" rx="9"/>
+    <text class="t-title fx-pass" x="1254" y="368">Opposing party</text>
+    <text class="t-sub" x="1254" y="392">reads the chain directly</text>
+    <text class="t-sub" x="1254" y="416">needs no trust in CreatorProof</text>
+
+    <path class="ar" d="M 1397 310 L 1397 330" marker-end="url(#a1)"/>
+
+    <rect class="nd" x="876" y="336" width="250" height="102" rx="9"/>
+    <text class="t-title" x="896" y="368">Evidence stays private</text>
+    <text class="t-sub" x="896" y="392">image, identity, detector</text>
+    <text class="t-sub" x="896" y="416">output — all off-chain</text>
+    <path class="ar-sig" d="M 1001 296 L 1001 330" marker-end="url(#a3)"/>
+
+    <g class="cal"><circle cx="1174" cy="221" r="17"/><text x="1174" y="227">3</text></g>
+    <g class="cal"><circle cx="1198" cy="388" r="17"/><text x="1198" y="394">4</text></g>
+</svg>

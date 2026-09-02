@@ -453,7 +453,11 @@ class ORBGeometricVerifier:
             and inliers >= self.relaxed_min_inliers
         )
         alignment_grade = (
-            "STRICT" if validated else "CORROBORATION_REQUIRED" if corroboration_required else "NONE"
+            "STRICT"
+            if validated
+            else "CORROBORATION_REQUIRED"
+            if corroboration_required
+            else "NONE"
         )
         correspondences: tuple[dict, ...] = ()
         regions: tuple[dict, ...] = ()

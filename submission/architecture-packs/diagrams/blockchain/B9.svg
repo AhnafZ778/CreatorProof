@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- B9 · Separated key families mean a single compromise degrades future trust without corrupting the past. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 414" role="img" aria-label="Three key families, their storage, rotation and blast radius" overflow="visible" width='1600.0' height='414.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  </defs>
+  <!-- key family 1 -->
+    <rect class="nd-a" x="16" y="52" width="500" height="248" rx="9"/>
+    <text class="t-lbl fx-a" x="38" y="80">family 1 · EVM attester key</text>
+    <text class="t-title" x="38" y="112">secp256k1 · writes to Base</text>
+    <line class="rule" x1="16" y1="128" x2="516" y2="128"/>
+    <text class="t-body" x="38" y="156">Held in a cloud KMS. The private key</text>
+    <text class="t-body" x="38" y="178">is never present in application memory.</text>
+    <text class="t-mono fx-dim" x="38" y="206">lease mutex stops two workers signing</text>
+    <text class="t-lbl fx-warn" x="38" y="238">blast radius if stolen</text>
+    <text class="t-body" x="38" y="264">Can publish false new records.</text>
+    <text class="t-body" x="38" y="286">Existing ones stay untouched.</text>
+
+    <!-- key family 2 -->
+    <rect class="nd" x="548" y="52" width="500" height="248" rx="9"/>
+    <text class="t-lbl fx-dim" x="570" y="80">family 2 · statement signing key</text>
+    <text class="t-title" x="570" y="112">Ed25519 · signs evidence</text>
+    <line class="rule" x1="548" y1="128" x2="1048" y2="128"/>
+    <text class="t-body" x="570" y="156">Separate from the EVM key, so chain</text>
+    <text class="t-body" x="570" y="178">access and evidence authorship differ.</text>
+    <text class="t-mono fx-dim" x="570" y="206">rotated on schedule · key history public</text>
+    <text class="t-lbl fx-warn" x="570" y="238">blast radius if stolen</text>
+    <text class="t-body" x="570" y="264">Can forge statements, but cannot</text>
+    <text class="t-body" x="570" y="286">backdate them past the chain.</text>
+
+    <!-- key family 3 -->
+    <rect class="nd-pass" x="1080" y="52" width="504" height="248" rx="9"/>
+    <text class="t-lbl fx-pass" x="1102" y="80">family 3 · counterparty wallet keys</text>
+    <text class="t-title fx-pass" x="1102" y="112">held by the customer</text>
+    <line class="rule" x1="1080" y1="128" x2="1584" y2="128"/>
+    <text class="t-body" x="1102" y="156">We never hold, escrow or recover a</text>
+    <text class="t-body" x="1102" y="178">customer key. We only store addresses.</text>
+    <text class="t-mono fx-dim" x="1102" y="206">signing happens in their browser</text>
+    <text class="t-lbl fx-pass" x="1102" y="238">blast radius if stolen</text>
+    <text class="t-body" x="1102" y="264">Confined to one member; the</text>
+    <text class="t-body" x="1102" y="286">registry can suspend the address.</text>
+
+    <!-- access control bar -->
+    <rect class="nd" x="16" y="326" width="1568" height="76" rx="9"/>
+    <text class="t-lbl fx-dim" x="38" y="352">access control, off-chain</text>
+    <text class="t-body" x="38" y="382">Per-tenant API keys · PostgreSQL row-level security with a NOBYPASSRLS runtime role · reviewer actions attributed and logged</text>
+
+    <g class="cal"><circle cx="492" cy="70" r="17"/><text x="492" y="76">1</text></g>
+    <g class="cal"><circle cx="1024" cy="70" r="17"/><text x="1024" y="76">2</text></g>
+    <g class="cal"><circle cx="1560" cy="70" r="17"/><text x="1560" y="76">3</text></g>
+    <g class="cal"><circle cx="1560" cy="352" r="17"/><text x="1560" y="358">4</text></g>
+</svg>

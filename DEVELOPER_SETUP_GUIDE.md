@@ -96,9 +96,8 @@ CREATORPROOF_STYLE_CSD_EXPECTED_SHA256=40e92fad63a361b8136100cd234c42d401ef9b34f
 # Synthetic AI-Origin Lane
 CREATORPROOF_SYNTHETIC_DETECTOR=auto
 CREATORPROOF_SYNTHETIC_POLICY_MODE=INFORMATIONAL
-CREATORPROOF_SIGHTENGINE_API_USER=
-CREATORPROOF_SIGHTENGINE_API_SECRET=
-CREATORPROOF_SIGHTENGINE_API_KEY=
+CREATORPROOF_SIGHTENGINE_API_USER=your-api-user
+CREATORPROOF_SIGHTENGINE_API_SECRET=your-api-secret
 CREATORPROOF_SIGHTENGINE_TIMEOUT_SECONDS=20
 CREATORPROOF_SYNTHETIC_COMMUNITY_MODEL_PATH=./models/community-forensics-384
 CREATORPROOF_SYNTHETIC_TORCHSCRIPT_MODEL_PATH=./models/synthetic-detector.torchscript.pt
@@ -318,4 +317,3 @@ rm -f creatorproof.db creatorproof.db-shm creatorproof.db-wal creatorproof.db.ba
 # Run migrations to generate a clean, initialized database
 uv run python -m scripts.migrate upgrade --skip-backup
 ```
-

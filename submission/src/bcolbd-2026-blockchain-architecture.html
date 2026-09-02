@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CreatorProof — Blockchain Architecture Pack — BCOLBD 2026</title>
+<link rel="stylesheet" href="../assets/arch.css">
+</head>
+<body>
+
+<!-- Arrowhead markers are declared once and referenced by every figure in the
+     document. A zero-sized SVG keeps them out of the layout without using
+     display:none, which would stop Chrome resolving the marker references. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+</defs></svg>
+
+
+<!-- ════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="coverMark"><b>CreatorProof</b><span></span>BCOLBD 2026<span></span>Blockchain Category<span></span>Architecture Pack</div>
+
+  <div class="coverBody">
+    <h1 class="coverTitle">A record the record-keeper<em>cannot rewrite.</em></h1>
+    <p class="coverLead">
+      CreatorProof checks creative work before it is published and seals the result into evidence
+      that survives the party who produced it. This pack is the technical architecture: every layer,
+      every trust boundary, and the reasoning behind each decision.
+    </p>
+  </div>
+
+  <div>
+    <div class="coverLanes">
+      <div class="coverLane" style="--tone:#7fb3ff">
+        <b>Settlement</b>
+        <span>Base, an OP&nbsp;Stack L2 settling to Ethereum L1. Public, permissionless, no privileged writer.</span>
+      </div>
+      <div class="coverLane" style="--tone:#60a5fa">
+        <b>Commitment</b>
+        <span>32 bytes per record via the Ethereum Attestation Service. Nothing else ever crosses the boundary.</span>
+      </div>
+      <div class="coverLane" style="--tone:#a5b4fc">
+        <b>Governance</b>
+        <span>On-chain member registry, two-step governor transfer, standing regulator-observer seat.</span>
+      </div>
+      <div class="coverLane" style="--tone:#34d399">
+        <b>Verification</b>
+        <span>Any third party can re-derive the whole chain of custody without trusting CreatorProof.</span>
+      </div>
+    </div>
+
+    <div class="coverFoot">
+      <div>
+        <b>Blockchain Olympiad Bangladesh 2026</b>Finals · Architecture &amp; Governance
+        <br>Companion to the whitepaper, poster board and pitch deck
+      </div>
+      <div style="text-align:right">
+        <b>Build</b>CreatorProof v0.10.0
+        <br>Base Sepolia 84532 · EAS · ERC-5192 · EIP-712 · RFC 6962
+      </div>
+    </div>
+  </div>
+</div>
+
+<table class="pageFrame">
+<thead><tr><td></td></tr></thead>
+<tfoot><tr><td></td></tr></tfoot>
+<tbody><tr><td>
+
+
+<!-- ═══════════════════════════════════════════════════════════ 00 CONTENTS -->
+<section class="slide">
+  <div class="slideHead">
+    <span class="slideNum">00</span>
+    <h1>How to use this pack</h1>
+    <em>Contents &amp; legend</em>
+  </div>
+
+  <p class="kicker">
+    Each sheet carries one diagram with <strong>numbered badges</strong>, the numbered explanation
+    beneath it, and the sentence to say out loud while pointing. The last two sheets are a rapid-fire
+    answer set for the Q&amp;A session, each answer tagged with the diagram to turn to.
+  </p>
+
+  <div class="split wide">
+    <div>
+      <h4>Contents</h4>
+      <div class="toc">
+        <a href="#b1"><b>B1</b><span>Why a database cannot do this</span><i>Core</i></a>
+        <a href="#b2"><b>B2</b><span>Actors and trust gaps</span><i>Context</i></a>
+        <a href="#b3"><b>B3</b><span>Anchoring pipeline</span><i>Flow</i></a>
+        <a href="#b4"><b>B4</b><span>On-chain / off-chain boundary</span><i>Privacy</i></a>
+        <a href="#b5"><b>B5</b><span>Contract topology</span><i>On-chain</i></a>
+        <a href="#b6"><b>B6</b><span>Transparency log and batching</span><i>Scale</i></a>
+        <a href="#b7"><b>B7</b><span>Multi-party co-attestation</span><i>Trust</i></a>
+        <a href="#b8"><b>B8</b><span>Governance model</span><i>Governance</i></a>
+        <a href="#b9"><b>B9</b><span>Key management</span><i>Security</i></a>
+        <a href="#b10"><b>B10</b><span>Failure and finality</span><i>Risk</i></a>
+        <a href="#b11"><b>B11</b><span>Independent verification</span><i>Proof</i></a>
+        <a href="#b12"><b>B12</b><span>Chain choice and consensus</span><i>Platform</i></a>
+        <a href="#b13"><b>B13</b><span>Tokenisation of clearance</span><i>Assets</i></a>
+        <a href="#b14"><b>B14</b><span>Legacy integration</span><i>Adoption</i></a>
+        <a href="#b15"><b>B15</b><span>Q&amp;A armory, part one</span><i>Defence</i></a>
+        <a href="#b16"><b>B16</b><span>Q&amp;A armory, part two</span><i>Defence</i></a>
+      </div>
+    </div>
+
+    <div>
+      <h4>Arrow grammar</h4>
+      <p class="small muted" style="margin-bottom:2.4mm">
+        Line style carries meaning throughout this pack. An arrow is never decoration.
+      </p>
+      <div class="legend" style="grid-template-columns:1fr 1fr">
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar" x1="2" y1="7" x2="44" y2="7" marker-end="url(#a1)"/></svg><span>Data movement</span></div>
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar-dec" x1="2" y1="7" x2="44" y2="7" marker-end="url(#a2)"/></svg><span>Decision or control</span></div>
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar-sig" x1="2" y1="7" x2="44" y2="7" marker-end="url(#a3)"/></svg><span>Signature binding</span></div>
+        <div><svg width="52" height="14" viewBox="0 0 52 14"><line class="ar-pub" x1="2" y1="7" x2="42" y2="7" marker-end="url(#a4)"/></svg><span>Public commitment</span></div>
+      </div>
+
+      <h4 style="margin-top:4mm">Colour grammar</h4>
+      <div class="legend" style="grid-template-columns:1fr 1fr">
+        <div><span class="pill" style="color:#7fb3ff">PUBLIC PROOF</span></div>
+        <div><span class="pill pass">POLICY OUTCOME</span></div>
+        <div><span class="pill copy">COPY EVIDENCE</span></div>
+        <div><span class="pill origin">ORIGIN EVIDENCE</span></div>
+      </div>
+
+      <div class="say" style="margin-top:4mm">
+        <b>Opening line</b>
+        <p>
+          Our customers have to prove they checked an image <em>before</em> they published it. The
+          problem is that we are the ones holding that proof, and we are paid by them.
+        </p>
+        <p>
+          So the question is not where to store the record. It is how to make a record that we
+          ourselves are unable to change afterwards.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <h4 style="margin-top:4.6mm">Where each BCOLBD criterion is answered</h4>
+  <table class="data">
+    <thead>
+      <tr><th style="width:46mm">Evaluation criterion</th><th class="m" style="width:20mm">Proposal / prototype</th><th>Answered on</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Problem &amp; Solution</td><td class="m" style="white-space:nowrap">30 · 40</td>
+        <td><span class="mono">B1</span> why a database fails · <span class="mono">B2</span> multi-party coordination · <span class="mono">B13</span> value captured · <span class="mono">B15–16</span> the objections in full</td>
+      </tr>
+      <tr>
+        <td>Architecture</td><td class="m" style="white-space:nowrap">30 · 20</td>
+        <td><span class="mono">B3</span> pipeline · <span class="mono">B4</span> on-chain vs off-chain · <span class="mono">B5</span> contracts · <span class="mono">B6</span> scale · <span class="mono">B12</span> consensus and platform choice · <span class="mono">B14</span> legacy integration</td>
+      </tr>
+      <tr>
+        <td>Governance</td><td class="m" style="white-space:nowrap">30 · 20</td>
+        <td><span class="mono">B8</span> membership, business and infrastructure governance · <span class="mono">B7</span> counterparty commitments · <span class="mono">B11</span> public accountability</td>
+      </tr>
+      <tr>
+        <td>Privacy &amp; Security Risks</td><td class="m" style="white-space:nowrap">— · 20</td>
+        <td><span class="mono">B4</span> data minimisation and erasure · <span class="mono">B9</span> key management and access control · <span class="mono">B10</span> failure modes</td>
+      </tr>
+      <tr>
+        <td>Competition &amp; Risks</td><td class="m" style="white-space:nowrap">20 · —</td>
+        <td><span class="mono">B1</span> alternatives compared · <span class="mono">B10</span> technical risk register · <span class="mono">B12</span> platform risk</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════ B1 TRUST PROBLEM -->
+<section class="slide" id="b1">
+  <div class="slideHead">
+    <span class="slideNum">B1</span>
+    <h1>Why a database cannot answer this</h1>
+    <em>The core argument</em>
+  </div>
+
+  <p class="kicker">
+    A database answers <strong>“what do you say happened?”</strong> A chain answers
+    <strong>“what can you no longer change about what you said?”</strong> Those are different
+    questions, and only the second one survives a dispute.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 470" role="img" aria-label="Comparison of a mutable database record against an immutable public commitment">
+
+    <!-- ───────────────────────── LEFT: the database -->
+    <rect class="zone" x="6" y="34" width="752" height="424" rx="12"/>
+    <text class="t-lbl" x="26" y="24">Conventional database  ·  the record has an owner</text>
+
+    <rect class="nd" x="40" y="66" width="250" height="66" rx="9"/>
+    <text class="t-title" x="60" y="98">CreatorProof</text>
+    <text class="t-sub" x="60" y="120">holds the credentials</text>
+
+    <rect class="nd" x="40" y="196" width="330" height="176" rx="9"/>
+    <text class="t-lbl" x="62" y="226">scan_records</text>
+    <line class="rule" x1="40" y1="240" x2="370" y2="240"/>
+    <text class="t-body" x="62" y="270">image_hash</text><text class="t-mono" x="230" y="270">0x9f2c…</text>
+    <text class="t-body" x="62" y="304">verdict</text><text class="t-mono fx-pass" x="230" y="304">PASS</text>
+    <text class="t-body" x="62" y="338">checked_at</text><text class="t-mono fx-warn" x="230" y="338">2 Sep 2026</text>
+
+    <path class="ar-bad" d="M 165 132 L 165 190" marker-end="url(#a5)"/>
+    <text class="t-mono fx-bad" x="180" y="168">UPDATE · DELETE · ALTER</text>
+
+    <rect class="nd-ghost" x="40" y="392" width="330" height="46" rx="8"/>
+    <text class="t-body fx-dim" x="62" y="421">…or 2 Oct 2026, written yesterday</text>
+
+    <rect class="nd" x="472" y="196" width="248" height="106" rx="9"/>
+    <text class="t-title" x="492" y="230">Opposing party</text>
+    <text class="t-sub" x="492" y="254">creator, insurer, court</text>
+    <text class="t-sub" x="492" y="278">must simply believe us</text>
+
+    <path class="ar" d="M 380 262 L 464 250" marker-end="url(#a1)"/>
+    <text class="t-big fx-bad" x="404" y="352">?</text>
+    <text class="t-mono fx-bad" x="436" y="342">the two rows are</text>
+    <text class="t-mono fx-bad" x="436" y="364">indistinguishable</text>
+
+    <g class="cal"><circle cx="106" cy="161" r="17"/><text x="106" y="167">1</text></g>
+    <g class="cal"><circle cx="424" cy="416" r="17"/><text x="424" y="422">2</text></g>
+
+    <!-- ───────────────────────── RIGHT: the commitment -->
+    <rect class="zone-public" x="842" y="34" width="752" height="424" rx="12"/>
+    <text class="t-lbl" x="862" y="24">Public commitment  ·  the record has no owner</text>
+
+    <rect class="nd" x="876" y="66" width="250" height="66" rx="9"/>
+    <text class="t-title" x="896" y="98">CreatorProof</text>
+    <text class="t-sub" x="896" y="120">operator — same credentials</text>
+
+    <rect class="nd-a" x="876" y="196" width="250" height="94" rx="9"/>
+    <text class="t-lbl fx-a" x="898" y="226">32-byte commitment</text>
+    <text class="t-mono fx-txt" x="898" y="258">0x9f2c4e…b71a</text>
+    <text class="t-sub" x="898" y="280">hash of the sealed packet</text>
+
+    <path class="ar-bad" d="M 1001 132 L 1001 190" marker-end="url(#a5)"/>
+    <circle cx="1001" cy="161" r="19" fill="#05070c" stroke="#f87171" stroke-width="2.4"/>
+    <path d="M 992 152 L 1010 170 M 1010 152 L 992 170" stroke="#f87171" stroke-width="2.6"/>
+    <text class="t-mono fx-bad" x="1030" y="167">no write path exists</text>
+
+    <path class="ar-pub" d="M 1132 243 L 1216 243" marker-end="url(#a4)"/>
+
+    <rect class="nd-a" x="1232" y="182" width="330" height="122" rx="9"/>
+    <text class="t-lbl fx-a" x="1254" y="212">Base L2 → Ethereum L1</text>
+    <g fill="rgba(127,179,255,0.16)" stroke="#7fb3ff" stroke-width="1.4">
+      <rect x="1254" y="228" width="52" height="46" rx="5"/>
+      <rect x="1316" y="228" width="52" height="46" rx="5"/>
+      <rect x="1378" y="228" width="52" height="46" rx="5"/>
+      <rect x="1440" y="228" width="52" height="46" rx="5"/>
+    </g>
+    <path class="ar-soft" d="M 1500 251 L 1546 251" marker-end="url(#a1)"/>
+    <text class="t-sub" x="1254" y="294">block ordering · independent replicas</text>
+
+    <rect class="nd-pass" x="1232" y="336" width="330" height="102" rx="9"/>
+    <text class="t-title fx-pass" x="1254" y="368">Opposing party</text>
+    <text class="t-sub" x="1254" y="392">reads the chain directly</text>
+    <text class="t-sub" x="1254" y="416">needs no trust in CreatorProof</text>
+
+    <path class="ar" d="M 1397 310 L 1397 330" marker-end="url(#a1)"/>
+
+    <rect class="nd" x="876" y="336" width="250" height="102" rx="9"/>
+    <text class="t-title" x="896" y="368">Evidence stays private</text>
+    <text class="t-sub" x="896" y="392">image, identity, detector</text>
+    <text class="t-sub" x="896" y="416">output — all off-chain</text>
+    <path class="ar-sig" d="M 1001 296 L 1001 330" marker-end="url(#a3)"/>
+
+    <g class="cal"><circle cx="1174" cy="221" r="17"/><text x="1174" y="227">3</text></g>
+    <g class="cal"><circle cx="1198" cy="388" r="17"/><text x="1198" y="394">4</text></g>
+  </svg>
+  <figcaption>B1 · Same operator, same credentials, same evidence. Only the right-hand record is one the operator cannot revise.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>The owner is the attacker.</strong> Whoever holds the database credentials can rewrite any row, including the timestamp that the whole defence rests on.</span></li>
+    <li><b>2</b><span><strong>Backdating is undetectable.</strong> A row written on time and a row fabricated a month later are byte-for-byte identical to an outside examiner.</span></li>
+    <li><b>3</b><span><strong>No write path back.</strong> Once the commitment is in a block there is no privileged account, no admin console and no support ticket that can alter it.</span></li>
+    <li><b>4</b><span><strong>Verification without trust.</strong> The opposing party reads the chain themselves. Our cooperation, and our continued existence, stop being required.</span></li>
+  </ol>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        We do not need storage. We need an <em>ordering witness with no privileged writer</em> — and
+        that is the one thing a database cannot be, by definition.
+      </p>
+      <p>
+        The moment the record and the interested party share an owner, the record stops being
+        evidence and becomes a claim.
+      </p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“Use an append-only table, or WORM storage.”</q> We hold the credentials that make it append-only, so we can make it not append-only. That relocates the trust; it does not remove it.</p>
+      <p><q>“Use a trusted timestamping authority.”</q> That is one company: one key to compromise, one entity to subpoena, one business that can fold and take the evidence with it.</p>
+      <p><q>“Let the customer keep their own copy.”</q> The customer is the interested party. A record that both interested parties can rewrite is worth nothing in a dispute.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════════ B2 ACTORS -->
+<section class="slide" id="b2">
+  <div class="slideHead">
+    <span class="slideNum">B2</span>
+    <h1>The actors, and who distrusts whom</h1>
+    <em>Problem context</em>
+  </div>
+
+  <p class="kicker">
+    Publishing a single image touches five parties with genuinely opposed incentives, and no two of
+    them accept each other’s records. <strong>Broken lines below are broken trust</strong> — every one
+    of them is a reason this cannot be solved inside any one company’s database.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 452" role="img" aria-label="The five parties around a publishing decision and the trust gaps between them">
+
+    <rect class="zone-public" x="556" y="150" width="488" height="152" rx="12"/>
+    <text class="t-lbl fx-a" x="580" y="180">Shared neutral ground</text>
+    <text class="t-big" x="580" y="222">Public commitment layer</text>
+    <text class="t-sub" x="580" y="252">No party controls it, so every party accepts it</text>
+    <text class="t-mono fx-a" x="580" y="282">Base L2 · EAS · registry · receipts</text>
+
+    <!-- creator -->
+    <rect class="nd-prof" x="40" y="34" width="272" height="98" rx="9"/>
+    <text class="t-title fx-prof" x="62" y="68">Creator</text>
+    <text class="t-sub" x="62" y="92">registers work, wants to know</text>
+    <text class="t-sub" x="62" y="114">their catalogue was truly searched</text>
+
+    <!-- agency -->
+    <rect class="nd-copy" x="40" y="176" width="272" height="98" rx="9"/>
+    <text class="t-title fx-copy" x="62" y="210">Agency</text>
+    <text class="t-sub" x="62" y="234">runs the check, must prove</text>
+    <text class="t-sub" x="62" y="256">diligence to its client later</text>
+
+    <!-- brand -->
+    <rect class="nd-copy" x="40" y="318" width="272" height="98" rx="9"/>
+    <text class="t-title fx-copy" x="62" y="352">Brand / publisher</text>
+    <text class="t-sub" x="62" y="376">carries the liability, will not</text>
+    <text class="t-sub" x="62" y="398">take the agency’s word for it</text>
+
+    <!-- marketplace -->
+    <rect class="nd" x="1288" y="34" width="272" height="98" rx="9"/>
+    <text class="t-title" x="1310" y="68">Marketplace</text>
+    <text class="t-sub" x="1310" y="92">must act on takedowns without</text>
+    <text class="t-sub" x="1310" y="114">re-running every check itself</text>
+
+    <!-- regulator -->
+    <rect class="nd-pass" x="1288" y="176" width="272" height="98" rx="9"/>
+    <text class="t-title fx-pass" x="1310" y="210">Regulator / court</text>
+    <text class="t-sub" x="1310" y="234">arrives years later, needs an</text>
+    <text class="t-sub" x="1310" y="256">account nobody could have edited</text>
+
+    <!-- insurer -->
+    <rect class="nd" x="1288" y="318" width="272" height="98" rx="9"/>
+    <text class="t-title" x="1310" y="352">Insurer</text>
+    <text class="t-sub" x="1310" y="376">prices the risk, needs proof of</text>
+    <text class="t-sub" x="1310" y="398">process rather than assertion</text>
+
+    <!-- platform in the middle bottom -->
+    <rect class="nd-a" x="612" y="352" width="376" height="80" rx="9"/>
+    <text class="t-title fx-a" x="634" y="384">CreatorProof platform</text>
+    <text class="t-sub" x="634" y="408">produces the evidence · an interested party</text>
+
+    <!-- broken-trust arcs -->
+    <path class="ar-bad" d="M 320 214 C 430 214 430 372 604 380"/>
+    <path class="ar-bad" d="M 320 356 C 440 356 470 392 604 396"/>
+    <path class="ar-bad" d="M 1284 372 C 1160 372 1120 396 996 396"/>
+    <text class="t-mono fx-bad" x="338" y="326">will not accept a self-reported record</text>
+
+    <!-- everyone reads the neutral layer -->
+    <path class="ar-pub" d="M 320 96 C 440 96 460 200 548 214" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1284 96 C 1160 96 1140 200 1052 214" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1284 222 L 1052 222" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1284 360 C 1150 360 1120 264 1052 240" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 800 348 L 800 310" marker-end="url(#a4)"/>
+
+    <g class="cal"><circle cx="470" cy="272" r="17"/><text x="470" y="278">1</text></g>
+    <g class="cal"><circle cx="800" cy="330" r="17"/><text x="800" y="336">2</text></g>
+    <g class="cal"><circle cx="474" cy="146" r="17"/><text x="474" y="152">3</text></g>
+    <g class="cal"><circle cx="1130" cy="146" r="17"/><text x="1130" y="152">4</text></g>
+  </svg>
+  <figcaption>B2 · Red dashed lines are refusals of trust. Blue lines are the one record all six parties will read.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Nobody accepts the interested party’s log.</strong> The brand will not trust the agency, and the creator will not trust either of them.</span></li>
+    <li><b>2</b><span><strong>We are not neutral.</strong> CreatorProof is paid by one side, so our own database is disqualified as the shared record for exactly the same reason.</span></li>
+    <li><b>3</b><span><strong>Coordination needs a common reference.</strong> Six parties, six systems, one fact that must mean the same thing to all of them.</span></li>
+    <li><b>4</b><span><strong>The reader arrives late.</strong> Courts and insurers appear years after the fact, when contracts have lapsed and vendors have folded.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      This is a coordination problem between parties whose incentives genuinely conflict, and the
+      referee cannot be one of the players. Every party here needs the same fact to be true, and each
+      of them has a reason to doubt whoever is holding it.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════ B3 PIPELINE -->
+<section class="slide" id="b3">
+  <div class="slideHead">
+    <span class="slideNum">B3</span>
+    <h1>From uploaded image to public commitment</h1>
+    <em>End-to-end flow</em>
+  </div>
+
+  <p class="kicker">
+    Seven stages turn a raw upload into a fact that cannot be retracted. The critical property is that
+    <strong>every stage is deterministic</strong> — the same evidence always produces the same 32 bytes,
+    so anyone can recompute the commitment and check it themselves.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 400" role="img" aria-label="Seven stage pipeline from image upload to on-chain attestation">
+
+    <rect class="zone-private" x="6" y="40" width="1046" height="270" rx="12"/>
+    <text class="t-lbl" x="26" y="30">Private · tenant-isolated, row-level security</text>
+    <rect class="zone-public" x="1072" y="40" width="522" height="270" rx="12"/>
+    <text class="t-lbl fx-a" x="1092" y="30">Public · irreversible</text>
+
+    <!-- stage boxes, evenly pitched so every gap can carry a visible arrow -->
+    <g>
+      <rect class="nd" x="30" y="72" width="172" height="112" rx="9"/>
+      <text class="t-lbl fx-dim" x="48" y="100">stage 01</text>
+      <text class="t-title" x="48" y="130">Evidence</text>
+      <text class="t-sub" x="48" y="152">three AI lanes</text>
+      <text class="t-sub" x="48" y="172">emit findings</text>
+
+      <rect class="nd" x="238" y="72" width="172" height="112" rx="9"/>
+      <text class="t-lbl fx-dim" x="256" y="100">stage 02</text>
+      <text class="t-title" x="256" y="130">Packet</text>
+      <text class="t-sub" x="256" y="152">findings, policy</text>
+      <text class="t-sub" x="256" y="172">and scope sealed</text>
+
+      <rect class="nd-a" x="446" y="72" width="172" height="112" rx="9"/>
+      <text class="t-lbl fx-a" x="464" y="100">stage 03</text>
+      <text class="t-title" x="464" y="130">Canonical</text>
+      <text class="t-sub" x="464" y="152">RFC 8785 JCS</text>
+      <text class="t-sub" x="464" y="172">one byte layout</text>
+
+      <rect class="nd-a" x="654" y="72" width="172" height="112" rx="9"/>
+      <text class="t-lbl fx-a" x="672" y="100">stage 04</text>
+      <text class="t-title" x="672" y="130">Digest</text>
+      <text class="t-mono fx-txt" x="672" y="154">SHA-256</text>
+      <text class="t-sub" x="672" y="174">→ 32 bytes</text>
+
+      <rect class="nd-a" x="862" y="72" width="172" height="112" rx="9"/>
+      <text class="t-lbl fx-a" x="880" y="100">stage 05</text>
+      <text class="t-title" x="880" y="130">Statement</text>
+      <text class="t-sub" x="880" y="152">Ed25519 over</text>
+      <text class="t-sub" x="880" y="172">COSE Sign1</text>
+    </g>
+
+    <path class="ar" d="M 206 128 L 230 128" marker-end="url(#a1)"/>
+    <path class="ar" d="M 414 128 L 438 128" marker-end="url(#a1)"/>
+    <path class="ar" d="M 622 128 L 646 128" marker-end="url(#a1)"/>
+    <path class="ar" d="M 830 128 L 854 128" marker-end="url(#a1)"/>
+
+    <!-- transparency log; the signature route leaves the statement box, runs
+         along a clear corridor and drops into the top of the log box, so no
+         line ever crosses a label -->
+    <rect class="nd" x="238" y="228" width="410" height="76" rx="9"/>
+    <text class="t-lbl fx-dim" x="256" y="254">stage 06 · transparency log</text>
+    <text class="t-body" x="256" y="284">RFC 6962 Merkle tree · signed tree head</text>
+
+    <path class="ar-sig" d="M 948 188 L 948 208 L 443 208 L 443 222" marker-end="url(#a3)"/>
+
+    <!-- chain -->
+    <rect class="nd-a" x="1096" y="72" width="470" height="112" rx="9"/>
+    <text class="t-lbl fx-a" x="1116" y="100">stage 07 · EAS attestation on Base</text>
+    <text class="t-title" x="1116" y="134">attest(schema, bytes32 packetHash)</text>
+    <text class="t-mono" x="1116" y="164">confirmed tx → attestation UID → ANCHORED</text>
+
+    <path class="ar-pub" d="M 1038 128 L 1088 128" marker-end="url(#a4)"/>
+
+    <rect class="nd-a" x="1096" y="228" width="470" height="76" rx="9"/>
+    <text class="t-lbl fx-a" x="1116" y="254">checkpoint attestation</text>
+    <text class="t-body" x="1116" y="284">one transaction commits a whole batch</text>
+    <path class="ar-pub" d="M 656 266 L 1088 266" marker-end="url(#a4)"/>
+
+    <!-- footer rules -->
+    <text class="t-mono fx-dim" x="30" y="342">deterministic — recomputable by anyone holding the packet</text>
+    <line class="rule" x1="30" y1="356" x2="1034" y2="356" stroke-dasharray="4 5"/>
+    <text class="t-mono fx-a" x="1096" y="342">irreversible — recomputable by nobody</text>
+    <line class="rule-hot" x1="1096" y1="356" x2="1566" y2="356"/>
+
+    <g class="cal"><circle cx="532" cy="54" r="17"/><text x="532" y="60">1</text></g>
+    <g class="cal"><circle cx="740" cy="54" r="17"/><text x="740" y="60">2</text></g>
+    <g class="cal"><circle cx="948" cy="54" r="17"/><text x="948" y="60">3</text></g>
+    <g class="cal"><circle cx="872" cy="266" r="17"/><text x="872" y="272">4</text></g>
+    <g class="cal"><circle cx="1063" cy="128" r="17"/><text x="1063" y="134">5</text></g>
+  </svg>
+  <figcaption>B3 · Stages 1–6 are reproducible by any holder of the packet. Stage 7 is the only step that cannot be undone.</figcaption>
+  </figure>
+
+  <ol class="callouts">
+    <li><b>1</b><span><strong>Canonicalisation comes first.</strong> RFC 8785 forces one byte layout per document, so key order or whitespace can never change the hash.</span></li>
+    <li><b>2</b><span><strong>The digest is the whole payload.</strong> Everything the chain will ever see is compressed to 32 bytes here.</span></li>
+    <li><b>3</b><span><strong>Signed before anchored.</strong> Ed25519 proves who asserted it; the chain proves when. Separate keys, separate failures.</span></li>
+    <li><b>4</b><span><strong>The log is the batching point.</strong> Leaves accumulate into a Merkle tree so one transaction can commit thousands of scans.</span></li>
+    <li><b>5</b><span><strong>Anchoring is explicit state.</strong> <code>anchor_status</code> is a field on every scan, so a pending anchor is never displayed as a confirmed one.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Everything left of this line is reproducible — hand anyone the evidence packet and they will
+      derive the identical 32 bytes. Everything right of it is irreversible, and that asymmetry is the
+      entire product.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════ B4 BOUNDARY -->
+<section class="slide" id="b4">
+  <div class="slideHead">
+    <span class="slideNum">B4</span>
+    <h1>The on-chain / off-chain boundary</h1>
+    <em>Privacy &amp; data minimisation</em>
+  </div>
+
+  <p class="kicker">
+    Exactly one thing crosses this line: <strong>32 bytes with no internal structure</strong>. Everything
+    a regulator would care about stays in tenant-isolated Postgres, which is what makes the right to
+    erasure compatible with a permanent public record.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 428" role="img" aria-label="Data that stays off-chain versus the single 32-byte value written on-chain">
+
+    <rect class="zone-private" x="6" y="42" width="884" height="346" rx="12"/>
+    <text class="t-lbl" x="26" y="32">Off-chain · Postgres with row-level security, S3 object store</text>
+
+    <g>
+      <rect class="nd" x="30" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="48" y="104">Image bytes</text><text class="t-mono fx-dim" x="48" y="124">encrypted at rest</text>
+      <rect class="nd" x="242" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="260" y="104">Creator identity</text><text class="t-mono fx-dim" x="260" y="124">personal data</text>
+      <rect class="nd" x="454" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="472" y="104">Detector scores</text><text class="t-mono fx-dim" x="472" y="124">commercially secret</text>
+      <rect class="nd" x="666" y="76" width="196" height="60" rx="8"/>
+      <text class="t-body" x="684" y="104">Catalogue contents</text><text class="t-mono fx-dim" x="684" y="124">customer property</text>
+
+      <rect class="nd" x="30" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="48" y="178">Policy thresholds</text><text class="t-mono fx-dim" x="48" y="198">tenant configuration</text>
+      <rect class="nd" x="242" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="260" y="178">Licence terms</text><text class="t-mono fx-dim" x="260" y="198">contract data</text>
+      <rect class="nd" x="454" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="472" y="178">Reviewer notes</text><text class="t-mono fx-dim" x="472" y="198">employee data</text>
+      <rect class="nd" x="666" y="150" width="196" height="60" rx="8"/>
+      <text class="t-body" x="684" y="178">Client IP + agent</text><text class="t-mono fx-dim" x="684" y="198">access logs</text>
+    </g>
+
+    <rect class="nd-a" x="30" y="240" width="832" height="76" rx="9"/>
+    <text class="t-lbl fx-a" x="52" y="268">Sealed evidence packet</text>
+    <text class="t-body" x="52" y="296">canonicalised, hashed, Ed25519-signed — still entirely off-chain</text>
+
+    <rect class="nd-pass" x="30" y="330" width="832" height="46" rx="8"/>
+    <text class="t-body fx-pass" x="52" y="359">Erasure request → rows deleted → the on-chain value becomes an unresolvable number</text>
+
+    <!-- the boundary -->
+    <line class="rule-hot" x1="928" y1="42" x2="928" y2="388"/>
+    <text class="t-lbl fx-a" transform="rotate(-90 928 132)" x="928" y="132" text-anchor="middle" dy="-9">trust boundary</text>
+
+    <path class="ar-pub" d="M 866 278 L 984 278" marker-end="url(#a4)"/>
+    <text class="t-mono fx-a" x="874" y="306">32 bytes</text>
+
+    <!-- public side -->
+    <rect class="zone-public" x="966" y="42" width="628" height="346" rx="12"/>
+    <text class="t-lbl fx-a" x="986" y="32">On-chain · Base, world-readable, permanent</text>
+
+    <rect class="nd-a" x="992" y="76" width="576" height="200" rx="9"/>
+    <text class="t-lbl fx-a" x="1014" y="104">the complete attestation record</text>
+    <line class="rule" x1="992" y1="116" x2="1568" y2="116"/>
+    <text class="t-mono" x="1014" y="146">schema</text><text class="t-mono fx-txt" x="1200" y="146">0x7f1e…</text>
+    <text class="t-mono" x="1014" y="176">attester</text><text class="t-mono fx-txt" x="1200" y="176">0xA13c…  (CreatorProof)</text>
+    <text class="t-mono" x="1014" y="206">time</text><text class="t-mono fx-txt" x="1200" y="206">block timestamp</text>
+    <text class="t-mono" x="1014" y="236">data</text><text class="t-mono fx-txt" x="1200" y="236">bytes32 packetHash</text>
+    <text class="t-mono fx-dim" x="1014" y="264">no media · no names · no scores · no policy</text>
+
+    <rect class="nd" x="992" y="292" width="576" height="84" rx="9"/>
+    <text class="t-body" x="1014" y="320">A hash cannot be reversed and carries no personal data,</text>
+    <text class="t-body" x="1014" y="346">so nothing on chain is ever within scope of an erasure order.</text>
+
+    <g class="cal"><circle cx="826" cy="268" r="17"/><text x="826" y="274">1</text></g>
+    <g class="cal"><circle cx="928" cy="410" r="17"/><text x="928" y="416">2</text></g>
+    <g class="cal"><circle cx="1280" cy="60" r="17"/><text x="1280" y="66">3</text></g>
+    <g class="cal"><circle cx="826" cy="353" r="17"/><text x="826" y="359">4</text></g>
+  </svg>
+  <figcaption>B4 · Eight categories of sensitive data on the left, one opaque number on the right.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Sealed, then hashed.</strong> The packet is canonicalised and signed off-chain; only its digest is ever eligible to cross.</span></li>
+    <li><b>2</b><span><strong>One direction, one payload.</strong> There is no read path from chain back to data, and no second field to leak through.</span></li>
+    <li><b>3</b><span><strong>The full on-chain record.</strong> Everything a block explorer can show is listed here — and none of it identifies anyone.</span></li>
+    <li><b>4</b><span><strong>Erasure still works.</strong> Deleting the off-chain rows destroys the only pre-image, leaving an orphaned number.</span></li>
+  </ol>
+
+  <div class="split">
+    <div class="say">
+      <b>Say this</b>
+      <p>
+        Nothing personal ever reaches the chain. Erasure works <em>because</em> of that split — delete
+        the off-chain record and the on-chain hash becomes a meaningless 32 bytes that can never be
+        reversed into the data.
+      </p>
+      <p>We satisfy the right to erasure and keep the timestamp intact at the same time.</p>
+    </div>
+
+    <div class="parry">
+      <b>If they push back</b>
+      <p><q>“A hash of personal data is still personal data.”</q> Only where the pre-image space is small enough to brute-force. Ours is a multi-kilobyte JSON document containing high-entropy fields, so it is not enumerable.</p>
+      <p><q>“Which regulation are you claiming compliance with?”</q> GDPR Article 17 and the Bangladesh Personal Data Protection framework both attach to identifiability; an unresolvable digest is out of scope once its pre-image is destroyed.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════ B5 CONTRACTS -->
+<section class="slide" id="b5">
+  <div class="slideHead">
+    <span class="slideNum">B5</span>
+    <h1>Contract topology</h1>
+    <em>What is deployed on-chain</em>
+  </div>
+
+  <p class="kicker">
+    Four contracts, none of them bespoke cryptography. We build on the <strong>Ethereum Attestation
+    Service</strong> so that a third party can verify our records with tooling they already trust,
+    instead of an audit of code we wrote ourselves.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 424" role="img" aria-label="The four deployed contracts and the links between them">
+
+    <!-- schema registry -->
+    <rect class="nd" x="24" y="60" width="316" height="188" rx="9"/>
+    <text class="t-lbl fx-dim" x="46" y="88">standard · EAS</text>
+    <text class="t-title" x="46" y="118">SchemaRegistry</text>
+    <line class="rule" x1="24" y1="132" x2="340" y2="132"/>
+    <text class="t-mono" x="46" y="160">register(schema)</text>
+    <text class="t-sub" x="46" y="188">declares the shape of each</text>
+    <text class="t-sub" x="46" y="210">record type, once, publicly</text>
+    <text class="t-mono fx-dim" x="46" y="236">0x42…0020</text>
+
+    <!-- three schemas -->
+    <rect class="nd-a" x="24" y="272" width="316" height="128" rx="9"/>
+    <text class="t-lbl fx-a" x="46" y="298">three registered schemas</text>
+    <text class="t-mono fx-txt" x="46" y="326">bytes32 packetHash</text>
+    <text class="t-mono fx-txt" x="46" y="352">bytes32 checkpointHash</text>
+    <text class="t-mono fx-txt" x="46" y="378">bytes32 coAttestationHash</text>
+
+    <path class="ar" d="M 182 252 L 182 266" marker-end="url(#a1)"/>
+
+    <!-- EAS -->
+    <rect class="nd-a" x="404" y="60" width="404" height="340" rx="9"/>
+    <text class="t-lbl fx-a" x="426" y="88">standard · EAS core</text>
+    <text class="t-title" x="426" y="118">EAS</text>
+    <line class="rule" x1="404" y1="132" x2="808" y2="132"/>
+    <text class="t-mono fx-txt" x="426" y="160">attest(request) → uid</text>
+    <text class="t-mono fx-txt" x="426" y="188">getAttestation(uid)</text>
+    <text class="t-mono fx-txt" x="426" y="216">isAttestationValid(uid)</text>
+    <text class="t-mono fx-txt" x="426" y="244">revoke(uid)</text>
+    <line class="rule" x1="404" y1="266" x2="808" y2="266"/>
+    <text class="t-sub" x="426" y="294">Emits Attested(uid, attester, schema).</text>
+    <text class="t-sub" x="426" y="318">Any explorer or independent client can</text>
+    <text class="t-sub" x="426" y="342">read it without our software.</text>
+    <text class="t-mono fx-dim" x="426" y="378">0x42…0021 · Base</text>
+
+    <path class="ar" d="M 344 178 L 398 178" marker-end="url(#a1)"/>
+    <path class="ar-sig" d="M 344 320 C 370 320 380 300 398 288" marker-end="url(#a3)"/>
+
+    <!-- member registry -->
+    <rect class="nd" x="872" y="60" width="352" height="188" rx="9"/>
+    <text class="t-lbl fx-dim" x="894" y="88">ours · governance</text>
+    <text class="t-title" x="894" y="118">MemberRegistry</text>
+    <line class="rule" x1="872" y1="132" x2="1224" y2="132"/>
+    <text class="t-mono" x="894" y="160">enroll · suspend · offboard</text>
+    <text class="t-sub" x="894" y="188">seven roles, three statuses,</text>
+    <text class="t-sub" x="894" y="210">two-step governor transfer</text>
+    <text class="t-mono fx-dim" x="894" y="236">standing regulator seat</text>
+
+    <!-- clearance receipt -->
+    <rect class="nd-pass" x="872" y="272" width="352" height="128" rx="9"/>
+    <text class="t-lbl fx-pass" x="894" y="298">ours · ERC-5192 soulbound</text>
+    <text class="t-title fx-pass" x="894" y="328">ClearanceReceipt</text>
+    <text class="t-mono" x="894" y="356">issue(holder, packetHash, uid)</text>
+    <text class="t-sub" x="894" y="382">locked() always true — never transferable</text>
+
+    <path class="ar-dec" d="M 1188 252 L 1188 266" marker-end="url(#a2)"/>
+    <text class="t-mono fx-a" x="894" y="266">issuance gated by membership</text>
+
+    <path class="ar-sig" d="M 866 330 L 812 330" marker-end="url(#a3)"/>
+
+    <!-- verifier -->
+    <rect class="nd" x="1288" y="60" width="288" height="188" rx="9"/>
+    <text class="t-lbl fx-dim" x="1310" y="88">anyone</text>
+    <text class="t-title" x="1310" y="118">Independent</text>
+    <text class="t-title" x="1310" y="146">verifier</text>
+    <text class="t-sub" x="1310" y="176">block explorer, EAS scan,</text>
+    <text class="t-sub" x="1310" y="198">or a plain RPC call</text>
+    <text class="t-mono fx-pass" x="1310" y="228">no CreatorProof code</text>
+
+    <path class="ar-pub" d="M 1230 154 L 1282 154" marker-end="url(#a4)"/>
+
+    <g class="cal"><circle cx="182" cy="264" r="17"/><text x="182" y="270">1</text></g>
+    <g class="cal"><circle cx="374" cy="178" r="17"/><text x="374" y="184">2</text></g>
+    <g class="cal"><circle cx="1048" cy="42" r="17"/><text x="1048" y="48">3</text></g>
+    <g class="cal"><circle cx="840" cy="330" r="17"/><text x="840" y="336">4</text></g>
+    <g class="cal"><circle cx="1256" cy="154" r="17"/><text x="1256" y="160">5</text></g>
+  </svg>
+  <figcaption>B5 · Two standard EAS contracts we did not write, two small governance contracts we did.</figcaption>
+  </figure>
+
+  <ol class="callouts">
+    <li><b>1</b><span><strong>Three record types, declared publicly.</strong> Evidence packets, log checkpoints and counterparty commitments each get their own schema.</span></li>
+    <li><b>2</b><span><strong>We wrote no cryptography.</strong> EAS is deployed, audited and widely used; our contracts only handle membership.</span></li>
+    <li><b>3</b><span><strong>Governance gates issuance.</strong> A receipt can only be minted for an address the registry currently lists as active.</span></li>
+    <li><b>4</b><span><strong>Receipts point at attestations.</strong> Every receipt stores the packet hash and the attestation UID, so the two layers cannot drift apart.</span></li>
+    <li><b>5</b><span><strong>Verification needs nothing of ours.</strong> A judge can check any record on a public explorer while we are offline.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      We deliberately wrote as little on-chain code as possible. Using the Ethereum Attestation Service
+      means a counterparty verifies us with tooling they already trust, instead of auditing a contract
+      written by the company they are checking up on.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════ B6 MERKLE -->
+<section class="slide" id="b6">
+  <div class="slideHead">
+    <span class="slideNum">B6</span>
+    <h1>Transparency log, and why cost stops mattering</h1>
+    <em>Scale economics</em>
+  </div>
+
+  <p class="kicker">
+    Anchoring every scan individually would not scale. Instead each record becomes a leaf in an
+    <strong>RFC 6962 Merkle tree</strong>, and one transaction commits the entire batch — while every
+    individual record keeps its own independently checkable proof.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 400" role="img" aria-label="Merkle tree batching thousands of records into a single on-chain checkpoint">
+
+    <!-- leaves -->
+    <text class="t-lbl" x="24" y="34">Evidence packets · one leaf each</text>
+    <g>
+      <rect class="nd" x="24" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="48" y="332">#8801</text>
+      <rect class="nd" x="140" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="164" y="332">#8802</text>
+      <rect class="nd-a" x="256" y="300" width="104" height="52" rx="6"/><text class="t-mono fx-txt" x="280" y="332">#8803</text>
+      <rect class="nd" x="372" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="396" y="332">#8804</text>
+      <rect class="nd" x="488" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="512" y="332">#8805</text>
+      <rect class="nd" x="604" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="628" y="332">#8806</text>
+      <rect class="nd" x="720" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="744" y="332">#8807</text>
+      <rect class="nd" x="836" y="300" width="104" height="52" rx="6"/><text class="t-mono" x="860" y="332">#8808</text>
+    </g>
+    <text class="t-mono fx-dim" x="24" y="378">SHA-256(0x00 ‖ packet)  —  domain-separated leaf hash</text>
+
+    <!-- level 1 -->
+    <g>
+      <rect class="nd" x="82" y="228" width="104" height="44" rx="6"/>
+      <rect class="nd-a" x="314" y="228" width="104" height="44" rx="6"/>
+      <rect class="nd" x="546" y="228" width="104" height="44" rx="6"/>
+      <rect class="nd" x="778" y="228" width="104" height="44" rx="6"/>
+    </g>
+    <path class="ar" d="M 76 296 L 118 276"/><path class="ar" d="M 192 296 L 150 276"/>
+    <path class="ar-dec" d="M 308 296 L 350 276"/><path class="ar" d="M 424 296 L 382 276"/>
+    <path class="ar" d="M 540 296 L 582 276"/><path class="ar" d="M 656 296 L 614 276"/>
+    <path class="ar" d="M 772 296 L 814 276"/><path class="ar" d="M 888 296 L 846 276"/>
+
+    <!-- level 2 -->
+    <g>
+      <rect class="nd-a" x="198" y="156" width="104" height="44" rx="6"/>
+      <rect class="nd" x="662" y="156" width="104" height="44" rx="6"/>
+    </g>
+    <path class="ar-dec" d="M 134 224 L 234 204"/><path class="ar" d="M 366 224 L 266 204"/>
+    <path class="ar" d="M 598 224 L 698 204"/><path class="ar" d="M 830 224 L 730 204"/>
+
+    <!-- root -->
+    <rect class="nd-a" x="380" y="84" width="204" height="48" rx="7"/>
+    <text class="t-lbl fx-a" x="402" y="114">Merkle root</text>
+    <path class="ar-dec" d="M 250 152 L 440 136"/><path class="ar" d="M 714 152 L 524 136"/>
+
+    <!-- signed tree head -->
+    <rect class="nd" x="644" y="76" width="286" height="64" rx="8"/>
+    <text class="t-body" x="666" y="104">Signed tree head</text>
+    <text class="t-mono fx-dim" x="666" y="126">Ed25519 over root + size</text>
+    <path class="ar-sig" d="M 590 108 L 638 108" marker-end="url(#a3)"/>
+
+    <!-- chain -->
+    <rect class="nd-a" x="1000" y="76" width="290" height="64" rx="8"/>
+    <text class="t-lbl fx-a" x="1022" y="104">checkpoint attestation</text>
+    <text class="t-mono" x="1022" y="126">one tx · Base</text>
+    <path class="ar-pub" d="M 936 108 L 994 108" marker-end="url(#a4)"/>
+
+    <!-- economics -->
+    <rect class="zone-public" x="1000" y="176" width="580" height="196" rx="10"/>
+    <text class="t-lbl fx-a" x="1022" y="206">what this buys</text>
+    <text class="t-body" x="1022" y="240">65 536 records committed by one transaction</text>
+    <text class="t-body" x="1022" y="268">inclusion proof for any record: 16 hashes</text>
+    <text class="t-body" x="1022" y="296">verification cost: microseconds, offline</text>
+    <line class="rule" x1="1022" y1="314" x2="1558" y2="314"/>
+    <text class="t-big fx-pass" x="1022" y="352">≈ 0.000002 USD</text>
+    <text class="t-sub" x="1270" y="352">marginal cost per record</text>
+
+    <!-- inclusion proof callout -->
+    <text class="t-mono fx-a" x="24" y="66">highlighted path = the inclusion proof for record #8803</text>
+
+    <g class="cal"><circle cx="238" cy="278" r="17"/><text x="238" y="284">1</text></g>
+    <g class="cal"><circle cx="614" cy="70" r="17"/><text x="614" y="76">2</text></g>
+    <g class="cal"><circle cx="966" cy="108" r="17"/><text x="966" y="114">3</text></g>
+    <g class="cal"><circle cx="1560" cy="206" r="17"/><text x="1560" y="212">4</text></g>
+  </svg>
+  <figcaption>B6 · The blue path is everything needed to prove one record was in the tree the chain committed to.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Domain-separated hashing.</strong> Leaves and internal nodes use different prefixes, which blocks second-preimage attacks on the tree.</span></li>
+    <li><b>2</b><span><strong>One root represents everything.</strong> Change any single record and the root changes, so the published root pins the whole batch.</span></li>
+    <li><b>3</b><span><strong>One transaction, whole batch.</strong> Gas is paid once per checkpoint rather than once per customer scan.</span></li>
+    <li><b>4</b><span><strong>Cost stops being an argument.</strong> At this marginal price we anchor every record, not only the disputed ones.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      A record you only create once you are already in trouble is worthless, so the anchoring has to be
+      cheap enough to run on every single check. Batching is what takes the cost per record to
+      effectively zero while each record keeps its own proof.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════ B7 COATTEST -->
+<section class="slide" id="b7">
+  <div class="slideHead">
+    <span class="slideNum">B7</span>
+    <h1>Multi-party co-attestation</h1>
+    <em>Not just our word</em>
+  </div>
+
+  <p class="kicker">
+    A record we sign alone is still a record by an interested party. So the counterparty who <em>acted</em>
+    on the result signs it too, from their own wallet, using <strong>EIP-712 typed data</strong> — and their
+    commitment is bound on-chain to ours.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 398" role="img" aria-label="Five step counterparty co-attestation flow using EIP-712 signatures">
+
+    <!-- who performs each step, tagged above the box rather than as swimlanes,
+         because the actor alternates and true lanes would cross themselves -->
+    <text class="t-lbl fx-prof" x="24" y="40">counterparty</text>
+    <text class="t-lbl fx-a" x="346" y="202">creatorproof</text>
+    <text class="t-lbl fx-prof" x="668" y="40">counterparty wallet</text>
+    <text class="t-lbl fx-a" x="990" y="202">creatorproof</text>
+    <text class="t-lbl" x="1312" y="40" style="fill:#7fb3ff">base</text>
+
+    <!-- step 1 -->
+    <rect class="nd" x="24" y="58" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-dim" x="46" y="86">step 1</text>
+    <text class="t-title" x="46" y="116">Reviewer decides</text>
+    <text class="t-sub" x="46" y="142">accepts the evidence and</text>
+    <text class="t-sub" x="46" y="164">approves the asset for use</text>
+
+    <!-- step 2 api -->
+    <rect class="nd-a" x="346" y="220" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-a" x="368" y="248">step 2 · challenge</text>
+    <text class="t-title" x="368" y="278">Typed data issued</text>
+    <text class="t-mono" x="368" y="304">domain: chainId +</text>
+    <text class="t-mono" x="368" y="326">verifyingContract</text>
+
+    <!-- step 3 wallet -->
+    <rect class="nd" x="668" y="58" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-dim" x="690" y="86">step 3</text>
+    <text class="t-title" x="690" y="116">Wallet signs</text>
+    <text class="t-mono" x="690" y="142">eth_signTypedData_v4</text>
+    <text class="t-sub" x="690" y="164">key never leaves the browser</text>
+
+    <!-- step 4 verify -->
+    <rect class="nd-a" x="990" y="220" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-a" x="1012" y="248">step 4 · verify</text>
+    <text class="t-title" x="1012" y="278">Signer recovered</text>
+    <text class="t-sub" x="1012" y="304">address must be an active</text>
+    <text class="t-sub" x="1012" y="326">member in the registry</text>
+
+    <!-- step 5 chain -->
+    <rect class="nd-pass" x="1312" y="58" width="264" height="118" rx="9"/>
+    <text class="t-lbl fx-pass" x="1334" y="86">step 5 · anchored</text>
+    <text class="t-title fx-pass" x="1334" y="116">Co-attestation</text>
+    <text class="t-mono" x="1334" y="142">refUID → our</text>
+    <text class="t-mono" x="1334" y="164">attestation</text>
+
+    <path class="ar" d="M 314 130 C 420 130 400 210 470 214" marker-end="url(#a1)"/>
+    <path class="ar-sig" d="M 636 264 C 700 264 660 180 696 172" marker-end="url(#a3)"/>
+    <path class="ar-sig" d="M 958 130 C 1060 130 1050 208 1112 214" marker-end="url(#a3)"/>
+    <path class="ar-pub" d="M 1280 264 C 1360 264 1360 190 1400 182" marker-end="url(#a4)"/>
+
+    <!-- binding annotation -->
+    <rect class="nd-a" x="24" y="220" width="286" height="118" rx="9"/>
+    <text class="t-lbl fx-a" x="46" y="248">the binding</text>
+    <text class="t-body" x="46" y="278">Their signature covers the</text>
+    <text class="t-body" x="46" y="300">exact packet hash we anchored,</text>
+    <text class="t-body" x="46" y="322">so neither side can drift.</text>
+
+    <g class="cal"><circle cx="470" cy="130" r="17"/><text x="470" y="136">1</text></g>
+    <g class="cal"><circle cx="668" cy="216" r="17"/><text x="668" y="222">2</text></g>
+    <g class="cal"><circle cx="1030" cy="130" r="17"/><text x="1030" y="136">3</text></g>
+    <g class="cal"><circle cx="1300" cy="188" r="17"/><text x="1300" y="194">4</text></g>
+  </svg>
+  <figcaption>B7 · The counterparty’s private key never leaves their browser; only the recovered address is stored.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>The decision triggers it.</strong> Co-attestation is requested at the moment a human accepts the result, not retroactively.</span></li>
+    <li><b>2</b><span><strong>Replay is impossible.</strong> The typed-data domain pins chain ID and the registry address, so a signature cannot be reused elsewhere.</span></li>
+    <li><b>3</b><span><strong>Membership is enforced.</strong> We recover the signing address and reject it unless the registry lists it as active.</span></li>
+    <li><b>4</b><span><strong>Bound, not merely adjacent.</strong> <code>refUID</code> makes the counterparty commitment a child of ours, permanently linked on chain.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      This is what stops the record being self-serving. The brand that relied on the result signs the
+      same 32 bytes we did, from their own key, and that pair of signatures is what a court would
+      actually find persuasive.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ B8 GOVERNANCE -->
+<section class="slide" id="b8">
+  <div class="slideHead">
+    <span class="slideNum">B8</span>
+    <h1>Governance across all three layers</h1>
+    <em>Network · business · infrastructure</em>
+  </div>
+
+  <p class="kicker">
+    Governance is where most consortium designs quietly become “whatever the founding company decides”.
+    Ours is enforced by contract, not by policy document — <strong>membership, roles and removal are all
+    on-chain and publicly auditable</strong>.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 412" role="img" aria-label="Network membership, business network and technology infrastructure governance">
+
+    <!-- column 1 -->
+    <rect class="zone" x="8" y="36" width="512" height="286" rx="10"/>
+    <text class="t-lbl fx-a" x="30" y="26">1 · Network membership governance</text>
+    <rect class="nd" x="32" y="62" width="464" height="112" rx="8"/>
+    <text class="t-title" x="54" y="92">On- and off-boarding</text>
+    <text class="t-mono fx-txt" x="54" y="120">enroll → suspend → reinstate → offboard</text>
+    <text class="t-sub" x="54" y="150">Each transition emits an event, so the full membership</text>
+    <text class="t-sub" x="54" y="166">history of the network is reconstructable by anyone.</text>
+
+    <rect class="nd" x="32" y="188" width="228" height="118" rx="8"/>
+    <text class="t-lbl fx-dim" x="54" y="214">permission structure</text>
+    <text class="t-body" x="54" y="242">7 roles: platform,</text>
+    <text class="t-body" x="54" y="264">rights-holder, agency,</text>
+    <text class="t-body" x="54" y="286">marketplace, auditor…</text>
+
+    <rect class="nd-pass" x="270" y="188" width="226" height="118" rx="8"/>
+    <text class="t-lbl fx-pass" x="292" y="214">regulatory oversight</text>
+    <text class="t-body" x="292" y="242">A standing</text>
+    <text class="t-body" x="292" y="264">regulator-observer seat,</text>
+    <text class="t-body" x="292" y="286">read access by default.</text>
+
+    <!-- column 2 -->
+    <rect class="zone" x="544" y="36" width="512" height="286" rx="10"/>
+    <text class="t-lbl fx-a" x="566" y="26">2 · Business network governance</text>
+    <rect class="nd" x="568" y="62" width="464" height="112" rx="8"/>
+    <text class="t-title" x="590" y="92">Charter and common services</text>
+    <text class="t-sub" x="590" y="122">Schema changes, threshold changes and fee changes are</text>
+    <text class="t-sub" x="590" y="140">proposals against the registry, never silent config edits.</text>
+    <text class="t-mono fx-txt" x="590" y="166">two-step governor transfer</text>
+
+    <rect class="nd" x="568" y="188" width="228" height="118" rx="8"/>
+    <text class="t-lbl fx-dim" x="590" y="214">service levels</text>
+    <text class="t-body" x="590" y="242">Anchor latency and</text>
+    <text class="t-body" x="590" y="264">availability published</text>
+    <text class="t-body" x="590" y="286">as measurable targets.</text>
+
+    <rect class="nd" x="806" y="188" width="226" height="118" rx="8"/>
+    <text class="t-lbl fx-dim" x="828" y="214">dispute path</text>
+    <text class="t-body" x="828" y="242">Revocation is public</text>
+    <text class="t-body" x="828" y="264">and additive — history</text>
+    <text class="t-body" x="828" y="286">is never rewritten.</text>
+
+    <!-- column 3 -->
+    <rect class="zone" x="1080" y="36" width="512" height="286" rx="10"/>
+    <text class="t-lbl fx-a" x="1102" y="26">3 · Technology infrastructure governance</text>
+    <rect class="nd" x="1104" y="62" width="464" height="112" rx="8"/>
+    <text class="t-title" x="1126" y="92">Deployment manifest</text>
+    <text class="t-sub" x="1126" y="122">Chain ID, contract addresses and schema UIDs are hashed</text>
+    <text class="t-sub" x="1126" y="140">into one public descriptor that clients pin and compare.</text>
+    <text class="t-mono fx-txt" x="1126" y="166">contract bytecode SHA-256 pinned at runtime</text>
+
+    <rect class="nd" x="1104" y="188" width="228" height="118" rx="8"/>
+    <text class="t-lbl fx-dim" x="1126" y="214">on / off-chain split</text>
+    <text class="t-body" x="1126" y="242">Fixed by design, not</text>
+    <text class="t-body" x="1126" y="264">by configuration —</text>
+    <text class="t-body" x="1126" y="286">see sheet B4.</text>
+
+    <rect class="nd" x="1342" y="188" width="226" height="118" rx="8"/>
+    <text class="t-lbl fx-dim" x="1364" y="214">upgrade policy</text>
+    <text class="t-body" x="1364" y="242">Not proxy-upgradeable;</text>
+    <text class="t-body" x="1364" y="264">a new version means</text>
+    <text class="t-body" x="1364" y="286">a new address.</text>
+
+    <!-- bottom enforcement bar -->
+    <rect class="nd-a" x="8" y="342" width="1584" height="58" rx="9"/>
+    <text class="t-lbl fx-a" x="32" y="368">enforced by</text>
+    <text class="t-body fx-txt" x="176" y="368">MemberRegistry contract — governor, pendingGovernor, regulatorObserver, activeMemberCount</text>
+    <text class="t-mono fx-pass" x="176" y="390">every governance action is a transaction: public, ordered, and impossible to backdate</text>
+
+    <g class="cal"><circle cx="496" cy="46" r="17"/><text x="496" y="52">1</text></g>
+    <g class="cal"><circle cx="1032" cy="46" r="17"/><text x="1032" y="52">2</text></g>
+    <g class="cal"><circle cx="1568" cy="46" r="17"/><text x="1568" y="52">3</text></g>
+    <g class="cal"><circle cx="1552" cy="371" r="17"/><text x="1552" y="377">4</text></g>
+  </svg>
+  <figcaption>B8 · The three governance domains the BCOLBD checklist names, each mapped to an on-chain mechanism.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Removal is as public as joining.</strong> Suspension and off-boarding are transactions, so a member cannot be quietly deleted from history.</span></li>
+    <li><b>2</b><span><strong>No single-transaction takeover.</strong> Governor transfer is propose-then-accept, so a stolen key cannot instantly capture the network.</span></li>
+    <li><b>3</b><span><strong>Clients verify the deployment.</strong> If we swapped a contract address, every pinned client would notice immediately.</span></li>
+    <li><b>4</b><span><strong>Policy that cannot be ignored.</strong> These are not commitments in a PDF; they are the only code paths that exist.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      The honest failure mode of most consortium networks is that governance lives in a document while
+      control lives in one company’s admin panel. Here the registry contract <em>is</em> the governance,
+      so our own power over the network is bounded and visible.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════════ B9 KEYS -->
+<section class="slide" id="b9">
+  <div class="slideHead">
+    <span class="slideNum">B9</span>
+    <h1>Key management and access control</h1>
+    <em>Crypto-security</em>
+  </div>
+
+  <p class="kicker">
+    Three key families with different jobs, different lifetimes and different blast radii. The design
+    rule is that <strong>no single key compromise can rewrite history</strong> — the worst case is that new
+    records stop being trustworthy, never that old ones change.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 414" role="img" aria-label="Three key families, their storage, rotation and blast radius">
+
+    <!-- key family 1 -->
+    <rect class="nd-a" x="16" y="52" width="500" height="248" rx="9"/>
+    <text class="t-lbl fx-a" x="38" y="80">family 1 · EVM attester key</text>
+    <text class="t-title" x="38" y="112">secp256k1 · writes to Base</text>
+    <line class="rule" x1="16" y1="128" x2="516" y2="128"/>
+    <text class="t-body" x="38" y="156">Held in a cloud KMS. The private key</text>
+    <text class="t-body" x="38" y="178">is never present in application memory.</text>
+    <text class="t-mono fx-dim" x="38" y="206">lease mutex stops two workers signing</text>
+    <text class="t-lbl fx-warn" x="38" y="238">blast radius if stolen</text>
+    <text class="t-body" x="38" y="264">Can publish false new records.</text>
+    <text class="t-body" x="38" y="286">Existing ones stay untouched.</text>
+
+    <!-- key family 2 -->
+    <rect class="nd" x="548" y="52" width="500" height="248" rx="9"/>
+    <text class="t-lbl fx-dim" x="570" y="80">family 2 · statement signing key</text>
+    <text class="t-title" x="570" y="112">Ed25519 · signs evidence</text>
+    <line class="rule" x1="548" y1="128" x2="1048" y2="128"/>
+    <text class="t-body" x="570" y="156">Separate from the EVM key, so chain</text>
+    <text class="t-body" x="570" y="178">access and evidence authorship differ.</text>
+    <text class="t-mono fx-dim" x="570" y="206">rotated on schedule · key history public</text>
+    <text class="t-lbl fx-warn" x="570" y="238">blast radius if stolen</text>
+    <text class="t-body" x="570" y="264">Can forge statements, but cannot</text>
+    <text class="t-body" x="570" y="286">backdate them past the chain.</text>
+
+    <!-- key family 3 -->
+    <rect class="nd-pass" x="1080" y="52" width="504" height="248" rx="9"/>
+    <text class="t-lbl fx-pass" x="1102" y="80">family 3 · counterparty wallet keys</text>
+    <text class="t-title fx-pass" x="1102" y="112">held by the customer</text>
+    <line class="rule" x1="1080" y1="128" x2="1584" y2="128"/>
+    <text class="t-body" x="1102" y="156">We never hold, escrow or recover a</text>
+    <text class="t-body" x="1102" y="178">customer key. We only store addresses.</text>
+    <text class="t-mono fx-dim" x="1102" y="206">signing happens in their browser</text>
+    <text class="t-lbl fx-pass" x="1102" y="238">blast radius if stolen</text>
+    <text class="t-body" x="1102" y="264">Confined to one member; the</text>
+    <text class="t-body" x="1102" y="286">registry can suspend the address.</text>
+
+    <!-- access control bar -->
+    <rect class="nd" x="16" y="326" width="1568" height="76" rx="9"/>
+    <text class="t-lbl fx-dim" x="38" y="352">access control, off-chain</text>
+    <text class="t-body" x="38" y="382">Per-tenant API keys · PostgreSQL row-level security with a NOBYPASSRLS runtime role · reviewer actions attributed and logged</text>
+
+    <g class="cal"><circle cx="492" cy="70" r="17"/><text x="492" y="76">1</text></g>
+    <g class="cal"><circle cx="1024" cy="70" r="17"/><text x="1024" y="76">2</text></g>
+    <g class="cal"><circle cx="1560" cy="70" r="17"/><text x="1560" y="76">3</text></g>
+    <g class="cal"><circle cx="1560" cy="352" r="17"/><text x="1560" y="358">4</text></g>
+  </svg>
+  <figcaption>B9 · Separated key families mean a single compromise degrades future trust without corrupting the past.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>The chain key never touches our code.</strong> Signing happens inside the KMS, and a database lease stops two workers racing the same nonce.</span></li>
+    <li><b>2</b><span><strong>Rotation is expected, not exceptional.</strong> Old public keys stay published so historical statements remain verifiable after a rotation.</span></li>
+    <li><b>3</b><span><strong>We are not a custodian.</strong> Holding no customer keys removes the single most attractive target in the system.</span></li>
+    <li><b>4</b><span><strong>Isolation is enforced by the database.</strong> Row-level security means a bug in application code still cannot cross a tenant boundary.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      We assumed a key would eventually be compromised and designed for what happens next. Because the
+      past is already committed on a public chain, the worst an attacker can do is pollute the future —
+      and that becomes visible immediately.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════ B10 FAILURE -->
+<section class="slide" id="b10">
+  <div class="slideHead">
+    <span class="slideNum">B10</span>
+    <h1>Failure, finality and honest degradation</h1>
+    <em>Technical risk</em>
+  </div>
+
+  <p class="kicker">
+    Chains stall, RPC providers drop and gas spikes. The system therefore treats anchoring as a
+    <strong>durable job with visible state</strong>, and it will report a pending anchor as pending rather
+    than quietly claiming success.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 396" role="img" aria-label="Anchor job state machine with retry, failover and degraded modes">
+
+    <!-- state machine -->
+    <text class="t-lbl" x="24" y="34">Anchor job state machine · persisted in Postgres, survives restarts</text>
+
+    <rect class="nd" x="24" y="60" width="196" height="76" rx="8"/>
+    <text class="t-title" x="46" y="92">QUEUED</text>
+    <text class="t-mono fx-dim" x="46" y="118">idempotency key</text>
+
+    <rect class="nd" x="272" y="60" width="196" height="76" rx="8"/>
+    <text class="t-title" x="294" y="92">SIGNING</text>
+    <text class="t-mono fx-dim" x="294" y="118">lease acquired</text>
+
+    <rect class="nd" x="520" y="60" width="196" height="76" rx="8"/>
+    <text class="t-title" x="542" y="92">SUBMITTED</text>
+    <text class="t-mono fx-dim" x="542" y="118">tx hash recorded</text>
+
+    <rect class="nd-a" x="768" y="60" width="196" height="76" rx="8"/>
+    <text class="t-title fx-a" x="790" y="92">CONFIRMING</text>
+    <text class="t-mono fx-dim" x="790" y="118">depth policy</text>
+
+    <rect class="nd-pass" x="1016" y="60" width="196" height="76" rx="8"/>
+    <text class="t-title fx-pass" x="1038" y="92">ANCHORED</text>
+    <text class="t-mono fx-dim" x="1038" y="118">UID read back</text>
+
+    <path class="ar" d="M 224 98 L 266 98" marker-end="url(#a1)"/>
+    <path class="ar" d="M 472 98 L 514 98" marker-end="url(#a1)"/>
+    <path class="ar" d="M 720 98 L 762 98" marker-end="url(#a1)"/>
+    <path class="ar-dec" d="M 968 98 L 1010 98" marker-end="url(#a2)"/>
+
+    <!-- retry loop -->
+    <rect class="nd-warn" x="520" y="196" width="444" height="76" rx="8"/>
+    <text class="t-title fx-warn" x="542" y="228">RETRYING</text>
+    <text class="t-sub" x="542" y="254">backoff · RPC failover · nonce recovery</text>
+    <path class="ar-bad" d="M 618 140 L 618 190" marker-end="url(#a5)"/>
+    <path class="ar" d="M 900 192 C 900 168 880 150 866 142" marker-end="url(#a1)"/>
+
+    <!-- degraded -->
+    <rect class="nd" x="24" y="196" width="444" height="76" rx="8"/>
+    <text class="t-title" x="46" y="228">Degraded mode</text>
+    <text class="t-sub" x="46" y="254">Merkle log keeps accepting · anchored on recovery</text>
+    <path class="ar-soft" d="M 514 234 L 474 234" marker-end="url(#a1)"/>
+
+    <!-- honesty -->
+    <rect class="nd-a" x="1016" y="196" width="560" height="76" rx="8"/>
+    <text class="t-lbl fx-a" x="1038" y="222">what the customer sees</text>
+    <text class="t-body" x="1038" y="252">anchor_status is returned on every scan and never guesses</text>
+    <path class="ar-dec" d="M 1114 140 L 1114 190" marker-end="url(#a2)"/>
+
+    <!-- finality -->
+    <rect class="zone" x="24" y="300" width="1552" height="80" rx="9"/>
+    <text class="t-lbl fx-a" x="46" y="326">finality policy · configurable per deployment</text>
+    <text class="t-body" x="46" y="358">confirmation-depth  ·  safe  ·  finalized     —     an L2 reorg before the chosen depth returns the job to RETRYING rather than reporting a false anchor</text>
+
+    <g class="cal"><circle cx="244" cy="98" r="17"/><text x="244" y="104">1</text></g>
+    <g class="cal"><circle cx="618" cy="168" r="17"/><text x="618" y="174">2</text></g>
+    <g class="cal"><circle cx="492" cy="234" r="17"/><text x="492" y="240">3</text></g>
+    <g class="cal"><circle cx="1114" cy="168" r="17"/><text x="1114" y="174">4</text></g>
+  </svg>
+  <figcaption>B10 · Every transition is persisted, so a crashed worker resumes instead of double-spending a nonce.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Idempotent by construction.</strong> Re-submitting the same packet cannot produce a second attestation for the same record.</span></li>
+    <li><b>2</b><span><strong>Failure is a state, not an exception.</strong> Gas spikes and RPC outages route into a bounded retry loop with provider failover.</span></li>
+    <li><b>3</b><span><strong>Service continues while the chain is unreachable.</strong> Leaves keep accumulating locally and are anchored once connectivity returns.</span></li>
+    <li><b>4</b><span><strong>We never overstate a proof.</strong> A pending anchor is displayed as pending, which is the only version of this that survives cross-examination.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      The dangerous failure here is not downtime, it is a system that reports a proof it does not have.
+      So anchor state is a first-class field on every result, and the product would rather show you
+      “pending” than a comfortable lie.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ B11 VERIFY -->
+<section class="slide" id="b11">
+  <div class="slideHead">
+    <span class="slideNum">B11</span>
+    <h1>Verifying a record with zero trust in us</h1>
+    <em>The proof actually working</em>
+  </div>
+
+  <p class="kicker">
+    This is the test the whole architecture exists to pass. A stranger holding only an evidence packet
+    can confirm the entire chain of custody <strong>without our servers, our software, or our
+    cooperation</strong>.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 384" role="img" aria-label="Five step independent verification path with the trust required at each step">
+
+    <text class="t-lbl" x="24" y="34">A third party holds: the evidence packet JSON, its signature, and an inclusion proof</text>
+
+    <rect class="nd" x="16" y="56" width="288" height="150" rx="9"/>
+    <text class="t-lbl fx-dim" x="38" y="84">step 1</text>
+    <text class="t-title" x="38" y="114">Recompute the hash</text>
+    <text class="t-sub" x="38" y="142">Canonicalise the packet with</text>
+    <text class="t-sub" x="38" y="162">RFC 8785 and take SHA-256.</text>
+    <text class="t-mono fx-dim" x="38" y="190">any language, 10 lines</text>
+
+    <rect class="nd" x="336" y="56" width="288" height="150" rx="9"/>
+    <text class="t-lbl fx-dim" x="358" y="84">step 2</text>
+    <text class="t-title" x="358" y="114">Check the signature</text>
+    <text class="t-sub" x="358" y="142">Verify Ed25519 against the</text>
+    <text class="t-sub" x="358" y="162">published trust bundle.</text>
+    <text class="t-mono fx-dim" x="358" y="190">proves who asserted it</text>
+
+    <rect class="nd" x="656" y="56" width="288" height="150" rx="9"/>
+    <text class="t-lbl fx-dim" x="678" y="84">step 3</text>
+    <text class="t-title" x="678" y="114">Replay the Merkle path</text>
+    <text class="t-sub" x="678" y="142">Fold the sibling hashes up to</text>
+    <text class="t-sub" x="678" y="162">the published root.</text>
+    <text class="t-mono fx-dim" x="678" y="190">proves it was in the batch</text>
+
+    <rect class="nd-a" x="976" y="56" width="288" height="150" rx="9"/>
+    <text class="t-lbl fx-a" x="998" y="84">step 4</text>
+    <text class="t-title" x="998" y="114">Read the chain</text>
+    <text class="t-sub" x="998" y="142">Call getAttestation(uid) on a</text>
+    <text class="t-sub" x="998" y="162">public Base RPC endpoint.</text>
+    <text class="t-mono fx-dim" x="998" y="190">proves when</text>
+
+    <rect class="nd-pass" x="1296" y="56" width="288" height="150" rx="9"/>
+    <text class="t-lbl fx-pass" x="1318" y="84">step 5</text>
+    <text class="t-title fx-pass" x="1318" y="114">Compare</text>
+    <text class="t-sub" x="1318" y="142">The 32 bytes on chain equal</text>
+    <text class="t-sub" x="1318" y="162">the 32 bytes just computed.</text>
+    <text class="t-mono fx-pass" x="1318" y="190">verified</text>
+
+    <path class="ar" d="M 308 130 L 330 130" marker-end="url(#a1)"/>
+    <path class="ar" d="M 628 130 L 650 130" marker-end="url(#a1)"/>
+    <path class="ar" d="M 948 130 L 970 130" marker-end="url(#a1)"/>
+    <path class="ar-pub" d="M 1268 130 L 1290 130" marker-end="url(#a4)"/>
+
+    <!-- trust row -->
+    <text class="t-lbl fx-a" x="24" y="248">trust required in CreatorProof at each step</text>
+    <line class="rule" x1="16" y1="260" x2="1584" y2="260"/>
+    <text class="t-body fx-pass" x="38" y="292">none</text>
+    <text class="t-body fx-pass" x="358" y="292">none</text>
+    <text class="t-body fx-pass" x="678" y="292">none</text>
+    <text class="t-body fx-pass" x="998" y="292">none</text>
+    <text class="t-body fx-pass" x="1318" y="292">none</text>
+
+    <rect class="nd-pass" x="16" y="316" width="1568" height="56" rx="9"/>
+    <text class="t-body fx-txt" x="38" y="352">The browser verifier runs offline. If CreatorProof shut down tomorrow, every record issued to date remains fully checkable.</text>
+
+    <g class="cal"><circle cx="1566" cy="248" r="17"/><text x="1566" y="254">1</text></g>
+    <g class="cal"><circle cx="1120" cy="42" r="17"/><text x="1120" y="48">2</text></g>
+    <g class="cal"><circle cx="1560" cy="344" r="17"/><text x="1560" y="350">3</text></g>
+  </svg>
+  <figcaption>B11 · Five steps, five public inputs, and no point at which the verifier must believe us.</figcaption>
+  </figure>
+
+  <ol class="callouts">
+    <li><b>1</b><span><strong>Zero trust at every step.</strong> Each stage consumes only public data or data the verifier already holds — our cooperation is never an input.</span></li>
+    <li><b>2</b><span><strong>Any RPC endpoint works.</strong> The verifier picks their own node provider, so we cannot serve them a doctored view of the chain.</span></li>
+    <li><b>3</b><span><strong>It survives us.</strong> Business continuity is not a promise here; the evidence simply does not depend on the company continuing to exist.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Ask the hardest version of the question — what if CreatorProof is bankrupt, or lying, or gone?
+      Every record we have ever issued still verifies, and that is the difference between a service and
+      an actual proof.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════════ B12 CHAIN -->
+<section class="slide" id="b12">
+  <div class="slideHead">
+    <span class="slideNum">B12</span>
+    <h1>Why Base, and how consensus works here</h1>
+    <em>Platform choice</em>
+  </div>
+
+  <p class="kicker">
+    We need public settlement, negligible cost and a standard tooling ecosystem. <strong>Base is an
+    OP&nbsp;Stack layer&nbsp;2 that settles to Ethereum</strong>, so transactions are cheap while final
+    ordering inherits Ethereum’s proof-of-stake security.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 268" role="img" aria-label="Settlement stack from CreatorProof through Base to Ethereum layer 1">
+
+    <rect class="nd" x="16" y="40" width="300" height="94" rx="9"/>
+    <text class="t-title" x="38" y="74">CreatorProof</text>
+    <text class="t-sub" x="38" y="100">submits an attestation</text>
+    <text class="t-mono fx-dim" x="38" y="122">one of thousands of writers</text>
+
+    <rect class="nd-a" x="348" y="40" width="440" height="94" rx="9"/>
+    <text class="t-lbl fx-a" x="370" y="66">layer 2 · Base (OP Stack)</text>
+    <text class="t-title" x="370" y="98">Sequencer orders, batches post to L1</text>
+    <text class="t-mono fx-dim" x="370" y="122">anyone can challenge an invalid state root</text>
+
+    <rect class="nd-a" x="820" y="40" width="440" height="94" rx="9"/>
+    <text class="t-lbl fx-a" x="842" y="66">layer 1 · Ethereum</text>
+    <text class="t-title" x="842" y="98">Proof of stake, ~1M validators’ stake</text>
+    <text class="t-mono fx-dim" x="842" y="122">reversal means attacking Ethereum itself</text>
+
+    <rect class="nd-pass" x="1292" y="40" width="292" height="94" rx="9"/>
+    <text class="t-lbl fx-pass" x="1314" y="64">result</text>
+    <text class="t-title fx-pass" x="1314" y="94">Cheap writes,</text>
+    <text class="t-title fx-pass" x="1314" y="118">L1-grade ordering</text>
+
+    <path class="ar-pub" d="M 320 87 L 342 87" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 792 87 L 814 87" marker-end="url(#a4)"/>
+    <path class="ar-pub" d="M 1264 87 L 1286 87" marker-end="url(#a4)"/>
+
+    <rect class="zone" x="16" y="162" width="1568" height="88" rx="9"/>
+    <text class="t-lbl fx-a" x="38" y="190">why not a permissioned chain</text>
+    <text class="t-body" x="38" y="222">A consortium chain is governed by its members — and in year one that consortium is effectively us.</text>
+    <text class="t-body" x="38" y="244">Permissionless settlement is the only version where “we could not have faked this” is a fact rather than a promise.</text>
+
+    <g class="cal"><circle cx="568" cy="24" r="17"/><text x="568" y="30">1</text></g>
+    <g class="cal"><circle cx="1040" cy="24" r="17"/><text x="1040" y="30">2</text></g>
+    <g class="cal"><circle cx="1560" cy="190" r="17"/><text x="1560" y="196">3</text></g>
+  </svg>
+  <figcaption>B12 · Cost lives on layer 2; the security guarantee lives on layer 1.</figcaption>
+  </figure>
+
+  <table class="data">
+    <thead>
+      <tr><th style="width:42mm">Option</th><th style="width:34mm">Who can rewrite it</th><th class="m" style="width:30mm;white-space:nowrap">Cost per record</th><th>Why it was rejected</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PostgreSQL</td><td class="lose">We can</td><td class="m">~0</td><td>The record and the interested party share an owner, so it proves nothing in a dispute</td></tr>
+      <tr><td>Append-only / WORM</td><td class="lose">We can, with effort</td><td class="m">~0</td><td>We still administer the mechanism that makes it append-only</td></tr>
+      <tr><td>RFC 3161 timestamp authority</td><td class="lose">One company can</td><td class="m">~0.01 USD</td><td>Single point of trust, single subpoena target, single business-continuity risk</td></tr>
+      <tr><td>Permissioned consortium chain</td><td class="lose">The consortium can</td><td class="m">infra cost</td><td>Requires the counterparties to already exist and cooperate — a chicken-and-egg failure</td></tr>
+      <tr><td><strong>Base L2 + EAS</strong></td><td class="win">Nobody</td><td class="m" style="white-space:nowrap">≈0.000002 USD</td><td class="win">Chosen — public settlement, standard tooling, cost low enough to anchor every record</td></tr>
+    </tbody>
+  </table>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      Every alternative we considered fails the same test: somebody retains the ability to change the
+      record. Base is where that answer becomes “nobody”, at a price that lets us do it on every single
+      check rather than only the contested ones.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ B13 TOKENS -->
+<section class="slide" id="b13">
+  <div class="slideHead">
+    <span class="slideNum">B13</span>
+    <h1>Tokenising clearance, not speculation</h1>
+    <em>Asset design</em>
+  </div>
+
+  <p class="kicker">
+    The tokenised asset here is a <strong>clearance receipt</strong>: proof that a specific party ran a
+    specific check. It is deliberately <strong>soulbound under ERC-5192</strong>, because a diligence
+    record that can be sold to someone else is not a diligence record.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 350" role="img" aria-label="Lifecycle of a soulbound clearance receipt">
+
+    <rect class="nd" x="16" y="52" width="272" height="132" rx="9"/>
+    <text class="t-lbl fx-dim" x="38" y="80">trigger</text>
+    <text class="t-title" x="38" y="112">Check completes</text>
+    <text class="t-sub" x="38" y="140">packet anchored, policy</text>
+    <text class="t-sub" x="38" y="162">outcome recorded</text>
+
+    <rect class="nd-pass" x="320" y="52" width="272" height="132" rx="9"/>
+    <text class="t-lbl fx-pass" x="342" y="80">mint</text>
+    <text class="t-title fx-pass" x="342" y="112">issue()</text>
+    <text class="t-mono" x="342" y="140">holder · packetHash</text>
+    <text class="t-mono" x="342" y="162">· attestationUid</text>
+
+    <rect class="nd" x="624" y="52" width="272" height="132" rx="9"/>
+    <text class="t-lbl fx-dim" x="646" y="80">property</text>
+    <text class="t-title" x="646" y="112">locked() = true</text>
+    <text class="t-sub" x="646" y="140">no transfer function</text>
+    <text class="t-sub" x="646" y="162">exists at all</text>
+
+    <rect class="nd-warn" x="928" y="52" width="272" height="132" rx="9"/>
+    <text class="t-lbl fx-warn" x="950" y="80">correction</text>
+    <text class="t-title fx-warn" x="950" y="112">revoke()</text>
+    <text class="t-sub" x="950" y="140">marks it withdrawn —</text>
+    <text class="t-sub" x="950" y="162">history is never erased</text>
+
+    <rect class="nd-a" x="1232" y="52" width="352" height="132" rx="9"/>
+    <text class="t-lbl fx-a" x="1254" y="80">use</text>
+    <text class="t-title" x="1254" y="112">Portable diligence</text>
+    <text class="t-sub" x="1254" y="140">A marketplace or insurer reads the</text>
+    <text class="t-sub" x="1254" y="162">holder’s receipts without asking us.</text>
+
+    <path class="ar" d="M 292 118 L 314 118" marker-end="url(#a1)"/>
+    <path class="ar" d="M 596 118 L 618 118" marker-end="url(#a1)"/>
+    <path class="ar-dec" d="M 900 118 L 922 118" marker-end="url(#a2)"/>
+    <path class="ar-pub" d="M 1204 118 L 1226 118" marker-end="url(#a4)"/>
+
+    <rect class="zone" x="16" y="212" width="776" height="122" rx="9"/>
+    <text class="t-lbl fx-pass" x="38" y="240">why soulbound</text>
+    <text class="t-body" x="38" y="272">A transferable receipt would create a market in other people’s</text>
+    <text class="t-body" x="38" y="296">diligence. Binding it to the checking party is what preserves</text>
+    <text class="t-body" x="38" y="320">its evidentiary meaning.</text>
+
+    <rect class="zone" x="820" y="212" width="764" height="122" rx="9"/>
+    <text class="t-lbl fx-bad" x="842" y="240">what we deliberately did not build</text>
+    <text class="t-body" x="842" y="272">No fungible token, no fundraise instrument, no staking and no</text>
+    <text class="t-body" x="842" y="296">speculative secondary market. The asset carries information</text>
+    <text class="t-body" x="842" y="320">value, and value does not have to mean money.</text>
+
+    <g class="cal"><circle cx="456" cy="34" r="17"/><text x="456" y="40">1</text></g>
+    <g class="cal"><circle cx="760" cy="34" r="17"/><text x="760" y="40">2</text></g>
+    <g class="cal"><circle cx="1064" cy="34" r="17"/><text x="1064" y="40">3</text></g>
+    <g class="cal"><circle cx="1560" cy="240" r="17"/><text x="1560" y="246">4</text></g>
+  </svg>
+  <figcaption>B13 · A non-financial token whose only job is to make one party’s diligence portable and checkable.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Bound to the evidence.</strong> Each receipt stores the packet hash and attestation UID, so it cannot be pointed at a different result later.</span></li>
+    <li><b>2</b><span><strong>Non-transferable by construction.</strong> ERC-5192 with no transfer path means it cannot be traded, lent or laundered.</span></li>
+    <li><b>3</b><span><strong>Withdrawal is additive.</strong> Revocation records that a receipt was withdrawn and when; nothing is deleted.</span></li>
+    <li><b>4</b><span><strong>No token economics.</strong> Judges are right to be sceptical of gratuitous tokens — this one carries information, not price.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      We tokenised the one thing that genuinely benefits from being portable: the fact that a named party
+      checked something on a given date. Making it soulbound is the whole point, because diligence you
+      can buy from someone else is not diligence.
+    </p>
+  </div>
+</section>
+
+
+<!-- ═════════════════════════════════════════════════════════════ B14 LEGACY -->
+<section class="slide" id="b14">
+  <div class="slideHead">
+    <span class="slideNum">B14</span>
+    <h1>Fitting into systems that already exist</h1>
+    <em>Legacy integration</em>
+  </div>
+
+  <p class="kicker">
+    No customer will rebuild their content pipeline for us, and none of them want to touch a wallet.
+    So the blockchain is <strong>invisible at the integration surface</strong>: a normal REST call in, a
+    normal webhook out, and a verifiable receipt underneath.
+  </p>
+
+  <figure class="dia">
+  <svg viewBox="0 0 1600 372" role="img" aria-label="Integration surface between existing customer systems and the blockchain layer">
+
+    <rect class="zone" x="16" y="44" width="452" height="286" rx="10"/>
+    <text class="t-lbl" x="38" y="34">Systems the customer already runs</text>
+    <rect class="nd" x="40" y="70" width="404" height="52" rx="7"/><text class="t-body" x="62" y="102">Digital asset manager · Bynder, Frontify</text>
+    <rect class="nd" x="40" y="134" width="404" height="52" rx="7"/><text class="t-body" x="62" y="166">CMS and publishing workflow</text>
+    <rect class="nd" x="40" y="198" width="404" height="52" rx="7"/><text class="t-body" x="62" y="230">Creative suite plug-ins</text>
+    <rect class="nd" x="40" y="262" width="404" height="52" rx="7"/><text class="t-body" x="62" y="294">Marketplace upload pipeline</text>
+
+    <!-- api surface -->
+    <rect class="nd-a" x="516" y="44" width="392" height="286" rx="10"/>
+    <text class="t-lbl fx-a" x="538" y="34">Integration surface</text>
+    <text class="t-title" x="538" y="82">REST + SDKs</text>
+    <text class="t-mono fx-txt" x="538" y="114">POST /v1/scans</text>
+    <text class="t-mono fx-txt" x="538" y="140">GET  /v1/scans/{id}</text>
+    <text class="t-mono fx-txt" x="538" y="166">POST /v1/works</text>
+    <line class="rule" x1="516" y1="188" x2="908" y2="188"/>
+    <text class="t-body" x="538" y="218">Signed webhooks on completion</text>
+    <text class="t-body" x="538" y="244">Python and TypeScript clients</text>
+    <text class="t-body" x="538" y="270">API-key auth · no wallet, no gas,</text>
+    <text class="t-body" x="538" y="296">no seed phrase, no chain concepts</text>
+
+    <path class="ar" d="M 472 96 L 510 110" marker-end="url(#a1)"/>
+    <path class="ar" d="M 472 160 L 510 160" marker-end="url(#a1)"/>
+    <path class="ar" d="M 472 224 L 510 210" marker-end="url(#a1)"/>
+    <path class="ar" d="M 472 288 L 510 250" marker-end="url(#a1)"/>
+
+    <!-- engine -->
+    <rect class="nd" x="956" y="44" width="288" height="286" rx="10"/>
+    <text class="t-lbl fx-dim" x="978" y="34">CreatorProof</text>
+    <text class="t-title" x="978" y="82">Evidence engine</text>
+    <text class="t-sub" x="978" y="112">three AI lanes</text>
+    <text class="t-sub" x="978" y="136">policy evaluation</text>
+    <text class="t-sub" x="978" y="160">packet sealing</text>
+    <line class="rule" x1="956" y1="186" x2="1244" y2="186"/>
+    <text class="t-title" x="978" y="218">Anchor worker</text>
+    <text class="t-sub" x="978" y="248">runs asynchronously —</text>
+    <text class="t-sub" x="978" y="272">the customer’s request</text>
+    <text class="t-sub" x="978" y="296">never waits for a block</text>
+    <path class="ar" d="M 912 186 L 950 186" marker-end="url(#a1)"/>
+
+    <!-- chain -->
+    <rect class="zone-public" x="1292" y="44" width="292" height="286" rx="10"/>
+    <text class="t-lbl fx-a" x="1314" y="34">Public layer</text>
+    <text class="t-title fx-a" x="1314" y="82">Base</text>
+    <text class="t-sub" x="1314" y="112">Attestations, registry</text>
+    <text class="t-sub" x="1314" y="136">and receipts</text>
+    <line class="rule" x1="1292" y1="162" x2="1584" y2="162"/>
+    <text class="t-body fx-pass" x="1314" y="194">The customer never</text>
+    <text class="t-body fx-pass" x="1314" y="218">interacts with it —</text>
+    <text class="t-body fx-pass" x="1314" y="242">but their auditor can.</text>
+    <text class="t-mono fx-dim" x="1314" y="288">optional: connect a wallet</text>
+    <text class="t-mono fx-dim" x="1314" y="310">to co-sign (sheet B7)</text>
+    <path class="ar-pub" d="M 1248 186 L 1286 186" marker-end="url(#a4)"/>
+
+    <g class="cal"><circle cx="492" cy="160" r="17"/><text x="492" y="166">1</text></g>
+    <g class="cal"><circle cx="934" cy="186" r="17"/><text x="934" y="192">2</text></g>
+    <g class="cal"><circle cx="1268" cy="186" r="17"/><text x="1268" y="192">3</text></g>
+    <g class="cal"><circle cx="1560" cy="218" r="17"/><text x="1560" y="224">4</text></g>
+  </svg>
+  <figcaption>B14 · Adoption cost is one HTTP call. The chain is an implementation detail until someone needs to audit.</figcaption>
+  </figure>
+
+  <ol class="callouts four">
+    <li><b>1</b><span><strong>Ordinary API, ordinary auth.</strong> Teams integrate this the way they integrate any other vendor, in an afternoon.</span></li>
+    <li><b>2</b><span><strong>Anchoring is off the request path.</strong> The scan returns immediately; the chain write completes behind it.</span></li>
+    <li><b>3</b><span><strong>No crypto literacy required.</strong> No wallets, no gas, no seed phrases anywhere in the customer’s workflow.</span></li>
+    <li><b>4</b><span><strong>Depth is opt-in.</strong> Customers who want to co-sign can connect a wallet; everyone else gets the benefit without the concept.</span></li>
+  </ol>
+
+  <div class="say">
+    <b>Say this</b>
+    <p>
+      The single biggest reason blockchain projects fail commercially is that they ask the customer to
+      change how they work. Ours asks for one HTTP request, and the customer can go their whole
+      relationship with us without ever learning what Base is.
+    </p>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ B15 ARMORY 1 -->
+<section class="slide" id="b15">
+  <div class="slideHead">
+    <span class="slideNum">B15</span>
+    <h1>Q&amp;A armory — the hard questions</h1>
+    <em>Part one of two</em>
+  </div>
+
+  <p class="kicker">
+    Each answer is two or three sentences, followed by the sheet to turn to. Answer, then point — do not
+    read the sheet aloud.
+  </p>
+
+  <div class="armory">
+    <div class="qa">
+      <p class="q"><small>Question 01</small>Why blockchain? Why not just PostgreSQL?</p>
+      <p class="a">
+        A database answers “what do you say happened?”; a chain answers “what can you no longer change
+        about what you said?”. Our customer’s defence is a date, and we are the ones holding it while
+        being paid by them. We need an ordering witness with no privileged writer, which is the one
+        thing a database cannot be.
+        <span class="pt">Turn to <b>B1</b> · left panel first, then the right</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 02</small>An append-only table would do the same job.</p>
+      <p class="a">
+        We hold the credentials that make it append-only, so we can also make it not append-only. That
+        relocates the trust into our operations team rather than removing it, and an outside examiner
+        cannot audit our operations team.
+        <span class="pt">Turn to <b>B12</b> · comparison table, row two</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 03</small>You are only storing a hash. That is trivial.</p>
+      <p class="a">
+        Correct, and the minimalism is the design. Because it is 32 bytes it costs a fraction of a cent,
+        so we anchor every check rather than only disputed ones — and a record created after trouble
+        starts is worthless. The chain also carries the membership registry and the co-attestations.
+        <span class="pt">Turn to <b>B6</b> · then <b>B5</b> for the rest of the on-chain surface</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 04</small>What about GDPR? You cannot delete from a chain.</p>
+      <p class="a">
+        Nothing personal ever reaches the chain — only a 32-byte hash. Erasure works because of that
+        split: delete the off-chain rows and the on-chain value becomes an unresolvable number.
+        We satisfy erasure and keep the timestamp at the same time.
+        <span class="pt">Turn to <b>B4</b> · point at the vertical boundary</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 05</small>Is this actually decentralised, or just you writing to a chain?</p>
+      <p class="a">
+        Two mechanisms make it more than that. Membership, roles and removal live in a contract with a
+        two-step governor transfer and a standing regulator seat, and the counterparty who acted on a
+        result co-signs it from their own wallet.
+        <span class="pt">Turn to <b>B8</b> · then <b>B7</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 06</small>Why Base rather than Ethereum directly, or a private chain?</p>
+      <p class="a">
+        Base is an OP&nbsp;Stack layer 2 that settles to Ethereum, so we get L1 ordering security at L2
+        prices. A private chain is governed by its members, and in year one those members are
+        effectively us — which reintroduces exactly the problem we are solving.
+        <span class="pt">Turn to <b>B12</b> · the stack, left to right</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 07</small>What is the consensus mechanism you depend on?</p>
+      <p class="a">
+        Base sequences transactions and posts batches to Ethereum, where proof-of-stake validators
+        provide final ordering and fault proofs let anyone challenge an invalid state root. Reversing one
+        of our records means attacking Ethereum itself.
+        <span class="pt">Turn to <b>B12</b> · layer 1 box</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 08</small>What happens if the chain is down or gas spikes?</p>
+      <p class="a">
+        Anchoring is a durable job with persisted state, exponential backoff and RPC failover across
+        providers. The local Merkle log keeps accepting records meanwhile, and every result exposes its
+        anchor status rather than claiming a proof it does not yet have.
+        <span class="pt">Turn to <b>B10</b> · the retry loop</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════ B16 ARMORY 2 -->
+<section class="slide" id="b16">
+  <div class="slideHead">
+    <span class="slideNum">B16</span>
+    <h1>Q&amp;A armory — business, risk and scope</h1>
+    <em>Part two of two</em>
+  </div>
+
+  <p class="kicker">
+    Commercial and adversarial questions. Where you do not know something, name the boundary precisely
+    and move on.
+  </p>
+
+  <div class="armory">
+    <div class="qa">
+      <p class="q"><small>Question 09</small>Who pays for the gas, and does it scale?</p>
+      <p class="a">
+        We do, and it is negligible because one checkpoint transaction commits an entire batch of
+        records. The marginal cost per record is around two millionths of a dollar, so anchoring cost
+        never becomes a reason to stop anchoring.
+        <span class="pt">Turn to <b>B6</b> · the economics panel</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 10</small>What stops you anchoring a false record in the first place?</p>
+      <p class="a">
+        Nothing on the chain — it proves timing and integrity, not truthfulness. What constrains it is the
+        counterparty co-signature, an evidence packet anyone can re-derive, and the fact that a false
+        record is permanent once written.
+        <span class="pt">Turn to <b>B7</b> · then <b>B11</b></span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 11</small>Why does this need a token at all?</p>
+      <p class="a">
+        It does not need a financial one, and we did not build one. The only token is a soulbound
+        ERC-5192 receipt proving a named party ran a specific check, which cannot be transferred
+        precisely because diligence you can buy from someone else is not diligence.
+        <span class="pt">Turn to <b>B13</b> · the right-hand panel</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 12</small>Your customers do not want to touch crypto.</p>
+      <p class="a">
+        They never do. Integration is one REST call with an API key — no wallet, no gas, no seed phrase —
+        and anchoring happens asynchronously behind the response. The chain only becomes visible when
+        somebody needs to audit.
+        <span class="pt">Turn to <b>B14</b> · the integration surface column</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 13</small>What is your single biggest technical risk?</p>
+      <p class="a">
+        Dependence on one layer-2 ecosystem. Because we write only standard EAS attestations and publish
+        a hashed deployment manifest, migrating to another EVM chain re-points addresses without changing
+        the evidence format or invalidating past records.
+        <span class="pt">Turn to <b>B8</b> · infrastructure governance column</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 14</small>What if someone steals your signing key?</p>
+      <p class="a">
+        They could publish false new records, but they could not alter a single existing one, because the
+        past is already committed. Key families are separated by job, the chain key lives in a KMS, and
+        we hold no customer keys at all.
+        <span class="pt">Turn to <b>B9</b> · the blast-radius lines</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 15</small>Who are your competitors, and why do they lose?</p>
+      <p class="a">
+        Content-ID style matchers and AI-detector APIs both return a score and keep the record inside
+        their own database. We compete on the artifact rather than the score: the evidence survives us,
+        and theirs does not survive them.
+        <span class="pt">Turn to <b>B11</b> · the “none” row</span>
+      </p>
+    </div>
+
+    <div class="qa">
+      <p class="q"><small>Question 16</small>Where does this genuinely not work?</p>
+      <p class="a">
+        We prove a check was run, its inputs and its timing. We do not prove ownership and we do not issue
+        legal findings of infringement — those stay human and judicial. Naming that boundary is what makes
+        the rest credible.
+        <span class="pt">Turn to <b>B1</b> · restate what the record actually asserts</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="say">
+    <b>Closing line for the session</b>
+    <p>
+      Every question here returns to one point: we built the record so that our own word is never
+      load-bearing. If you do not trust us, the evidence still stands.
+    </p>
+  </div>
+</section>
+
+</td></tr></tbody></table>
+</body>
+</html>

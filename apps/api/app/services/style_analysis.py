@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.models import Work
 from app.providers.style_signature import explain_style_pair
 from app.services.ai_index import reference_embedding
-from app.services.style_fusion import fuse_style_evidence
+from app.services.style_fusion import StyleFusionResult, fuse_style_evidence
 from app.services.style_index import reference_style_embedding
 from app.services.style_profiles import StyleProfileRegistry
 from app.services.style_readout import (
@@ -68,24 +68,70 @@ def _profile_metadata(
 
 
 def _apply_profile_authorization_gate(decision: dict | None, profile: dict | None) -> dict | None:
-    if decision is None or profile is None:
-        return decision
-    if profile.get("profile_authorized") or not decision.get("review_recommended"):
-        return decision
+    if decision is None:
+        return None
+
+    evidence_review_recommended = bool(
+        decision.get("evidence_review_recommended", decision.get("review_recommended"))
+    )
+    policy_escalation_authorized = bool(profile and profile.get("profile_authorized"))
+    policy_review_recommended = bool(evidence_review_recommended and policy_escalation_authorized)
     reasons = list(decision.get("reason_codes") or [])
-    for reason in (
-        "PROFILE_CONSENT_NOT_CONFIRMED",
-        "STYLE_POLICY_ESCALATION_SUPPRESSED",
-    ):
-        if reason not in reasons:
-            reasons.append(reason)
+    if evidence_review_recommended and not policy_escalation_authorized:
+        for reason in (
+            "PROFILE_CONSENT_NOT_CONFIRMED",
+            "STYLE_POLICY_ESCALATION_SUPPRESSED",
+        ):
+            if reason not in reasons:
+                reasons.append(reason)
+
+    if policy_review_recommended:
+        policy_classification = "STYLE_POLICY_REVIEW_RECOMMENDED"
+    elif evidence_review_recommended:
+        policy_classification = "STYLE_POLICY_ESCALATION_SUPPRESSED"
+    else:
+        policy_classification = "STYLE_POLICY_NO_REVIEW"
+
     return {
         **decision,
-        "review_recommended": False,
-        "evidence_tier": "ADVISORY_ONLY",
-        "classification": "PROFILE_ENROLLMENT_NOT_CONSENT_BACKED",
+        # `review_recommended` remains the evidence conclusion for v2/UI consumers.
+        # Governance controls are separate so missing consent cannot erase measured evidence.
+        "review_recommended": evidence_review_recommended,
+        "evidence_review_recommended": evidence_review_recommended,
+        "policy_review_recommended": policy_review_recommended,
+        "policy_escalation_authorized": policy_escalation_authorized,
+        "policy_classification": policy_classification,
         "reason_codes": reasons,
     }
+
+
+def _should_surface_selected_exemplar(
+    profile_fusion: StyleFusionResult,
+    exemplar_fusion: StyleFusionResult,
+    *,
+    settings,
+) -> bool:
+    """Recover a strong cross-content exemplar that a mixed profile averaged away.
+
+    Selecting the best work from a pool creates a multiple-comparison risk, so this
+    route is deliberately capped at REVIEW by the exemplar fusion's uncalibrated,
+    single-exemplar inputs. It also requires a stricter high-tier score, three
+    independent supports, and explicit separation from the SSCD content control.
+    Exact or near-identical content therefore stays in the copy lane instead of
+    manufacturing a creator-style result.
+    """
+
+    return bool(
+        profile_fusion.evidence_tier == "LOW"
+        and exemplar_fusion.evidence_tier == "REVIEW"
+        and exemplar_fusion.learned_style_similarity is not None
+        and exemplar_fusion.learned_style_similarity >= settings.style_evidence_high_similarity
+        and exemplar_fusion.evidence_index >= settings.style_evidence_high_similarity
+        and exemplar_fusion.independent_support_count >= 3
+        and exemplar_fusion.style_content_gap is not None
+        and exemplar_fusion.style_content_gap >= settings.style_content_gap_support
+        and exemplar_fusion.content_confound_state == "STYLE_EXCEEDS_CONTENT_CONTROL"
+    )
 
 
 def _read_reference(container, work: Work) -> Image.Image:
@@ -313,6 +359,10 @@ def _empty_analysis(status: dict) -> dict:
             "evidence_tier": "LOW",
             "classification": "NO_STYLE_REFERENCE_CORPUS",
             "review_recommended": False,
+            "evidence_review_recommended": False,
+            "policy_review_recommended": False,
+            "policy_escalation_authorized": False,
+            "policy_classification": "STYLE_POLICY_NO_REVIEW",
             "score_semantics": "NO_STYLE_EVIDENCE",
             "reason_codes": ["NO_REGISTERED_STYLE_REFERENCES"],
         },
@@ -397,7 +447,7 @@ def analyze_style(
             key: round(float(value), 6) if isinstance(value, float) else value
             for key, value in calibration.items()
         }
-        fusion = fuse_style_evidence(
+        profile_fusion = fuse_style_evidence(
             learned_provider_active=status["learned"],
             raw_style_similarity=float(top_profile["raw_pool_similarity"]),
             factors=diagnostics.get("factors"),
@@ -409,6 +459,50 @@ def analyze_style(
             calibration=calibration,
             settings=container.settings,
         )
+
+        exemplar_member = next(
+            member
+            for member in top_profile["member_scores"]
+            if member["work_id"] == top_profile["exemplar_work_id"]
+        )
+        exemplar_fusion = fuse_style_evidence(
+            learned_provider_active=status["learned"],
+            raw_style_similarity=float(top_profile["exemplar_similarity"]),
+            factors=diagnostics.get("factors"),
+            tile_map=diagnostics.get("tile_map"),
+            content_similarity=exemplar_member.get("content_similarity"),
+            # This branch is evidence about one selected pair. It must never
+            # inherit multi-work reliability merely because the surrounding
+            # claimant grouping contains several unrelated uploads.
+            sample_count=1,
+            discrimination_gap=None,
+            catalog_margin=None,
+            calibration={
+                "ready": False,
+                "state": "SELECTED_EXEMPLAR_REVIEW_ONLY",
+                "reason_codes": ["SELECTED_EXEMPLAR_UNCALIBRATED_REVIEW_ONLY"],
+            },
+            settings=container.settings,
+        )
+        selected_exemplar = _should_surface_selected_exemplar(
+            profile_fusion,
+            exemplar_fusion,
+            settings=container.settings,
+        )
+        fusion = exemplar_fusion if selected_exemplar else profile_fusion
+        top_profile["evidence_selection"] = {
+            "basis": (
+                "STRONGEST_EXEMPLAR_CROSS_CONTENT"
+                if selected_exemplar
+                else "CREATOR_PROFILE_AGGREGATE"
+            ),
+            "profile_aggregate_similarity": profile_fusion.learned_style_similarity,
+            "profile_aggregate_evidence_index": profile_fusion.evidence_index,
+            "exemplar_similarity": exemplar_fusion.learned_style_similarity,
+            "exemplar_content_similarity": exemplar_fusion.content_similarity,
+            "exemplar_evidence_index": exemplar_fusion.evidence_index,
+            "selected_exemplar_review_only": selected_exemplar,
+        }
         diagnostics["summary"] = {
             "mechanics_similarity": fusion.mechanics_similarity,
             "bidirectional_tile_consistency": fusion.tile_consistency,
@@ -456,8 +550,38 @@ def analyze_style(
     for profile in profiles:
         profile.pop("_profile_key", None)
 
+    decision_payload = asdict(fusion) if fusion is not None else None
+    if decision_payload is not None and profiles:
+        selection = profiles[0].get("evidence_selection") or {}
+        selected_exemplar = selection.get("selected_exemplar_review_only") is True
+        decision_payload.update(
+            {
+                "evidence_basis": selection.get("basis"),
+                "profile_aggregate_style_similarity": selection.get("profile_aggregate_similarity"),
+                "profile_aggregate_evidence_index": selection.get(
+                    "profile_aggregate_evidence_index"
+                ),
+                "exemplar_work_id": profiles[0].get("exemplar_work_id"),
+                "exemplar_similarity": selection.get("exemplar_similarity"),
+                "exemplar_content_similarity": selection.get("exemplar_content_similarity"),
+                "exemplar_evidence_index": selection.get("exemplar_evidence_index"),
+                "exemplar_selection_count": profiles[0].get("sample_count"),
+            }
+        )
+        if selected_exemplar:
+            decision_payload["reason_codes"] = list(
+                dict.fromkeys(
+                    [
+                        *(decision_payload.get("reason_codes") or []),
+                        "STRONG_SELECTED_EXEMPLAR_CROSS_CONTENT_SUPPORT",
+                        "PROFILE_AGGREGATE_DILUTION_DETECTED",
+                        "SELECTED_EXEMPLAR_REVIEW_ONLY",
+                    ]
+                )
+            )
+
     decision = _apply_profile_authorization_gate(
-        asdict(fusion) if fusion is not None else None,
+        decision_payload,
         profiles[0] if profiles else None,
     )
 

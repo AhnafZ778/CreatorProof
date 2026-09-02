@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A11 · Six modes, one packet. Everything on screen is a rendering of data that was signed and anchored. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 414" role="img" aria-label="Six evidence microscope modes with what each one displays" overflow="visible" width='1600.0' height='414.0'>
+  <style><![CDATA[
+@font-face {
+  font-family: "Geist";
+  src: url("../../assets/fonts/GeistVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../../assets/fonts/GeistMonoVariable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../../assets/fonts/SpaceGroteskVariable.woff2") format("woff2-variations");
+  font-weight: 300 700;
+}
+:root {
+  --bg: #05070c;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.74);
+  --text-3: rgba(255, 255, 255, 0.54);
+  --text-4: rgba(255, 255, 255, 0.36);
+  --accent: #60a5fa;
+  --accent-2: #a5b4fc;
+  --pass: #34d399;
+  --review: #fbbf24;
+  --block: #f87171;
+  --copy: #37d4dc;
+  --origin: #f07ab7;
+  --profile: #ffbd59;
+  --sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --display: "Space Grotesk", "Geist", sans-serif;
+}
+svg { background: var(--bg); }
+svg text { font-family: var(--sans); fill: var(--text-2); }
+.nd { fill: rgba(255, 255, 255, 0.05); stroke: var(--line-strong); stroke-width: 1.4; }
+.nd-a { fill: rgba(96, 165, 250, 0.11); stroke: var(--accent); stroke-width: 1.6; }
+.nd-copy { fill: rgba(55, 212, 220, 0.1); stroke: var(--copy); stroke-width: 1.6; }
+.nd-orig { fill: rgba(240, 122, 183, 0.1); stroke: var(--origin); stroke-width: 1.6; }
+.nd-prof { fill: rgba(255, 189, 89, 0.1); stroke: var(--profile); stroke-width: 1.6; }
+.nd-pass { fill: rgba(52, 211, 153, 0.1); stroke: var(--pass); stroke-width: 1.6; }
+.nd-warn { fill: rgba(251, 191, 36, 0.1); stroke: var(--review); stroke-width: 1.6; }
+.nd-bad { fill: rgba(248, 113, 113, 0.1); stroke: var(--block); stroke-width: 1.6; }
+.nd-ghost { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.zone { fill: rgba(255, 255, 255, 0.018); stroke: var(--line); stroke-width: 1.1; stroke-dasharray: 7 6; }
+.zone-private { fill: rgba(255, 255, 255, 0.028); stroke: var(--line-strong); stroke-width: 1.1; }
+.zone-public { fill: rgba(96, 165, 250, 0.055); stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 8 6; }
+.t-title { font-size: 21px; font-weight: 600; fill: var(--text); }
+.t-sub { font-size: 16.5px; fill: var(--text-3); }
+.t-body { font-size: 17.5px; fill: var(--text-2); }
+.t-lbl { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--text-4); letter-spacing: 1.5px; text-transform: uppercase; }
+.t-mono { font-family: var(--mono); font-size: 15px; fill: var(--text-3); }
+.t-big { font-family: var(--display); font-size: 30px; font-weight: 500; fill: var(--text); }
+.fx-a { fill: var(--accent); }
+.fx-copy { fill: var(--copy); }
+.fx-orig { fill: var(--origin); }
+.fx-prof { fill: var(--profile); }
+.fx-pass { fill: var(--pass); }
+.fx-warn { fill: var(--review); }
+.fx-bad { fill: var(--block); }
+.fx-dim { fill: var(--text-4); }
+.fx-txt { fill: var(--text); }
+.ar { fill: none; stroke: var(--line-strong); stroke-width: 1.6; }
+.ar-dec { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.ar-sig { fill: none; stroke: var(--accent-2); stroke-width: 1.6; stroke-dasharray: 7 5; }
+.ar-pub { fill: none; stroke: #7fb3ff; stroke-width: 3.2; }
+.ar-bad { fill: none; stroke: var(--block); stroke-width: 1.8; stroke-dasharray: 5 5; }
+.ar-soft { fill: none; stroke: var(--line); stroke-width: 1.3; stroke-dasharray: 4 4; }
+.rule { stroke: var(--line-strong); stroke-width: 1.2; }
+.rule-hot { stroke: #7fb3ff; stroke-width: 2; stroke-dasharray: 10 6; }
+.cal circle { fill: #05070c; stroke: var(--accent); stroke-width: 1.8; }
+.cal text { font-family: var(--mono); font-size: 16px; font-weight: 700; fill: var(--accent); text-anchor: middle; }
+]]></style>
+  <defs>
+<marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="rgba(255,255,255,0.2)"/></marker>
+  <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#60a5fa"/></marker>
+  <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#a5b4fc"/></marker>
+  <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="17" markerHeight="17" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#7fb3ff"/></marker>
+  <marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/></marker>
+  <marker id="a6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#34d399"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#37d4dc"/></marker>
+  <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#f07ab7"/></marker>
+  <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="13" markerHeight="13" orient="auto-start-reverse" markerUnits="userSpaceOnUse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ffbd59"/></marker>
+  </defs>
+  <rect class="nd-a" x="4" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-a" x="26" y="70">start here</text>
+    <text class="t-title" x="26" y="102">Summary</text>
+    <text class="t-sub" x="26" y="132">Plain-language verdict,</text>
+    <text class="t-sub" x="26" y="154">coverage badge and the</text>
+    <text class="t-sub" x="26" y="176">one action to take.</text>
+
+    <rect class="nd-orig" x="272" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-orig" x="294" y="70">ai check</text>
+    <text class="t-title" x="294" y="102">Origin</text>
+    <text class="t-sub" x="294" y="132">Which detector families</text>
+    <text class="t-sub" x="294" y="154">fired, their calibration</text>
+    <text class="t-sub" x="294" y="176">state, C2PA findings.</text>
+
+    <rect class="nd-copy" x="540" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="562" y="70">work match</text>
+    <text class="t-title" x="562" y="102">Copy</text>
+    <text class="t-sub" x="562" y="132">Verified support regions</text>
+    <text class="t-sub" x="562" y="154">outlined on both images,</text>
+    <text class="t-sub" x="562" y="176">plus matching point pairs.</text>
+
+    <rect class="nd-copy" x="808" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-copy" x="830" y="70">match detail</text>
+    <text class="t-title" x="830" y="102">Structure</text>
+    <text class="t-sub" x="830" y="132">Post-alignment measures:</text>
+    <text class="t-sub" x="830" y="154">SSIM, luminance and</text>
+    <text class="t-sub" x="830" y="176">gradient agreement.</text>
+
+    <rect class="nd-prof" x="1076" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-prof" x="1098" y="70">creator</text>
+    <text class="t-title" x="1098" y="102">Style</text>
+    <text class="t-sub" x="1098" y="132">Profile name, sample</text>
+    <text class="t-sub" x="1098" y="154">count, consent state and</text>
+    <text class="t-sub" x="1098" y="176">the factor breakdown.</text>
+
+    <rect class="nd-prof" x="1340" y="42" width="256" height="150" rx="9"/>
+    <text class="t-lbl fx-prof" x="1362" y="70">creator detail</text>
+    <text class="t-title" x="1362" y="102">Style map</text>
+    <text class="t-sub" x="1362" y="132">A 4 × 4 tile heat map</text>
+    <text class="t-sub" x="1362" y="154">showing which areas drive</text>
+    <text class="t-sub" x="1362" y="176">the resemblance.</text>
+
+    <rect class="nd" x="4" y="218" width="1050" height="106" rx="9"/>
+    <text class="t-lbl fx-dim" x="26" y="246">how the overlays are specified</text>
+    <text class="t-body" x="26" y="278">Coordinates are normalised to the 0–1 image space and travel inside the evidence packet itself, so the</text>
+    <text class="t-body" x="26" y="302">same outline renders identically in the web app, in a PDF export, and in a customer’s own viewer.</text>
+
+    <rect class="nd-bad" x="1078" y="218" width="518" height="106" rx="9"/>
+    <text class="t-lbl fx-bad" x="1100" y="246">a strict rule</text>
+    <text class="t-body" x="1100" y="278">The microscope is downstream of everything.</text>
+    <text class="t-body" x="1100" y="302">It can never alter a verdict, only display one.</text>
+
+    <rect class="nd-pass" x="4" y="344" width="1592" height="66" rx="9"/>
+    <text class="t-lbl fx-pass" x="26" y="372">why this wins the room</text>
+    <text class="t-body" x="26" y="396">When a reviewer can point at the exact overlapping region and count the matching points, the conversation stops being about whether they trust the model.</text>
+
+    <g class="cal"><circle cx="768" cy="64" r="17"/><text x="768" y="70">1</text></g>
+    <g class="cal"><circle cx="1568" cy="64" r="17"/><text x="1568" y="70">2</text></g>
+    <g class="cal"><circle cx="1026" cy="240" r="17"/><text x="1026" y="246">3</text></g>
+    <g class="cal"><circle cx="1568" cy="240" r="17"/><text x="1568" y="246">4</text></g>
+</svg>
