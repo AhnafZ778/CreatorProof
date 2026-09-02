@@ -15,7 +15,7 @@ keeps policy (`PASS` / `REVIEW` / `BLOCK`) out of the models.
 v0.10.0 · live demo: [creatorproof.uaenorth.cloudapp.azure.com](https://creatorproof.uaenorth.cloudapp.azure.com/)
 
 **Judges: start at [MODELS.md](MODELS.md).** That page is the model catalog, the
-preprocessing, what we trained (nothing), what we wrote, and how to reproduce
+preprocessing, what we wrote, and how to reproduce
 inference.
 
 ---
