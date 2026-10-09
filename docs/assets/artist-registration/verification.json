@@ -1,0 +1,12 @@
+{
+  "checks": [
+    "Full-width registration and submit action fit desktop, tablet and mobile",
+    "Image preview, file details and removal preserve the entered artwork details",
+    "Native drag-and-drop updates the actual file input and preview",
+    "Advanced controls and screening information remain usable",
+    "Registration submits original fields and bytes; pending and error states preserve the form",
+    "Tabs preserve the registration and produce no browser errors"
+  ],
+  "browser_errors": [],
+  "submission_intercepted": true
+}

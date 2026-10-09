@@ -1293,6 +1293,7 @@ class ReviewCase(Base):
     assignee_principal_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     disposition: Mapped[str] = mapped_column(String(40), default=ReviewDisposition.NOT_DECIDED)
     opened_reason: Mapped[str] = mapped_column(String(200), default="POLICY_REVIEW")
+    archive_record: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     correlation_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

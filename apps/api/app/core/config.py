@@ -130,6 +130,7 @@ class Settings(BaseSettings):
     # is up to two more verifications per candidate this similar and unaligned.
     copy_alignment_escalation_similarity: float = Field(default=0.55, ge=0.0, le=1.0)
     candidate_retention_seconds: int = 0
+    admin_archive_matches: bool = False
     sscd_provider: Literal["local", "remote"] = "local"
     sscd_model_path: Path = Path("./models/sscd_disc_mixup.torchscript.pt")
     sscd_device: Literal["auto", "cpu", "cuda"] = "auto"

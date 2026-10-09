@@ -663,7 +663,12 @@ class C2PAToolProvenanceProvider:
             code.startswith("claimsignature.")
             and (
                 bucket == "failure"
-                or code not in {"claimsignature.validated", "claimsignature.valid"}
+                or code
+                not in {
+                    "claimsignature.validated",
+                    "claimsignature.valid",
+                    "claimsignature.insidevalidity",
+                }
             )
             for code, bucket in normalized_codes.items()
         )

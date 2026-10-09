@@ -19,7 +19,7 @@ export function adminInbox(detections: AdminRecord[], cases: AdminRecord[], asse
     items.set(scanId, {
       key: scanId, scanId, detection, reviewCase: detection.review_case || undefined,
       source: String(detection.source_provider || "User upload"),
-      title: String(detection.source_metadata?.title || detection.matched_work?.title || "Submitted image"),
+      title: String(detection.stored_case?.case_title || detection.source_metadata?.title || detection.matched_work?.title || "Submitted image"),
       classification: String(detection.classification || "REVIEW"),
       createdAt: String(detection.created_at || ""),
     });
@@ -60,6 +60,7 @@ export function needsAdminReview(item: InboxItem): boolean {
 export function flagLabel(item: InboxItem): string {
   if (item.detection?.category === "ASSESSMENT_GAP" || item.detection?.flag_category === "ASSESSMENT_GAP") return "Assessment incomplete";
   const reasons: string[] = Array.isArray(item.detection?.flag_reasons) ? item.detection.flag_reasons : [];
+  if (item.detection?.stored_case?.comparison_kind === "AI_EDIT" && item.detection?.match_status === "MATCH_FOUND") return "Artwork match · documented AI edit";
   if (reasons.includes("AI_ORIGIN_INDICATORS")) return reasons.includes("CATALOG_MATCH") ? "Artwork match with AI indicators" : "AI-generation indicators";
   if (reasons.includes("CREATOR_RESEMBLANCE")) return "Creator resemblance";
   if (reasons.includes("COPY_EVIDENCE_INCONCLUSIVE")) return "Copy evidence needs review";
@@ -72,5 +73,5 @@ export function flagLabel(item: InboxItem): string {
 }
 
 export function mediaProxyPath(value: unknown): string {
-  return typeof value === "string" && /^\/v1\/(?:scans|works)\/[A-Za-z0-9_-]+\/media$/.test(value) ? `/api/${value.slice(4)}` : "";
+  return typeof value === "string" && (/^\/v1\/(?:scans|works)\/[A-Za-z0-9_-]+\/media$/.test(value) || /^\/v1\/admin\/stored-cases\/scn_[a-f0-9]{32}\/media\/(?:candidate|reference)$/.test(value)) ? `/api/${value.slice(4)}` : "";
 }

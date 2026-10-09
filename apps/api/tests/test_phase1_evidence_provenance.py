@@ -215,6 +215,9 @@ def test_scan_persists_matrix_and_provenance_before_zero_retention(client, api_k
     assert result.status_code == 200, result.text
     body = result.json()
     assert body["persisted"] and body["legal_conclusion"] is None
+    assert body["assessment"]["lanes"]["COPY"]["verdict"] == "EXACT_COPY"
+    assert body["assessment"]["lanes"]["RIGHTS"]["verdict"] == "AUTHORIZATION_UNVERIFIED"
+    assert body["assessment"]["new_inference_performed"] is False
     assert body["packet_hash_sha256"] == scan["evidence_packet"]["proof"]["packet_hash_sha256"]
     assert {row["lane"] for row in body["signals"]} == set(LANES)
     assert all(row["started_at"] and row["completed_at"] for row in body["signals"])

@@ -1,0 +1,13 @@
+{
+  "cases": 3,
+  "checks": [
+    "Admin opens with saved paired images and selectable case cards",
+    "Documented AI edit opens its saved images and real evidence matrix",
+    "Notice and complete case context open immediately without generation or handoff",
+    "Collection pages exist and stored cases survive reload",
+    "Gallery and selected cases fit mobile, tablet and desktop widths",
+    "Presenting stored cases performs no scan, inference, decision or notice mutation"
+  ],
+  "browser_errors": [],
+  "mutations": []
+}

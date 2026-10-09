@@ -69,17 +69,77 @@
 .artistWelcomeSteps { display: grid; gap: 11px; margin: 24px 0 30px; }
 .artistWelcomeSteps span { display: flex; gap: 12px; align-items: center; color: var(--cp-text-secondary); font-size: 13px; }
 .artistWelcomeSteps b { display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid var(--cp-line-strong); border-radius: 8px; font-size: 11px; color: var(--portal-accent); font-weight: 400; }
-.artistDesk .artistRegisterPanel { max-width: 800px; width: 100%; padding: 28px; }
-.artistRegisterPanel h2 { margin: 9px 0 0; font-size: 26px; font-weight: 450; letter-spacing: -.03em; }
-.artistOriginNotice { display: flex; gap: 10px; align-items: start; color: var(--cp-text-muted); font-size: 12px; line-height: 1.7; border: 1px solid var(--cp-line); background: var(--portal-wash); padding: 14px; border-radius: 13px; margin-bottom: 24px; }
+.artistDesk .artistRegisterPanel { width: 100%; padding: 32px; background: linear-gradient(145deg,rgba(155,135,245,.035),transparent 42%),#0a0a0b; }
+.artistRegisterPanel .artistRegisterHeading { align-items: center; gap: 24px; margin-bottom: 30px; padding-bottom: 26px; border-bottom: 1px solid var(--cp-line); scroll-margin-top: 100px; }
+.artistRegisterHeading > div { min-width: 0; }
+.artistRegisterPanel h2 { margin: 10px 0 12px; font-size: clamp(25px,3vw,32px); font-weight: 450; letter-spacing: -.035em; }
+.artistRegisterHeading p { margin: 0; max-width: 64ch; font-size: 13px; line-height: 1.8; color: var(--cp-text-muted); }
+.artistRegisterMark { display: grid; place-items: center; flex-shrink: 0; width: 58px; height: 58px; border: 1px solid color-mix(in srgb,var(--portal-accent) 24%,transparent); border-radius: 17px; color: var(--portal-accent); background: rgba(155,135,245,.065); }
+.artistRegisterLayout { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 38px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.artistRegisterStep { display: flex; align-items: center; gap: 10px; color: var(--cp-text-secondary); font-size: 13px; font-weight: 450; margin-bottom: 18px; }
+.artistRegisterStep > span { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--cp-line); border-radius: 8px; color: var(--portal-accent); background: rgba(155,135,245,.04); font: 400 10px var(--cp-font-mono); }
+.artistRegisterStep > label { font: inherit; color: inherit; }
+.artistRegisterDetails { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.artistRegisterDetails .artistRegisterStep { margin-bottom: 0; }
+.artistRegisterDetails .portalField { min-width: 0; gap: 9px; }
+.artistRegisterDetails .portalFieldLabel { color: var(--cp-text-secondary); font-size: 12px; font-weight: 450; }
+.artistRegisterForm .artistRegisterDetails input { border-radius: 11px; background: #121214; box-shadow: none; min-height: 49px; font-size: 13px; }
+.artistRegisterForm .artistRegisterDetails input:hover { background: #151518; }
+.artistRegisterForm .artistRegisterDetails input:focus-visible { border-color: var(--portal-accent); box-shadow: 0 0 0 3px rgba(155,135,245,.1); }
+.artistRegisterDetails .portalFieldHint { font-size: 11px; line-height: 1.6; }
+.artistArtworkUpload { min-width: 0; }
+.artistUploadCanvas { position: relative; isolation: isolate; display: grid; place-items: center; width: 100%; min-width: 0; min-height: 320px; aspect-ratio: 1.38; border: 1px dashed rgba(155,135,245,.3); border-radius: 18px; overflow: hidden; background: radial-gradient(ellipse at 50% 38%,rgba(155,135,245,.07),transparent 70%),#0e0e11; transition: border-color .18s,background .18s; }
+.artistUploadCanvas::before { content:""; position: absolute; inset: 0; z-index: -1; background-image: radial-gradient(rgba(155,135,245,.14) .7px,transparent .7px); background-size: 22px 22px; mask-image: radial-gradient(ellipse,black,transparent 75%); }
+.artistRegisterForm .artistUploadCanvas > input { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.artistUploadCanvas:hover,.artistUploadCanvas:focus-within { border-color: var(--portal-accent); background-color: #131218; }
+.artistUploadCanvas:focus-within { outline: 2px solid var(--portal-accent); outline-offset: 4px; }
+.artistUploadCanvas.hasFile { border-style: solid; border-color: rgba(155,135,245,.3); background: #101013; }
+.artistUploadEmpty { display: flex; align-items: center; flex-direction: column; text-align: center; padding: 30px 20px; pointer-events: none; }
+.artistUploadIcon { display: grid; place-items: center; width: 67px; height: 67px; margin-bottom: 23px; border-radius: 20px; border: 1px solid rgba(155,135,245,.25); color: var(--portal-accent); background: linear-gradient(145deg,rgba(155,135,245,.14),rgba(155,135,245,.025)); box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+.artistUploadEmpty strong { font-size: 18px; letter-spacing: -.025em; font-weight: 450; color: var(--cp-text); }
+.artistUploadEmpty p { margin: 9px 0 20px; color: var(--cp-text-muted); font-size: 12px; line-height: 1.6; }
+.artistUploadBrowse { display: inline-flex; align-items: center; gap: 8px; padding: 10px 15px; border: 1px solid rgba(155,135,245,.3); border-radius: 9px; background: rgba(155,135,245,.08); color: var(--cp-text-secondary); font-size: 12px; }
+.artistUploadPreview { position: absolute; inset: 14px; width: calc(100% - 28px); height: calc(100% - 28px); object-fit: contain; border-radius: 8px; pointer-events: none; }
+.artistUploadReplace { position: absolute; bottom: 22px; display: flex; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.16); border-radius: 8px; padding: 8px 12px; background: rgba(10,10,12,.85); backdrop-filter: blur(12px); color: white; font-size: 11px; pointer-events: none; }
+.artistUploadCorners { position: absolute; inset: 13px; pointer-events: none; border-radius: 10px; }
+.artistUploadCorners::before,.artistUploadCorners::after { content:""; position: absolute; width: 14px; height: 14px; border-color: rgba(155,135,245,.35); border-style: solid; }
+.artistUploadCorners::before { top: 0; left: 0; border-width: 1px 0 0 1px; border-radius: 4px 0 0; }
+.artistUploadCorners::after { bottom: 0; right: 0; border-width: 0 1px 1px 0; border-radius: 0 0 4px; }
+.artistUploadMeta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 9px; min-height: 44px; padding-top: 14px; color: var(--cp-text-faint); font-size: 11px; line-height: 1.6; }
+.artistUploadFile { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+.artistUploadFile > svg { flex-shrink: 0; color: var(--portal-accent); }
+.artistUploadFile > span { min-width: 0; }
+.artistUploadFile strong { display: block; color: var(--cp-text-secondary); font-size: 12px; font-weight: 450; overflow-wrap: anywhere; }
+.artistUploadFile small { display: block; font-size: 10px; color: var(--cp-text-muted); }
+.artistUploadLimit { flex-basis: 100%; font-size: 10px; }
+.artistRemoveFile { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; min-height: 30px; padding: 0; margin: 0; border-radius: 8px; border: 1px solid var(--cp-line); background: transparent; color: var(--cp-text-muted); cursor: pointer; }
+.artistRemoveFile:hover { background: rgba(155,135,245,.08); color: white; border-color: var(--portal-accent); }
+.artistRegisterLayout:disabled { opacity: .65; }
+.artistRegisterLayout:disabled .artistUploadCanvas > input { cursor: wait; }
+.artistOriginNotice { display: flex; gap: 10px; align-items: start; color: var(--cp-text-muted); font-size: 11px; line-height: 1.7; padding-top: 3px; }
 .artistOriginNotice > svg { flex-shrink: 0; color: var(--portal-accent); margin-top: 2px; }
+.artistOriginNotice b { color: var(--cp-text-secondary); font-size: 12px; font-weight: 450; }
+.artistOriginNotice > div > p { margin: 5px 0 0; }
 .artistOriginNotice summary { color: var(--portal-accent); font-size: 11px; cursor: pointer; margin-top: 5px; }
 .artistOriginNotice p { margin: 8px 0 0; }
-.artistDesk .artistRegisterForm { gap: 18px; }
-.artistAdvancedRegistration { margin: 0; }
-.artistRegisterFooter { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-top: 20px; border-top: 1px solid var(--cp-line); }
-.artistRegisterFooter p { margin: 0; color: var(--cp-text-muted); font-size: 12px; line-height: 1.7; }
-.artistRegisterFooter .portalPrimary { flex-shrink: 0; gap: 7px; }
+.artistDesk .artistRegisterForm { gap: 28px; }
+.artistAdvancedRegistration { margin: 0; border-radius: 11px; background: rgba(255,255,255,.015); }
+.artistAdvancedRegistration > summary { display: flex; align-items: center; gap: 8px; padding: 13px; font-size: 11px; list-style: none; }
+.artistAdvancedRegistration > summary::-webkit-details-marker { display: none; }
+.artistAdvancedRegistration > summary > span { margin-left: auto; color: var(--cp-text-faint); font-size: 10px; }
+.artistAdvancedRegistration > summary::after { content:"+"; color: var(--portal-accent); font-size: 16px; font-weight: 400; }
+.artistAdvancedRegistration[open] > summary::after { content:"−"; }
+.artistAdvancedRegistration .cpFormGrid { grid-template-columns: 1fr; gap: 16px; }
+.artistRegisterFooter { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 25px; border-top: 1px solid var(--cp-line); }
+.artistRegisterFooter > div { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.artistRegisterNextIcon { display: grid; place-items: center; flex-shrink: 0; width: 37px; height: 37px; border: 1px solid var(--cp-line); border-radius: 11px; color: var(--portal-accent); }
+.artistRegisterFooter p { margin: 0; color: var(--cp-text-muted); font-size: 11px; line-height: 1.7; }
+.artistRegisterFooter p strong { display: block; font-size: 12px; color: var(--cp-text-secondary); font-weight: 450; }
+.artistRegisterFooter p span { display: block; margin-top: 3px; }
+.artistDesk .artistRegisterFooter .portalPrimary { width: auto; margin: 0; min-height: 47px; padding: 13px 19px; flex-shrink: 0; gap: 9px; font-size: 12px; border-radius: 12px; }
+.artistRegisterSpinner { animation: artistRegisterSpin 1s linear infinite; }
+@keyframes artistRegisterSpin { to { transform: rotate(360deg); } }
+.artistRegisterForm :is(summary,.artistRemoveFile):focus-visible { outline: 2px solid var(--portal-accent); outline-offset: 3px; }
 .artistRefusalDetails summary { margin-top: 16px; color: var(--cp-text-secondary); font-size: 12px; cursor: pointer; }
 .artistDesk :is(.artistSectionTabs > button,.artistWorkButton,.artistAddWork,.artistLibraryEmpty button,.artistWelcome button):focus-visible { outline: 2px solid var(--portal-accent); outline-offset: 3px; }
 .artistDesk .artistPolicyAdvanced { margin-top: 20px; }
@@ -106,6 +166,11 @@
   .artistSectionTabs > button { flex: 1; padding: 12px 10px; font-size: 12px; }
   .artistTabCount { display: none; }
   .artistDesk .artistRegisterPanel { padding: 22px; }
+  .artistRegisterLayout { grid-template-columns: 1fr; gap: 24px; }
+  .artistUploadCanvas { min-height: 250px; max-height: 380px; aspect-ratio: 1.5; }
+  .artistRegisterPanel .artistRegisterHeading { margin-bottom: 23px; padding-bottom: 22px; }
+  .artistRegisterFooter { align-items: stretch; flex-direction: column; gap: 18px; }
+  .artistDesk .artistRegisterFooter .portalPrimary { width: 100%; }
 }
 @media (max-width: 480px) {
   .artistHeroAside { flex-wrap: wrap; }
@@ -120,6 +185,9 @@
   .artistDesk .artistWorkspace .cpFormFooter { flex-direction: column; }
   .artistDesk .artistWelcome { padding: 25px; }
   .artistDesk .artistRegisterPanel { padding: 20px; }
+  .artistRegisterMark { display: none; }
+  .artistUploadCanvas { min-height: 250px; }
+  .artistUploadEmpty strong { font-size: 17px; }
   .artistRegisterFooter { align-items: start; flex-direction: column; }
   .artistRegisterForm .cpFormGrid { grid-template-columns: 1fr; }
 }
@@ -141,3 +209,4 @@
   .artistDesk .artistWorkspace .cpTabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible; padding: 8px; gap: 4px; }
   .artistDesk .artistWorkspace .cpTabs > button { padding: 12px 8px; border-radius: 9px; }
 }
+@media (prefers-reduced-motion: reduce) { .artistRegisterSpinner { animation: none; }.artistUploadCanvas { transition: none; } }

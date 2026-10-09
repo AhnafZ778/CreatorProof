@@ -35,7 +35,7 @@ function authenticationResponse() {
     headers: {
       "Cache-Control": "no-store",
       "Content-Type": "text/plain; charset=utf-8",
-      "WWW-Authenticate": 'Basic realm="CreatorProof demo", charset="UTF-8"',
+      "WWW-Authenticate": 'Basic realm="CreatorProof", charset="UTF-8"',
     },
   });
 }

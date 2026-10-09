@@ -26,3 +26,11 @@ test("media proxy paths stay on the finite authenticated API gateway", () => {
   assert.equal(mediaProxyPath("/v1/scans/id/media"), "/api/scans/id/media");
   assert.equal(mediaProxyPath("https://evil.example/media"), "");
 });
+
+test("saved comparison media accepts only the exact case id and image kind", () => {
+  const id = `scn_${"a".repeat(32)}`;
+  assert.equal(mediaProxyPath(`/v1/admin/stored-cases/${id}/media/candidate`), `/api/admin/stored-cases/${id}/media/candidate`);
+  assert.equal(mediaProxyPath(`/v1/admin/stored-cases/${id}/media/reference`), `/api/admin/stored-cases/${id}/media/reference`);
+  assert.equal(mediaProxyPath(`/v1/admin/stored-cases/${id}/media/../../secret`), "");
+  assert.equal(mediaProxyPath("/v1/admin/stored-cases/not-a-scan/media/candidate"), "");
+});

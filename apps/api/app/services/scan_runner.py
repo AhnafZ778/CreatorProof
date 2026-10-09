@@ -625,6 +625,16 @@ def _release_candidate_media(container, db, scan) -> None:
     Derived artifacts share the candidate prefix, so the whole prefix is removed
     rather than only the original upload.
     """
+    if (container.settings.admin_archive_matches
+            and container.settings.candidate_retention_seconds > 0
+            and scan.state == "COMPLETED" and scan.match_status == "MATCH_FOUND"):
+        from app.services.case_archive import save_comparison
+
+        try:
+            save_comparison(container, db, scan, actor="system")
+        except Exception:
+            db.rollback()
+            logger.exception("comparison_archive_deferred scan_id=%s", scan.id)
     if container.settings.candidate_retention_seconds != 0:
         return
     from app.services.retention import purge_candidate_media

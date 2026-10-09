@@ -668,13 +668,23 @@ def delete_work(
 
     prefix = work_prefix(auth.tenant_id, work_id)
     legacy_prefix = f"references/{auth.tenant_id}/{work.catalog_id}/{work_id}"
+    from app.models import ReviewCase, Scan
+
+    archived_cases = db.scalars(select(ReviewCase).where(
+        ReviewCase.tenant_id == auth.tenant_id,
+        ReviewCase.scan_id.in_(select(Scan.id).where(
+            Scan.tenant_id == auth.tenant_id, Scan.top_match_work_id == work_id)),
+        ReviewCase.archive_record.is_not(None),
+    )).all()
+    prefixes = (prefix, legacy_prefix, *(f"case-files/{auth.tenant_id}/{case.id}/"
+                                        for case in archived_cases))
     # Commit a signed deletion intent before crossing the database/object-store
     # transaction boundary. If the process dies after object removal, the work is
     # fail-closed (its immutable media hash cannot be read) and a retry can finish
     # deletion while the durable intent explains why the bytes disappeared.
     receipt = DeletionReceipt(
         tenant_id=auth.tenant_id,
-        requested_scope={"work_id": work_id, "prefixes": [prefix, legacy_prefix]},
+        requested_scope={"work_id": work_id, "prefixes": list(prefixes)},
         state=DeletionReceiptState.REQUESTED,
     )
     db.add(receipt)
@@ -690,7 +700,7 @@ def delete_work(
             "catalog_id": work_catalog_id,
             "registered_sha256": work_sha256,
             "deletion_receipt_id": receipt.id,
-            "requested_prefixes": [prefix, legacy_prefix],
+            "requested_prefixes": list(prefixes),
             "actor_principal_id": auth.principal_id,
         },
     )
@@ -707,14 +717,14 @@ def delete_work(
 
     deleted: list[str] = []
     retained: list[dict] = []
-    for target in (prefix, legacy_prefix):
+    for target in prefixes:
         try:
             deleted.extend(container.storage.delete_prefix(target))
         except Exception as exc:
             retained.append({"prefix": target, "reason": type(exc).__name__})
 
     remaining = []
-    for target in (prefix, legacy_prefix):
+    for target in prefixes:
         try:
             remaining.extend(container.storage.list_prefix(target))
         except Exception:
@@ -770,6 +780,9 @@ def delete_work(
     )
     receipt.objects_deleted = deleted
     receipt.objects_retained = retained
+    if not retained:
+        for case in archived_cases:
+            case.archive_record = None
     receipt.verified_at = datetime.now(UTC)
     db.flush()
     integrity_event = prepare_integrity_event(

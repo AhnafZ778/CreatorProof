@@ -141,8 +141,38 @@
 .cpMatrixOverview > div > span:first-of-type { color: var(--cp-text-muted); font-size: var(--cp-text-xs); }
 .cpMatrixOverview b { font-size: var(--cp-text-sm); font-weight: 450; color: var(--cp-text-secondary); line-height: 1.6; }
 .cpMatrixReason { color: var(--cp-text-secondary); font-size: var(--cp-text-sm); line-height: 1.8; margin: var(--cp-4) 0 var(--cp-6); }
+.cpAssessmentBanner { margin:var(--cp-6) 0;padding:var(--cp-6);border:1px solid rgba(96,165,250,.3);border-radius:var(--cp-r-lg);background:linear-gradient(125deg,rgba(59,130,246,.1),rgba(255,255,255,.02)); }
+.cpAssessmentBanner[data-tone="bad"] { border-color:rgba(255,125,130,.4);background:linear-gradient(125deg,rgba(255,125,130,.08),rgba(255,255,255,.02)); }
+.cpAssessmentBanner[data-tone="good"] { border-color:rgba(85,214,169,.35); }
+.cpAssessmentBanner > small { display:block;color:var(--portal-accent);font-size:var(--cp-text-xs);letter-spacing:.08em;text-transform:uppercase; }
+.cpAssessmentBanner h3 { margin:var(--cp-3) 0;font-size:clamp(20px,2.8vw,28px);line-height:1.3;letter-spacing:-.025em;font-weight:450; }
+.cpAssessmentBanner p,.cpLaneAssessment p { color:var(--cp-text-secondary);font-size:var(--cp-text-sm);line-height:1.8;overflow-wrap:anywhere; }
+.cpAssessmentFindings { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--cp-5);padding-top:var(--cp-4);margin-top:var(--cp-5);border-top:1px solid var(--cp-line); }
+.cpAssessmentFindings b { font-size:var(--cp-text-sm);font-weight:500; }
+.cpAssessmentFindings ul,.cpAssessmentNext ol { margin:var(--cp-3) 0 0;padding-left:var(--cp-5);color:var(--cp-text-secondary);font-size:var(--cp-text-xs);line-height:1.9; }
+.cpAssessmentFindings li::marker { color:var(--portal-accent); }
+.cpAssessmentBadge { white-space:normal;max-width:100%;text-align:left;line-height:1.5; }
+.cpAssessmentBadge > i { flex-shrink:0; }
+.cpLaneAssessment { margin:var(--cp-4) 0 var(--cp-5); }
+.cpAssessmentNext { margin:var(--cp-6) 0; }
+.cpAssessmentNext h3 { font-size:var(--cp-text-sm);font-weight:500; }
+.cpAssessmentContext { margin-top:var(--cp-4); }
+.cpAssessmentContext > summary { cursor:pointer;color:var(--cp-text-secondary);font-size:var(--cp-text-xs); }
+.cpLaneRating { display:flex;flex-direction:column;flex:1;padding-top:var(--cp-2); }
+.cpRatingValue { display:flex;align-items:baseline;gap:5px;font-size:clamp(24px,2.7vw,38px);line-height:1.3;letter-spacing:-.045em;font-weight:500;color:var(--cp-text);font-variant-numeric:tabular-nums;overflow-wrap:anywhere; }
+.cpRatingValue > span { color:var(--cp-text-faint);font-size:13px;letter-spacing:0; }
+.cpRatingLabel { display:block;min-height:2.9em;font-size:var(--cp-text-xs);line-height:1.5;color:var(--cp-text-secondary);margin-top:var(--cp-1); }
+.cpRatingTrack { height:4px;overflow:hidden;border-radius:10px;background:rgba(255,255,255,.08);margin:var(--cp-3) 0; }
+.cpRatingTrack i { display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#407bce,#95bbf5); }
+.cpLaneRating[data-tone="good"] .cpRatingTrack i { background:linear-gradient(90deg,#288c70,#55d6a9); }
+.cpRatingGrade { display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:var(--cp-2);font-size:var(--cp-text-xs);line-height:1.5;color:var(--cp-text-secondary); }
+.cpRatingGrade::before { content:"";width:5px;height:5px;border-radius:50%;background:var(--cp-accent-soft);flex-shrink:0; }
+.cpLaneRating[data-tone="good"] .cpRatingGrade::before { background:var(--cp-pass); }
+.cpLaneRating[data-tone="bad"] .cpRatingGrade::before { background:var(--cp-block); }
+.cpRatingSemantics { color:var(--cp-text-muted);font-size:var(--cp-text-xs);line-height:1.7;margin:var(--cp-5) 0; }
+@media(max-width:640px) { .cpAssessmentFindings { grid-template-columns:minmax(0,1fr); }.cpAssessmentBanner { padding:var(--cp-4); } }
 .cpLaneGrid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: var(--cp-3); }
-.cpLaneGrid > button { padding: var(--cp-4); border: 1px solid var(--cp-line); border-radius: var(--cp-r-lg); background: rgba(255,255,255,.025); text-align: left; cursor: pointer; min-width: 0; transition: background .2s,border-color .2s; }
+.cpLaneGrid > button { display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;padding: var(--cp-4); border: 1px solid var(--cp-line); border-radius: var(--cp-r-lg); background: rgba(255,255,255,.025); text-align: left; cursor: pointer; min-width: 0; transition: background .2s,border-color .2s; }
 .cpLaneGrid > button > div:first-child { display: flex; align-items: center; justify-content: space-between; color: var(--portal-accent); }
 .cpLaneGrid > button > div:first-child > span { color: var(--cp-text-faint); font: 400 var(--cp-text-xs) var(--cp-font-mono); }
 .cpLaneGrid h3 { margin: var(--cp-4) 0 var(--cp-2); color: white; font-size: var(--cp-text-sm); font-weight: 450; }

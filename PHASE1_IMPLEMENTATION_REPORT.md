@@ -5,6 +5,10 @@
 > capabilities in Artist, User and Admin portals and adds an interactive pipeline.
 > Its frontend changes supersede the original UI freeze for that later phase.
 > The subsequent [Artist/Admin simplification and User handoff update](docs/ADMIN_ARTIST_SIMPLIFICATION_REPORT.md) groups those tools and persists all completed flags for Admin review.
+> The [stored comparison update](docs/STORED_CASES_IMPLEMENTATION_REPORT.md) adds a ready-to-open Admin collection with saved image pairs, recorded matches and prepared notices.
+> The [evidence verdict update](docs/EVIDENCE_VERDICTS_REPORT.md) replaces mixed lane badges with specific assessments and distinguishes supported reuse, recorded permission conflicts and unresolved authorization.
+> The [measured ratings update](docs/EVIDENCE_RATINGS_REPORT.md) adds numeric model indices, specific reuse verdicts and full saved assessments for the three stored image comparisons.
+> The [Artist registration design update](docs/ARTIST_REGISTRATION_DESIGN_REPORT.md) adds a spacious image-preview form, clearer fields and a responsive layout matching the Artist portal.
 
 Recorded on 2026-10-09. Phase 1 extends the backend rights, evidence, persistence,
 security and operational infrastructure. The detailed sequence and acceptance

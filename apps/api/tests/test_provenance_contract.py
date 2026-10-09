@@ -53,6 +53,38 @@ def test_absent_manifest_is_neutral_and_not_human_origin_evidence(monkeypatch, t
     assert "ABSENCE_DOES_NOT_ESTABLISH_HUMAN_ORIGIN" in result.reason_codes
 
 
+@pytest.mark.parametrize(
+    "validity,bucket,expected",
+    [
+        ("claimSignature.insideValidity", "success", ProvenanceStatus.VALID_UNTRUSTED),
+        ("claimSignature.insideValidity", "failure", ProvenanceStatus.INVALID),
+        ("claimSignature.outsideValidity", "failure", ProvenanceStatus.INVALID),
+    ],
+)
+def test_signature_validity_success_does_not_imply_failure_or_signer_trust(
+    monkeypatch, tmp_path, validity, bucket, expected
+):
+    provider = _provider(monkeypatch)
+    payload = {
+        "active_manifest": "claim-1",
+        "manifests": {"claim-1": {}},
+        "validation_results": {
+            "success": [{"code": "claimSignature.validated"}],
+            "informational": [
+                {"code": "signingCredential.untrusted"},
+                {"code": "timeStamp.untrusted"},
+            ],
+        },
+    }
+    payload["validation_results"].setdefault(bucket, []).append({"code": validity})
+    monkeypatch.setattr(
+        "app.providers.provenance._run_bounded", lambda *args, **kwargs: _completed(payload)
+    )
+    result = provider.inspect(tmp_path / "image.png")
+    assert result.status == expected
+    assert result.trust_details["signer_trusted"] is not True
+
+
 def test_valid_untrusted_ai_assertion_keeps_signature_and_trust_separate(
     monkeypatch,
     tmp_path,

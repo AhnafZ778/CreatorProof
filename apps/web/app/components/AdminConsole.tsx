@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowUpRight, FileText, History, Images, Inbox, Pause, Play, RefreshCw, ScanSearch } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, FileText, History, Images, Inbox, Layers, Pause, Play, RefreshCw, ScanSearch } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { adminInbox, flagLabel, mediaProxyPath, needsAdminReview, type AdminRecord as Json, type InboxItem } from "../lib/adminInbox";
@@ -10,10 +10,12 @@ import EvidenceMatrixPanel from "./EvidenceMatrixPanel";
 import InvestigationPanel from "./InvestigationPanel";
 import MarketplaceSourceSelect from "./MarketplaceSourceSelect";
 import ProtectionActionPanel from "./ProtectionActionPanel";
+import StoredCaseGallery from "./StoredCaseGallery";
 import { Feedback, Status } from "./Phase1UI";
 import "../styles/admin-workspace.css";
 
 const SECTIONS = [
+  { key: "stored", label: "Stored cases", Icon: Images },
   { key: "review", label: "Review inbox", Icon: Inbox },
   { key: "monitor", label: "Monitoring", Icon: ScanSearch },
   { key: "history", label: "History", Icon: History },
@@ -35,7 +37,13 @@ function sourceLabel(item: InboxItem) { return marketplaceLabel(item.source, ite
 export default function AdminConsole() {
   const params = useSearchParams();
   const deepLink = params.get("scan_id");
-  const [section, setSection] = useState<Section>("review");
+  const [section, setSection] = useState<Section>("stored");
+  const [storedCases, setStoredCases] = useState<Json[]>([]);
+  const [storedMoreAvailable, setStoredMoreAvailable] = useState(false);
+  const [storedLoading, setStoredLoading] = useState(false);
+  const storedOffset = useRef(0);
+  const storedLoadBusy = useRef(false);
+  const [archiveBusy, setArchiveBusy] = useState(false);
   const [detail, setDetail] = useState<Detail>("summary");
   const [cases, setCases] = useState<Json[]>([]);
   const [detections, setDetections] = useState<Json[]>([]);
@@ -86,7 +94,7 @@ export default function AdminConsole() {
   const loadAdminData = useCallback(async (quiet = false) => {
     const epoch = ++loadEpoch.current;
     if (!quiet) setLoading(true);
-    const paths = ["/api/review-cases?limit=200", `/api/admin/marketplaces/monitor?limit=${PAGE_SIZE}&offset=0`, `/api/admin/user-detections?limit=${PAGE_SIZE}`];
+    const paths = ["/api/review-cases?limit=200", `/api/admin/marketplaces/monitor?limit=${PAGE_SIZE}&offset=0`, `/api/admin/user-detections?limit=${PAGE_SIZE}`, "/api/admin/stored-cases?limit=200"];
     const results = await Promise.allSettled(paths.map(async (path) => {
       const response = await fetch(path, { cache: "no-store" });
       const body: unknown = await response.json();
@@ -95,7 +103,11 @@ export default function AdminConsole() {
       return body as Json[];
     }));
     if (epoch !== loadEpoch.current) return;
-    const [caseRows, assets, flags] = results;
+    const [caseRows, assets, flags, saved] = results;
+    if (saved.status === "fulfilled") {
+      setStoredCases(current => saved.value.length < PAGE_SIZE ? saved.value : [...new Map([...current, ...saved.value].map(row => [row.scan_id, row])).values()].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))));
+      if (!quiet) { storedOffset.current = saved.value.length; setStoredMoreAvailable(saved.value.length === PAGE_SIZE); }
+    }
     if (caseRows.status === "fulfilled") setCases(current => [...new Map([...current, ...caseRows.value].map(row => [row.id, row])).values()]);
     if (assets.status === "fulfilled") {
       setHistory(current => [...new Map([...current, ...assets.value].map(row => [row.id, row])).values()]);
@@ -147,7 +159,20 @@ export default function AdminConsole() {
     finally { setHistoryLoading(false); }
   }
 
-  const inbox = useMemo(() => adminInbox(detections, cases, history), [detections, cases, history]);
+  async function loadMoreStoredCases() {
+    if (storedLoadBusy.current || !storedMoreAvailable) return;
+    storedLoadBusy.current = true; setStoredLoading(true); setLoadError(null);
+    try {
+      const response = await fetch(`/api/admin/stored-cases?limit=${PAGE_SIZE}&offset=${storedOffset.current}`, { cache: "no-store" });
+      const body: unknown = await response.json();
+      if (!response.ok || !Array.isArray(body)) throw new Error(errorMessage(body, "Older stored cases could not be loaded."));
+      setStoredCases(current => [...new Map([...current, ...body].map(row => [row.scan_id, row])).values()].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))));
+      storedOffset.current += body.length; setStoredMoreAvailable(body.length === PAGE_SIZE);
+    } catch (error) { setLoadError(error instanceof Error ? error.message : "Older stored cases could not be loaded."); }
+    finally { storedLoadBusy.current = false; setStoredLoading(false); }
+  }
+
+  const inbox = useMemo(() => adminInbox([...new Map([...detections, ...storedCases].map(row => [row.scan_id, row])).values()], cases, history), [detections, storedCases, cases, history]);
   const pendingCount = inbox.filter(needsAdminReview).length;
   const visibleInbox = inbox.filter(item => (queueFilter !== "pending" || needsAdminReview(item)) && `${item.title} ${sourceLabel(item)} ${flagLabel(item)} ${item.scanId}`.toLowerCase().includes(search.toLowerCase()));
   const visibleHistory = history.filter(asset => historyFilter === "all" || asset.classification === historyFilter);
@@ -184,12 +209,17 @@ export default function AdminConsole() {
       const work = record(item.detection?.matched_work);
       const packet = record(scan.evidence_packet);
       const match = Array.isArray(packet.matches) ? record(packet.matches.find(row => record(row).work_id === scan.top_match_work_id) || packet.matches[0]) : {};
+      const context = record(item.detection?.stored_case?.notice_context);
+      const prepared = record(item.detection?.prepared_notice);
+      if (prepared.id) { setDraft(prepared); setSavedDrafts([prepared]); loadedDraftScan.current = item.scanId; }
       setDraftForm(() => ({
-        ...EMPTY_DRAFT, claimant_name: str(work.claimant),
-        jurisdiction: String(item.detection?.jurisdiction || "GENERIC"),
+        ...EMPTY_DRAFT, claimant_name: str(context.claimant_name, str(work.claimant)),
+        claimant_email: str(context.claimant_email), recipient_email: str(context.recipient_email),
+        protected_url: safePublicUrl(context.protected_url),
+        jurisdiction: str(context.jurisdiction, String(item.detection?.jurisdiction || "GENERIC")),
         protected_title: str(work.title, str(match.title)),
-        infringing_url: safePublicUrl(item.detection?.source_url || item.asset?.source_url),
-        evidence_summary: str(item.detection?.review_summary, `CreatorProof recorded ${flagLabel(item).toLowerCase()} for scan ${item.scanId}. Review the visual comparison, rights and publication context before taking action.`),
+        infringing_url: safePublicUrl(context.infringing_url || item.detection?.source_url || item.asset?.source_url),
+        evidence_summary: str(context.evidence_summary, str(item.detection?.review_summary, `CreatorProof recorded ${flagLabel(item).toLowerCase()} for scan ${item.scanId}. Review the visual comparison, rights and publication context before taking action.`)),
       }));
     } catch (e) { if (epoch === selectionEpoch.current) setSelectionError(e instanceof Error ? e.message : "The selected record could not be opened."); }
     finally { if (epoch === selectionEpoch.current) setSelectionBusy(false); }
@@ -243,6 +273,7 @@ export default function AdminConsole() {
   const referenceId = str(referenceWork.id, str(selectedScan?.top_match_work_id));
   const sourceUrl = safePublicUrl(detection?.source_url || asset?.source_url || record(packet.source_observation).source_url);
   const caseRecord = selectedItem?.reviewCase;
+  const storedCaseIndex = storedCases.findIndex(row => row.scan_id === selectedItem?.scanId);
   const selectedEpoch = selectionEpoch.current;
   const noticeEligible = Boolean(selectedScan?.state === "COMPLETED" && selectedScan.match_status === "MATCH_FOUND" && detection?.takedown_eligible !== false && !(caseRecord && ["RESOLVED", "CLOSED"].includes(String(caseRecord.state)) && String(caseRecord.disposition) === "APPROVED_FOR_PUBLICATION"));
   const publicNoticeReady = Boolean(safePublicUrl(draftForm.infringing_url) && safePublicUrl(draftForm.protected_url));
@@ -292,19 +323,39 @@ export default function AdminConsole() {
   }
 
   function switchSection(next: Section) { setSection(next); }
-  function backToInbox() { selectionEpoch.current++; setSelectedItem(null); setSelectedScan(null); setSelectionBusy(false); setDraftBusy(false); setSelectionError(null); }
+  function backToInbox() { const stored = Boolean(selectedItem?.detection?.stored_case); selectionEpoch.current++; setSelectedItem(null); setSelectedScan(null); setSelectionBusy(false); setDraftBusy(false); setSelectionError(null); if (stored) setSection("stored"); }
+
+  async function saveSelectedComparison() {
+    if (!selectedItem || archiveBusy) return;
+    const epoch = selectionEpoch.current;
+    setArchiveBusy(true); setSelectionError(null);
+    try {
+      const response = await fetch(`/api/admin/stored-cases/${selectedItem.scanId}`, { method: "POST" });
+      const body: unknown = await response.json();
+      if (!response.ok) throw new Error(errorMessage(body, "The comparison could not be saved."));
+      const saved = record(body);
+      setStoredCases(current => [...current.filter(row => row.scan_id !== saved.scan_id), saved]);
+      if (epoch === selectionEpoch.current) setSelectedItem(current => current ? { ...current, detection: saved } : current);
+    } catch (error) { if (epoch === selectionEpoch.current) setSelectionError(error instanceof Error ? error.message : "The comparison could not be saved."); }
+    finally { setArchiveBusy(false); }
+  }
 
   return <div className="adminConsole adminWorkspace">
     <section className="portalHero adminHero" aria-labelledby="admin-title">
       <div className="portalHeroKicker">Admin portal</div>
-      <h1 id="admin-title">Review first. Act with evidence.</h1>
-      <p>Flagged scans arrive in your inbox. Open an image, check the facts, then record a decision or prepare a notice.</p>
+      <h1 id="admin-title">Evidence, ready to review.</h1>
+      <p>Open a stored case. Compare the artwork, follow the evidence, and review the next action — all in one place.</p>
       <div className="adminHeaderMeta"><span><Inbox size={16} />{pendingCount} need review</span><span><Images size={16} />{history.length} source images saved</span>{monitoring && <span className="adminLiveIndicator">Monitoring active</span>}</div>
     </section>
     <div className="adminSectionNav" role="tablist" aria-label="Admin sections">
       {SECTIONS.map(({ key, label, Icon }) => <button key={key} id={`admin-tab-${key}`} type="button" role="tab" aria-controls={`admin-panel-${key}`} aria-selected={section === key} tabIndex={section === key ? 0 : -1} onClick={() => switchSection(key)} onKeyDown={event => { const index = SECTIONS.findIndex(tab => tab.key === key); const next = event.key === "ArrowRight" ? (index + 1) % SECTIONS.length : event.key === "ArrowLeft" ? (index + SECTIONS.length - 1) % SECTIONS.length : event.key === "Home" ? 0 : event.key === "End" ? SECTIONS.length - 1 : -1; if (next >= 0) { event.preventDefault(); switchSection(SECTIONS[next].key); document.getElementById(`admin-tab-${SECTIONS[next].key}`)?.focus(); } }}><Icon size={17} />{label}{key === "review" && pendingCount > 0 && <span>{pendingCount}</span>}</button>)}
     </div>
     <Feedback error={loadError} />
+
+    <div id="admin-panel-stored" role="tabpanel" aria-labelledby="admin-tab-stored" hidden={section !== "stored"}>
+      <StoredCaseGallery cases={storedCases} loading={loading} onSelect={id => { const item = inbox.find(row => row.scanId === id); if (item) void selectItem(item); }} />
+      {storedMoreAvailable && <button className="portalSecondary adminLoadMore" type="button" disabled={storedLoading || loading} onClick={() => void loadMoreStoredCases()}>{storedLoading ? "Loading stored cases…" : "Load older stored cases"}</button>}
+    </div>
 
     <div id="admin-panel-review" role="tabpanel" aria-labelledby="admin-tab-review" hidden={section !== "review"}>
       {!selectedItem ? <section id="admin-review-inbox" className="portalPanel adminPanel" aria-labelledby="inbox-title">
@@ -315,17 +366,20 @@ export default function AdminConsole() {
         </button>)}</div> : <EmptyState icon="inbox" title={queueFilter === "pending" && inbox.length ? "You’re up to date" : "No flagged scans yet"}>New flags appear here automatically. Clean scans do not need an Admin decision.</EmptyState>}
         {moreAvailable && <button className="portalSecondary adminLoadMore" type="button" disabled={loading || flagsLoading} onClick={() => void loadMore()}>{flagsLoading ? "Loading older flags…" : "Load older flags"}</button>}
       </section> : <section id="admin-review-inbox" className="portalPanel adminPanel adminCaseWorkspace" aria-label="Selected scan review">
-        <div className="adminCaseTop"><button type="button" className="cpTextButton" onClick={backToInbox}><ArrowLeft size={16} />Back to inbox</button>{caseRecord && <Status value={caseRecord.state} />}</div>
+        <div className="adminCaseTop"><button type="button" className="cpTextButton" onClick={backToInbox}><ArrowLeft size={16} />{detection?.stored_case ? "Back to stored cases" : "Back to inbox"}</button>{caseRecord && <Status value={caseRecord.state} />}</div>
         <h2>{flagLabel(selectedItem)}</h2><p className="adminCaseSubtitle">{selectedItem.title} · {sourceLabel(selectedItem)}</p>
+        {storedCaseIndex >= 0 && <div className="storedCaseNavigation"><span>Case {storedCaseIndex + 1} of {storedCases.length}</span><div>{[{ step: -1, text: "Previous case" }, { step: 1, text: "Next case" }].map(({ step, text }) => <button key={text} type="button" className="portalSecondary" disabled={selectionBusy || storedCaseIndex + step < 0 || storedCaseIndex + step >= storedCases.length} onClick={() => { const next = inbox.find(row => row.scanId === storedCases[storedCaseIndex + step]?.scan_id); if (next) void selectItem(next); }}>{text}</button>)}</div></div>}
         <div className="adminDetailNav" role="tablist" aria-label="Selected case tools">{DETAILS.map(({ key, label }) => <button key={key} id={`admin-detail-${key}`} type="button" role="tab" aria-selected={detail === key} aria-controls={`admin-detail-panel-${key}`} tabIndex={detail === key ? 0 : -1} onClick={() => setDetail(key)} onKeyDown={e => { const index = DETAILS.findIndex(tab => tab.key === key); const next = e.key === "ArrowRight" ? (index + 1) % DETAILS.length : e.key === "ArrowLeft" ? (index + DETAILS.length - 1) % DETAILS.length : e.key === "Home" ? 0 : e.key === "End" ? DETAILS.length - 1 : -1; if (next >= 0) { e.preventDefault(); setDetail(DETAILS[next].key); document.getElementById(`admin-detail-${DETAILS[next].key}`)?.focus(); } }}>{label}</button>)}</div>
         {selectionBusy && <p className="cpLoading" role="status">Loading the image, evidence and review record…</p>}<Feedback error={selectionError} />
         {selectedScan && <>
           <div role="tabpanel" id="admin-detail-panel-summary" aria-labelledby="admin-detail-summary" hidden={detail !== "summary"}>
             <div className="adminReasonBox"><h3>Why this needs review</h3><p>{str(detection?.review_summary, "Check the recorded findings and intended use before deciding what to do.")}</p>{labels(detection?.flag_reasons).length > 0 && <ul>{labels(detection?.flag_reasons).map(reason => <li key={reason}>{readable(reason)}</li>)}</ul>}</div>
             <div className="adminComparison" aria-label="Submitted and registered image comparison">
-              <ComparisonImage label="Submitted image" src={detection?.candidate_media_status && detection.candidate_media_status !== "available" ? "" : mediaProxyPath(detection?.candidate_media_url) || `/api/scans/${encodeURIComponent(selectedItem.scanId)}/media`} />
+              <ComparisonImage label={detection?.stored_case ? "Observed website image" : "Submitted image"} src={detection?.candidate_media_status && detection.candidate_media_status !== "available" ? "" : mediaProxyPath(detection?.candidate_media_url) || `/api/scans/${encodeURIComponent(selectedItem.scanId)}/media`} />
               <ComparisonImage label={referenceWork.id && !matchedWork.id && labels(detection?.flag_reasons).includes("CREATOR_RESEMBLANCE") ? "Artist reference for resemblance" : "Registered artwork"} src={mediaProxyPath(detection?.reference_media_url) || (referenceId ? `/api/works/${encodeURIComponent(referenceId)}/media` : "")} missing={referenceId ? "The registered reference image is unavailable." : "No registered artwork match was established. Review the other findings."} />
             </div>
+            {detection?.stored_case ? <div className="storedCaseContext"><Images size={19} /><div><b>Comparison saved</b><p>Both image files are retained with verified SHA-256 hashes. Reopening this case uses the stored evidence.</p>{detection.stored_case.source_note && <p>{str(detection.stored_case.source_note)}</p>}{detection.stored_case.generation_record && <p><b>AI edit record:</b> {str(detection.stored_case.generation_record.description)} This is documented editing history; detector findings remain separate in Detailed evidence.</p>}</div></div> : selectedScan.match_status === "MATCH_FOUND" && detection?.candidate_media_status === "available" && <button className="portalSecondary" type="button" disabled={archiveBusy} onClick={() => void saveSelectedComparison()}><Images size={16} />{archiveBusy ? "Saving comparison…" : "Save this comparison"}</button>}
+            {detection?.stored_case && <div className="storedEvidenceSteps" aria-label="Stored case workflow">{[{ text: "Artwork registered", icon: Images }, { text: "Comparison saved", icon: Layers }, { text: "Match recorded", icon: ScanSearch }, { text: draft ? "Notice prepared" : "Human review", icon: FileText }].map(({ text, icon: Icon }, index) => <div key={text}><span>{index + 1}</span><Icon size={16} /><b>{text}</b></div>)}</div>}
             <dl className="adminFacts"><Fact label="Reference artwork" value={str(referenceWork.title, referenceId ? "Registered work" : "No confirmed match")} /><Fact label="Artist / claimant" value={str(referenceWork.claimant, "Not supplied")} /><Fact label="Intended use" value={str(detection?.intended_use, str(selectedScan.intended_use, "Not supplied"))} /><Fact label="Catalog checked" value={str(detection?.catalog_id, str(selectedScan.catalog_id, "Not supplied"))} /><Fact label="Country declaration" value={detection?.country_code ? `${detection.country_code} · supplied by the submitting user` : "Not supplied; residence is unknown"} /><Fact label="Policy outcome" value={readable(selectedScan.policy_action || "UNKNOWN")} /></dl>
             {Object.keys(record(detection?.use_context)).length > 0 && <dl className="adminFacts">{Object.entries(record(detection?.use_context)).map(([key, value]) => <Fact key={key} label={key === "territory" ? "Intended publication country" : readable(key)} value={String(value)} />)}</dl>}
             {Object.keys(referenceWork).length > 0 && <details className="cpDetails"><summary>Rights and registered-work details</summary><dl className="adminFacts cpDetailBody"><Fact label="Claim state" value={readable(referenceWork.claim_state)} /><Fact label="Recorded rights path" value={readable(referenceWork.rights_path)} /><Fact label="Recorded allowed uses" value={labels(referenceWork.allowed_uses).join(", ") || "Not supplied"} /></dl></details>}

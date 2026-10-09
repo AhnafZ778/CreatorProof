@@ -1,0 +1,268 @@
+{
+  "checks": [
+    "All three stored comparisons expose measured, hash-bound assessments and original records",
+    "Eight aligned rating cards display exactly the saved measurements with a clear reuse verdict",
+    "AI measurements retain detailed model results and provider receipts",
+    "Rating cards and receipts fit mobile, tablet and desktop widths",
+    "Saved cases survive reload and presentation issues no API mutations or browser errors"
+  ],
+  "measurements": [
+    {
+      "comparison_kind": "AI_EDIT",
+      "ratings": {
+        "COPY": {
+          "display": "89.8",
+          "label": "Copy evidence index",
+          "grade": "Confirmed reuse",
+          "value": 89.77929999999999,
+          "scale": 100,
+          "basis": "COPY_FUSION_INDEX_NOT_PROBABILITY",
+          "conclusive": true,
+          "tone": "good"
+        },
+        "ORIGIN": {
+          "display": "99.0",
+          "label": "AI detector score",
+          "grade": "Strong AI signal",
+          "value": 99,
+          "scale": 100,
+          "basis": "ORIGINAL_PRESERVING_QUALITY_WEIGHTED_ENSEMBLE_NOT_PROBABILITY",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "PROVENANCE": {
+          "display": "Valid",
+          "label": "Credential validation",
+          "grade": "Signer untrusted",
+          "value": null,
+          "scale": null,
+          "basis": "C2PA_INSPECTION",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "CREATOR_PROFILE": {
+          "display": "69.6",
+          "label": "Style similarity index",
+          "grade": "Measured resemblance",
+          "value": 69.62559999999999,
+          "scale": 100,
+          "basis": "UNCALIBRATED_CORROBORATED_STYLE_EVIDENCE_INDEX_NOT_PROBABILITY",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "RIGHTS": {
+          "display": "0",
+          "label": "Authorizing licenses on record",
+          "grade": "No license on file",
+          "value": 0,
+          "scale": null,
+          "basis": "RECORDED_PERMISSION_SNAPSHOT",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "POLICY": {
+          "display": "REVIEW",
+          "label": "Recorded publication decision",
+          "grade": "Operator approval",
+          "value": null,
+          "scale": null,
+          "basis": "DETERMINISTIC_POLICY_NOT_LEGAL_CONCLUSION",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "SOURCE_COVERAGE": {
+          "display": "2 / 2",
+          "label": "Registered references checked",
+          "grade": "Scope complete",
+          "value": 2,
+          "scale": 2,
+          "basis": "DECLARED_CORPUS_ONLY",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "INTEGRITY": {
+          "display": "SHA-256",
+          "label": "Saved packet integrity",
+          "grade": "Hash verified",
+          "value": null,
+          "scale": null,
+          "basis": "RECOMPUTED_CANONICAL_PACKET_HASH",
+          "conclusive": true,
+          "tone": "good"
+        }
+      }
+    },
+    {
+      "comparison_kind": "CROP",
+      "ratings": {
+        "COPY": {
+          "display": "90.6",
+          "label": "Copy evidence index",
+          "grade": "Confirmed reuse",
+          "value": 90.6455,
+          "scale": 100,
+          "basis": "COPY_FUSION_INDEX_NOT_PROBABILITY",
+          "conclusive": true,
+          "tone": "good"
+        },
+        "ORIGIN": {
+          "display": "0.1",
+          "label": "AI detector score",
+          "grade": "Little AI signal found",
+          "value": 0.1,
+          "scale": 100,
+          "basis": "ORIGINAL_PRESERVING_QUALITY_WEIGHTED_ENSEMBLE_NOT_PROBABILITY",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "PROVENANCE": {
+          "display": "0",
+          "label": "Embedded credentials found",
+          "grade": "Inspection complete",
+          "value": 0,
+          "scale": null,
+          "basis": "C2PA_INSPECTION",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "CREATOR_PROFILE": {
+          "display": "77.8",
+          "label": "Style similarity index",
+          "grade": "Measured resemblance",
+          "value": 77.803,
+          "scale": 100,
+          "basis": "UNCALIBRATED_CORROBORATED_STYLE_EVIDENCE_INDEX_NOT_PROBABILITY",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "RIGHTS": {
+          "display": "0",
+          "label": "Authorizing licenses on record",
+          "grade": "No license on file",
+          "value": 0,
+          "scale": null,
+          "basis": "RECORDED_PERMISSION_SNAPSHOT",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "POLICY": {
+          "display": "REVIEW",
+          "label": "Recorded publication decision",
+          "grade": "Operator approval",
+          "value": null,
+          "scale": null,
+          "basis": "DETERMINISTIC_POLICY_NOT_LEGAL_CONCLUSION",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "SOURCE_COVERAGE": {
+          "display": "2 / 2",
+          "label": "Registered references checked",
+          "grade": "Scope complete",
+          "value": 2,
+          "scale": 2,
+          "basis": "DECLARED_CORPUS_ONLY",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "INTEGRITY": {
+          "display": "SHA-256",
+          "label": "Saved packet integrity",
+          "grade": "Hash verified",
+          "value": null,
+          "scale": null,
+          "basis": "RECOMPUTED_CANONICAL_PACKET_HASH",
+          "conclusive": true,
+          "tone": "good"
+        }
+      }
+    },
+    {
+      "comparison_kind": "COPY",
+      "ratings": {
+        "COPY": {
+          "display": "100.0",
+          "label": "Byte identity",
+          "grade": "Exact match",
+          "value": 100,
+          "scale": 100,
+          "basis": "SHA256_IDENTITY",
+          "conclusive": true,
+          "tone": "good"
+        },
+        "ORIGIN": {
+          "display": "0.1",
+          "label": "AI detector score",
+          "grade": "Little AI signal found",
+          "value": 0.1,
+          "scale": 100,
+          "basis": "ORIGINAL_PRESERVING_QUALITY_WEIGHTED_ENSEMBLE_NOT_PROBABILITY",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "PROVENANCE": {
+          "display": "0",
+          "label": "Embedded credentials found",
+          "grade": "Inspection complete",
+          "value": 0,
+          "scale": null,
+          "basis": "C2PA_INSPECTION",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "CREATOR_PROFILE": {
+          "display": "81.5",
+          "label": "Style similarity index",
+          "grade": "Measured resemblance",
+          "value": 81.4696,
+          "scale": 100,
+          "basis": "UNCALIBRATED_CORROBORATED_STYLE_EVIDENCE_INDEX_NOT_PROBABILITY",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "RIGHTS": {
+          "display": "0",
+          "label": "Authorizing licenses on record",
+          "grade": "No license on file",
+          "value": 0,
+          "scale": null,
+          "basis": "RECORDED_PERMISSION_SNAPSHOT",
+          "conclusive": false,
+          "tone": "neutral"
+        },
+        "POLICY": {
+          "display": "REVIEW",
+          "label": "Recorded publication decision",
+          "grade": "Operator approval",
+          "value": null,
+          "scale": null,
+          "basis": "DETERMINISTIC_POLICY_NOT_LEGAL_CONCLUSION",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "SOURCE_COVERAGE": {
+          "display": "2 / 2",
+          "label": "Registered references checked",
+          "grade": "Scope complete",
+          "value": 2,
+          "scale": 2,
+          "basis": "DECLARED_CORPUS_ONLY",
+          "conclusive": true,
+          "tone": "neutral"
+        },
+        "INTEGRITY": {
+          "display": "SHA-256",
+          "label": "Saved packet integrity",
+          "grade": "Hash verified",
+          "value": null,
+          "scale": null,
+          "basis": "RECOMPUTED_CANONICAL_PACKET_HASH",
+          "conclusive": true,
+          "tone": "good"
+        }
+      }
+    }
+  ],
+  "browser_errors": [],
+  "mutations": []
+}

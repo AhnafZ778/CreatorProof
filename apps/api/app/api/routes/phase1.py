@@ -233,6 +233,8 @@ def get_evidence_matrix(
     db: Annotated[Session, Depends(get_db)],
 ) -> dict[str, Any]:
     from app.models import EvidenceCoverage, EvidenceMatrix, EvidenceSignal
+    from app.services.evidence_assessment import assess_evidence_packet
+    from app.services.evidence_ratings import resolve_assessment_scan
 
     scan = _tenant_scan(db, auth.tenant_id, scan_id)
     matrix = db.scalar(
@@ -267,6 +269,26 @@ def get_evidence_matrix(
                 "message": "This scan has no finalized evidence matrix.",
             },
         )
+    source = resolve_assessment_scan(db, scan)
+    assessment_signals = signals
+    source_matrix = matrix
+    if source.id != scan.id:
+        source_matrix = db.scalar(
+            select(EvidenceMatrix)
+            .where(EvidenceMatrix.tenant_id == auth.tenant_id, EvidenceMatrix.scan_id == source.id)
+            .order_by(EvidenceMatrix.created_at.desc())
+            .limit(1)
+        )
+        if source_matrix is not None:
+            assessment_signals = db.scalars(
+                select(EvidenceSignal).where(
+                    EvidenceSignal.tenant_id == auth.tenant_id,
+                    EvidenceSignal.scan_id == source.id,
+                    EvidenceSignal.matrix_id == source_matrix.id,
+                )
+            ).all()
+        else:
+            source, source_matrix = scan, matrix
     record_audit_event(
         db,
         tenant_id=auth.tenant_id,
@@ -292,6 +314,20 @@ def get_evidence_matrix(
         if scan.match_status == "MATCH_FOUND"
         else "NO_VALIDATED_COPY_REGION",
         "policy_result": scan.policy_action,
+        "assessment": assess_evidence_packet(
+            source.evidence_packet or {},
+            [_model_dict(item) for item in assessment_signals],
+            failed=source_matrix.final_status == "PROVIDER_FAILURE",
+        ),
+        "assessment_signals": [_model_dict(item) for item in assessment_signals],
+        "assessment_source": {
+            "scan_id": source.id,
+            "matrix_id": source_matrix.id,
+            "matrix_version": source_matrix.version,
+            "completed_at": source.completed_at,
+            "packet_hash_sha256": source_matrix.packet_hash_sha256,
+            "refreshed": source.id != scan.id,
+        },
         "packet_hash_sha256": matrix.packet_hash_sha256,
         "coverage": matrix.coverage_summary or {},
         "signals": [_model_dict(item) for item in signals],

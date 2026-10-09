@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "Exact copy has one supported verdict; unavailable checks and unknown permissions remain explicit",
+    "Lane explanations expose model metrics and original signal receipts without changing them",
+    "Verdict banner, eight cards and expanded evidence fit mobile, tablet and desktop",
+    "Cropped comparison shows validated reuse and its 322 verified feature pairs",
+    "All three existing cases receive assessments on read; presentation causes no scan, inference or decision mutation"
+  ],
+  "browser_errors": [],
+  "api_mutations": []
+}

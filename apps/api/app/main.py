@@ -17,6 +17,7 @@ from app.api.routes import (
     review,
     rights,
     scans,
+    stored_cases,
     uploads,
     usage,
     webhooks,
@@ -83,6 +84,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(CorrelationMiddleware)
     app.include_router(health.router)
     app.include_router(admin.router)
+    app.include_router(stored_cases.router)
     app.include_router(investigations.router)
     app.include_router(marketplaces.router)
     app.include_router(works.router)

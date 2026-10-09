@@ -1,0 +1,7 @@
+export const collectionEntries: Record<string, { title: string; image: string; description: string; kind: string; original?: string }> = {
+  nocturne: { title: "Nocturne", image: "nocturne-original.png", kind: "Registered artwork", description: "An original, programmatically illustrated study of moonlight, architecture and a stairway through the city." },
+  garden: { title: "Tidal Garden", image: "garden-original.png", kind: "Registered artwork", description: "An original geometric landscape, composed of rolling green contours, botanical details and a warm setting sun." },
+  "nocturne-republication": { title: "Nocturne · republication", image: "nocturne-republished.png", kind: "Published image", original: "nocturne", description: "A first-party republication of the complete Nocturne image. Its comparison with the registered reference is stored in CreatorProof." },
+  "garden-publication": { title: "Tidal Garden · cropped publication", image: "garden-cropped.png", kind: "Published image", original: "garden", description: "A first-party cropped publication of Tidal Garden. The tighter composition can be compared with its registered reference." },
+  "nocturne-sky-edit": { title: "Nocturne · sky edit", image: "nocturne-ai-edit.png", kind: "AI-edited publication", original: "nocturne", description: "An AI-assisted sky edit made with OpenAI image generation from the original Nocturne illustration. This page records the editing process; it does not claim a detector independently established AI use." },
+};

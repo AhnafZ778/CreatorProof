@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { FormEvent, Suspense, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { ArrowRight, Images, Plus, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, Images, LoaderCircle, Plus, Search, ShieldCheck, SlidersHorizontal } from "lucide-react";
 
 import ArtistWorkspace from "@/app/components/ArtistWorkspace";
 import ArtworkThumbnail from "@/app/components/ArtworkThumbnail";
-import PortalFileField from "@/app/components/PortalFileField";
+import ArtistArtworkUpload from "@/app/components/ArtistArtworkUpload";
 import PortalNav from "@/app/components/PortalNav";
 import { dateLabel } from "@/app/lib/phase1";
 import { DEFAULT_CATALOG_ID } from "@/app/lib/catalog";
@@ -378,23 +378,25 @@ function ArtistPortal() {
           hidden={section !== "register"}
           className="portalPanel artistRegisterPanel"
         >
-          <header id="register"><div><small>Add to your library</small><h2>Register your artwork</h2></div></header>
-          <p className="cpDescription">Upload your reference image and name the artist. After registration, you can set permissions and document your creative process.</p>
-          <div className="artistOriginNotice"><ShieldCheck size={17} aria-hidden="true" /><span>We check submissions for available AI-origin evidence before enrollment.<details><summary>About this check</summary><p>Enrollment policy may refuse a flagged image. A passed screening or missing Content Credentials does not independently establish human authorship or ownership.</p></details></span></div>
+          <header id="register" className="artistRegisterHeading"><div><small>Add to your library</small><h2>Register your artwork</h2><p>Your original image is the starting point. Add it once, then manage its permissions and creative history.</p></div><span className="artistRegisterMark" aria-hidden="true"><Images size={27} strokeWidth={1.4} /></span></header>
           <form className="portalForm artistRegisterForm" onSubmit={onRegister}>
-            <PortalFileField key={fileKey} required name="file" label="Reference image" hint="PNG, JPG, or WEBP · max 4 MB / 6 MP" />
-            <div className="cpFormGrid">
-              <label className="portalField"><span className="portalFieldLabel">Title</span><input required name="title" placeholder="Give your artwork a name" /></label>
-              <label className="portalField"><span className="portalFieldLabel">Artist / claimant name</span><input required name="claimant" defaultValue={name} /></label>
-            </div>
-            <details className="cpDetails artistAdvancedRegistration">
-              <summary>Advanced registration settings</summary>
-              <div className="cpDetailBody cpFormGrid">
-                <label className="portalField"><span className="portalFieldLabel">Catalog</span><input aria-label="Catalog" aria-describedby="artist-catalog-hint" required name="catalog_id" defaultValue={DEFAULT_CATALOG_ID} /><small id="artist-catalog-hint" className="portalFieldHint">The default catalog works for ordinary registration.</small></label>
-                <label className="portalField"><span className="portalFieldLabel">Claim state</span><select aria-label="Claim state" name="claim_state" defaultValue="ASSERTED"><option value="ASSERTED">Artist-recorded</option><option value="CORROBORATED">Supporting record declared</option><option value="DISPUTED">Under review</option><option value="REVOKED">Withdrawn</option></select><small className="portalFieldHint">Only declare supporting records when you have them available.</small></label>
+            <fieldset disabled={busy} className="artistRegisterLayout" aria-label="Artwork registration details">
+              <ArtistArtworkUpload key={fileKey} />
+              <div className="artistRegisterDetails">
+                <div className="artistRegisterStep"><span>02</span>Artwork details</div>
+                <label className="portalField"><span className="portalFieldLabel">Artwork title</span><input required name="title" placeholder="Give your artwork a name" autoComplete="off" /></label>
+                <div className="portalField"><label className="portalFieldLabel" htmlFor="artist-registration-claimant">Artist / claimant name</label><input id="artist-registration-claimant" required name="claimant" defaultValue={name} autoComplete="name" aria-describedby="artist-claimant-hint" /><small id="artist-claimant-hint" className="portalFieldHint">The name associated with this artwork's record.</small></div>
+                <details className="cpDetails artistAdvancedRegistration">
+                  <summary><SlidersHorizontal size={15} aria-hidden="true" />Advanced registration settings<span>Optional</span></summary>
+                  <div className="cpDetailBody cpFormGrid">
+                    <label className="portalField"><span className="portalFieldLabel">Catalog</span><input aria-label="Catalog" aria-describedby="artist-catalog-hint" required name="catalog_id" defaultValue={DEFAULT_CATALOG_ID} /><small id="artist-catalog-hint" className="portalFieldHint">The default catalog works for ordinary registration.</small></label>
+                    <label className="portalField"><span className="portalFieldLabel">Claim state</span><select aria-label="Claim state" name="claim_state" defaultValue="ASSERTED"><option value="ASSERTED">Artist-recorded</option><option value="CORROBORATED">Supporting record declared</option><option value="DISPUTED">Under review</option><option value="REVOKED">Withdrawn</option></select><small className="portalFieldHint">Only declare supporting records when you have them available.</small></label>
+                  </div>
+                </details>
+                <div className="artistOriginNotice"><ShieldCheck size={18} aria-hidden="true" /><div><b>Screened before registration</b><p>We check your image for available AI-origin evidence.</p><details><summary>About this check</summary><p>Enrollment policy may refuse a flagged image. A passed screening or missing Content Credentials does not independently establish human authorship or ownership.</p></details></div></div>
               </div>
-            </details>
-            <div className="artistRegisterFooter"><p>You can change your use preferences after saving.</p><button className="portalPrimary" disabled={busy} type="submit"><Plus size={16} />{busy ? "Checking and registering…" : "Register reference"}</button></div>
+            </fieldset>
+            <div className="artistRegisterFooter"><div><span className="artistRegisterNextIcon"><ShieldCheck size={18} aria-hidden="true" /></span><p><strong>Your record starts here.</strong><span>Set permissions and add your creation history after saving.</span></p></div><button className="portalPrimary" disabled={busy} type="submit">{busy ? <LoaderCircle size={17} className="artistRegisterSpinner" aria-hidden="true" /> : <Plus size={17} aria-hidden="true" />}{busy ? "Checking and registering…" : "Register reference"}{!busy && <ArrowRight size={16} aria-hidden="true" />}</button></div>
           </form>
           {refusal && (
             <section className="originRefusal" role="alert" aria-label="Registration refused">
