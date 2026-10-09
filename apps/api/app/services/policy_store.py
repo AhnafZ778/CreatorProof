@@ -224,7 +224,13 @@ class PolicyStore:
         ).all()
 
 
-def _license_authorizes(license_row, *, intended_use: str, now: datetime) -> tuple[bool, list[str]]:
+def _license_authorizes(
+    license_row,
+    *,
+    intended_use: str,
+    now: datetime,
+    scope_context: dict | None = None,
+) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     state = str(license_row.state)
     if state in {str(item) for item in UNAUTHORIZING_LICENSE_STATES}:
@@ -238,6 +244,25 @@ def _license_authorizes(license_row, *, intended_use: str, now: datetime) -> tup
     if intended_use not in (license_row.permitted_uses or []):
         reasons.append("LICENSE_DOES_NOT_LIST_INTENDED_USE")
         return False, reasons
+    context = scope_context or {}
+    for column, context_key in (
+        ("territories", "territory"),
+        ("channels", "channel"),
+        ("audiences", "audience"),
+        ("transformations", "transformation"),
+    ):
+        allowed = list(getattr(license_row, column, None) or [])
+        requested = context.get(context_key)
+        if allowed and "*" not in allowed:
+            if not requested:
+                return False, [f"LICENSE_{context_key.upper()}_CONTEXT_MISSING"]
+            normalized = str(requested).upper() if context_key == "territory" else str(requested)
+            choices = [
+                str(value).upper() if context_key == "territory" else str(value)
+                for value in allowed
+            ]
+            if normalized not in choices:
+                return False, [f"LICENSE_{context_key.upper()}_MISMATCH"]
     return True, ["LICENSE_PERMITS_INTENDED_USE"]
 
 
@@ -409,12 +434,138 @@ def _rights_projection_integrity(
     return results
 
 
+def _bounded_scope_context(context: dict | None) -> dict:
+    """Only decision-relevant declared dimensions enter the rights snapshot."""
+    keys = (
+        "territory",
+        "channel",
+        "audience",
+        "transformation",
+        "platform",
+        "model",
+        "rights_permission",
+    )
+    return {
+        key: str((context or {})[key])[:160] for key in keys if (context or {}).get(key) is not None
+    }
+
+
+def _requested_permission(intended_use: str, context: dict) -> str | None:
+    from app.services.rights_passport import PERMISSION_ALIASES, PERMISSION_FIELDS
+
+    explicit = context.get("rights_permission")
+    if explicit:
+        normalized = PERMISSION_ALIASES.get(str(explicit), str(explicit))
+        return normalized if normalized in PERMISSION_FIELDS else None
+    normalized = intended_use.strip().casefold().replace("-", "_").replace(" ", "_")
+    direct = PERMISSION_ALIASES.get(normalized, normalized)
+    if direct in PERMISSION_FIELDS:
+        return direct
+    # These are declared-use labels, not model guesses about actual intent.
+    labels = {
+        "ai_training": "AI_training_permission",
+        "commercial_ai_training": "commercial_training_permission",
+        "noncommercial_ai_training": "noncommercial_training_permission",
+        "search_indexing": "search_indexing_permission",
+        "commercial_search": "commercial_search_permission",
+        "fine_tuning": "fine_tuning_permission",
+        "style_reference": "style_reference_permission",
+        "image_to_image": "image_to_image_permission",
+        "image_editing": "image_editing_permission",
+        "derivative_generation": "derivative_generation_permission",
+        "likeness_use": "likeness_use_permission",
+    }
+    return labels.get(normalized)
+
+
+def _rights_preference_facts(
+    row, *, intended_use: str, scope_context: dict | None, now: datetime
+) -> dict:
+    from app.services.rights_baseline import is_unknown_rights_baseline
+    from app.services.rights_passport import policy_state
+
+    context = _bounded_scope_context(scope_context)
+    state = policy_state(row, now=now)
+    requested = _requested_permission(intended_use, context)
+    facts = {
+        "policy_id": row.id if row else None,
+        "version": row.version if row else None,
+        "digest_sha256": row.digest_sha256 if row else None,
+        "state": state,
+        "source": "CREATOR_ASSERTION_NOT_AUTHORIZATION",
+        "requested_permission": requested,
+        "preference": "UNKNOWN",
+        "license_required": False,
+        "blocking_reason_codes": [],
+        "missing_facts": [],
+        "reason_codes": [],
+    }
+    if row is None:
+        return facts
+    if state != "ACTIVE":
+        facts["missing_facts"].append(f"RIGHTS_POLICY_{state}")
+        facts["reason_codes"].append(f"RIGHTS_POLICY_{state}")
+        return facts
+    if is_unknown_rights_baseline(row):
+        # Registration's neutral baseline records absence of instructions. It
+        # cannot authorize a use or override separately verified license terms.
+        facts["source"] = "SYSTEM_UNKNOWN_BASELINE_NOT_AUTHORIZATION"
+        facts["reason_codes"].append("RIGHTS_POLICY_UNKNOWN_REGISTRATION_BASELINE")
+        return facts
+    dimensions = row.dimensions or {}
+    facts["license_required"] = bool(dimensions.get("license_required"))
+    if requested:
+        value = (row.permissions or {}).get(requested, "UNKNOWN")
+        if value == "UNKNOWN" and requested in {
+            "commercial_training_permission",
+            "noncommercial_training_permission",
+            "fine_tuning_permission",
+        }:
+            value = (row.permissions or {}).get("AI_training_permission", "UNKNOWN")
+        facts["preference"] = str(value)
+        if value == "DENY":
+            facts["blocking_reason_codes"].append("RIGHTS_POLICY_DENIES_DECLARED_USE")
+        elif value == "LICENSE_REQUIRED":
+            facts["license_required"] = True
+            facts["reason_codes"].append("RIGHTS_POLICY_LICENSE_REQUIRED")
+        elif value in {"UNKNOWN", "REVIEW"}:
+            facts["missing_facts"].append(f"RIGHTS_POLICY_PERMISSION_{value}")
+        elif value == "NOT_APPLICABLE":
+            facts["missing_facts"].append("RIGHTS_POLICY_PERMISSION_NOT_APPLICABLE")
+    elif context.get("rights_permission"):
+        facts["missing_facts"].append("RIGHTS_POLICY_UNKNOWN_DECLARED_PERMISSION")
+    for dimension, key, permitted, prohibited in (
+        ("GEOGRAPHY", "territory", "geographic_scope", None),
+        ("CHANNEL", "channel", "channels", None),
+        ("AUDIENCE", "audience", "audiences", None),
+        ("TRANSFORMATION", "transformation", "transformations", None),
+        ("PLATFORM", "platform", "permitted_platforms", "prohibited_platforms"),
+        ("MODEL", "model", "permitted_models", "prohibited_models"),
+    ):
+        allowed = dimensions.get(permitted) or []
+        denied = dimensions.get(prohibited) or [] if prohibited else []
+        value = context.get(key)
+        if (allowed and "*" not in allowed) or denied:
+            if value is None:
+                facts["missing_facts"].append(f"RIGHTS_POLICY_{dimension}_CONTEXT_MISSING")
+                continue
+            if key == "territory":
+                value = value.upper()
+                allowed = [str(code).upper() for code in allowed]
+            if value in denied or "*" in denied:
+                facts["blocking_reason_codes"].append(f"RIGHTS_POLICY_{dimension}_PROHIBITED")
+            elif allowed and "*" not in allowed and value not in allowed:
+                facts["blocking_reason_codes"].append(f"RIGHTS_POLICY_{dimension}_MISMATCH")
+    return facts
+
+
 def collect_rights_facts(
     db: Session,
     *,
     tenant_id: str,
     work_id: str | None,
     intended_use: str,
+    scope_context: dict | None = None,
 ) -> dict:
     """Snapshot the persisted rights position for one work and intended use.
 
@@ -423,7 +574,7 @@ def collect_rights_facts(
     compatibility projection; only Claim and License rows can authorize a live
     scan.
     """
-    from app.models import Claim, License
+    from app.models import Claim, License, RightsPolicyVersion
 
     if work_id is None:
         facts = {
@@ -457,6 +608,18 @@ def collect_rights_facts(
         tenant_id=tenant_id,
         claims=list(claims),
         licenses=list(licenses),
+    )
+    rights_policy = db.scalar(
+        select(RightsPolicyVersion)
+        .where(
+            RightsPolicyVersion.tenant_id == tenant_id,
+            RightsPolicyVersion.work_id == work_id,
+        )
+        .order_by(RightsPolicyVersion.version.desc())
+        .limit(1)
+    )
+    preference_facts = _rights_preference_facts(
+        rights_policy, intended_use=intended_use, scope_context=scope_context, now=now
     )
 
     claim_by_id = {claim.id: claim for claim in claims}
@@ -505,7 +668,12 @@ def collect_rights_facts(
             license_reasons.append(str(integrity["reason_code"]))
             missing.append("LICENSE_PROJECTION_INTEGRITY_UNVERIFIED")
             continue
-        authorized, reasons = _license_authorizes(license_row, intended_use=intended_use, now=now)
+        authorized, reasons = _license_authorizes(
+            license_row,
+            intended_use=intended_use,
+            now=now,
+            scope_context=scope_context,
+        )
         license_reasons.extend(reasons)
         if str(license_row.state) == str(LicenseState.SUSPENDED):
             blocking.append("LICENSE_SUSPENDED")
@@ -530,6 +698,8 @@ def collect_rights_facts(
             )
     if not licenses:
         missing.append("NO_RECORDED_LICENSE")
+    blocking.extend(preference_facts["blocking_reason_codes"])
+    missing.extend(preference_facts["missing_facts"])
 
     authorizing_license_id = (
         strongly_authorizing_license_ids[0] if strongly_authorizing_license_ids else None
@@ -572,6 +742,10 @@ def collect_rights_facts(
                 "permitted_uses": list(row.permitted_uses or []),
                 "prohibited_uses": list(row.prohibited_uses or []),
                 "claim_id": row.claim_id,
+                "territories": list(row.territories or []),
+                "channels": list(row.channels or []),
+                "audiences": list(row.audiences or []),
+                "transformations": list(row.transformations or []),
                 "effective_from": (
                     _as_utc(row.effective_from).isoformat() if row.effective_from else None
                 ),
@@ -592,6 +766,8 @@ def collect_rights_facts(
         "blocking_reason_codes": sorted(set(blocking)),
         "missing_facts": sorted(set(missing)),
         "integrity_enforcement": "SIGNED_EVENT_AND_TRANSPARENCY_PROJECTION_MATCH",
+        "rights_preferences": preference_facts,
+        "scope_context": _bounded_scope_context(scope_context),
     }
     return {**facts, "snapshot_digest_sha256": canonical_digest(facts)}
 
@@ -626,6 +802,8 @@ def evaluate_policy(
     derived_rights_path = RightsPath(
         str(rights_facts.get("derived_rights_path") or RightsPath.NO_LICENSE_INFO)
     )
+    preference_facts = rights_facts.get("rights_preferences") or {}
+    reason_codes.extend(preference_facts.get("reason_codes") or [])
 
     if match_status == MatchStatus.MATCH_FOUND:
         matched_rules.append("persisted_rights_facts_are_authoritative")
@@ -647,7 +825,11 @@ def evaluate_policy(
 
     blocking = list(rights_facts.get("blocking_reason_codes") or [])
     if blocking:
-        matched_rules.append("terminal_rights_state_cannot_authorize")
+        matched_rules.append(
+            "recorded_rights_preferences_require_review"
+            if preference_facts.get("blocking_reason_codes")
+            else "terminal_rights_state_cannot_authorize"
+        )
         reason_codes.extend(blocking)
         action = PolicyAction.REVIEW if action == PolicyAction.PASS_BY_POLICY else action
 
@@ -751,6 +933,8 @@ def evaluate_policy(
             "creator_profile_tier": creator_profile_tier,
             "origin_policy_mode": origin_policy_mode,
             "rights_facts_snapshot_digest_sha256": rights_facts.get("snapshot_digest_sha256"),
+            "rights_preferences": preference_facts,
+            "scope_context": rights_facts.get("scope_context") or {},
         },
         "notes": [
             "A pass is a policy outcome for the declared scope, not a legal clearance finding.",

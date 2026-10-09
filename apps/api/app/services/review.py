@@ -32,6 +32,11 @@ def case_needed(scan) -> str | None:
         return f"POLICY_{scan.policy_action}"
     if str(scan.match_status or "") in _OPEN_ON_MATCH_STATUS:
         return f"MATCH_{scan.match_status}"
+    from app.services.admin_review import review_signal
+
+    signal = review_signal(scan)
+    if signal["status"] == "needs_review":
+        return signal["reasons"][0]
     return None
 
 

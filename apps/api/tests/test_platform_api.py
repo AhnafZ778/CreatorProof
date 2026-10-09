@@ -531,7 +531,7 @@ def test_review_actions_are_attributable_and_immutable(client, scan_headers, com
     action = client.post(
         f"/v1/review-cases/{case_id}/actions",
         headers=scan_headers,
-        json={"event_type": "COMMENT_ADDED", "note": "Checked the licence on file."},
+        json={"event_type": "COMMENTED", "note": "Checked the licence on file."},
     )
     assert action.status_code == 201, action.text
 

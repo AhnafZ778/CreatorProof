@@ -25,7 +25,6 @@ from sqlalchemy import select, update
 from app.domain.enums import MatchStatus, PolicyAction, ScanState
 from app.domain.platform import (
     AuditEventType,
-    DeletionReceiptState,
     RetryClass,
     ScanLifecycleState,
     StageName,
@@ -139,6 +138,9 @@ def _run_stages(container, db, scan, ledger) -> None:
 
     packet = _run_evidence_stage(container, db, scan, ledger, started_at)
     if packet is None:
+        db.refresh(scan)
+        if scan.state == ScanState.FAILED:
+            _release_candidate_media(container, db, scan)
         return
 
     statement = _run_statement_stage(container, db, scan, ledger, packet)
@@ -303,6 +305,9 @@ def _run_evidence_stage(container, db, scan, ledger, started_at: str):
                     progress=report,
                     defer_proof=True,
                 )
+                from app.services.evidence_matrix import persist_evidence_matrix
+
+                persist_evidence_matrix(db, scan=scan, packet=packet)
         evidence_seconds = time.perf_counter() - evidence_started
         gpu_providers = gpu_providers_in_use(container)
         if gpu_providers:
@@ -591,6 +596,22 @@ def _finalize_failure(db, scan, *, exc: BaseException, retry_class: RetryClass) 
             completed_at=datetime.now(UTC),
         )
     )
+    db.flush()
+    db.refresh(scan)
+    from app.services.evidence_matrix import persist_evidence_matrix
+
+    failure_packet = {
+        "schema": "creatorproof.failure-evidence.v1",
+        "scan_id": scan.id,
+        "decision": {
+            "match_status": "ERROR",
+            "policy_action": "REVIEW",
+            "reason_codes": scan.reason_codes,
+        },
+        "scope": {"coverage_status": "FAILED"},
+    }
+    scan.evidence_packet = failure_packet
+    persist_evidence_matrix(db, scan=scan, packet=failure_packet, failed=True)
     db.commit()
     METRICS.increment(
         "creatorproof_scan_failed_total",
@@ -604,37 +625,11 @@ def _release_candidate_media(container, db, scan) -> None:
     Derived artifacts share the candidate prefix, so the whole prefix is removed
     rather than only the original upload.
     """
-    from app.models import DeletionReceipt
-
     if container.settings.candidate_retention_seconds != 0:
         return
-    if not scan.candidate_storage_key:
-        return
-    prefix = f"scans/{scan.tenant_id}/{scan.id}/"
-    try:
-        deleted = container.storage.delete_prefix(prefix)
-    except Exception as exc:
-        logger.warning("candidate_delete_failed scan_id=%s error=%s", scan.id, type(exc).__name__)
-        db.add(
-            DeletionReceipt(
-                tenant_id=scan.tenant_id,
-                requested_scope={"scan_id": scan.id, "prefix": prefix},
-                state=DeletionReceiptState.FAILED,
-                objects_retained=[{"prefix": prefix, "reason": type(exc).__name__}],
-            )
-        )
-        db.commit()
-        return
-    db.add(
-        DeletionReceipt(
-            tenant_id=scan.tenant_id,
-            requested_scope={"scan_id": scan.id, "prefix": prefix},
-            state=DeletionReceiptState.COMPLETED,
-            objects_deleted=deleted,
-            verified_at=datetime.now(UTC),
-        )
-    )
-    db.commit()
+    from app.services.retention import purge_candidate_media
+
+    purge_candidate_media(container, db, scan, force=True)
 
 
 def recover_orphaned_scans(container) -> int:

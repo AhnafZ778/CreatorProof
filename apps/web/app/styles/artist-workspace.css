@@ -1,0 +1,143 @@
+/* Artist-only layout. Shared portal colors and controls keep the desk coherent. */
+.artistDesk .artistHero { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 28px 30px; }
+.artistDesk .artistHero h1 { font-size: clamp(30px, 3.6vw, 42px); max-width: 26ch; }
+.artistDesk .artistHero p { max-width: 60ch; font-size: 14px; }
+.artistHeroAside { flex-shrink: 0; display: grid; gap: 12px; text-align: right; }
+.artistHeroAside > span { color: var(--cp-text-muted); font-size: var(--cp-text-sm); }
+.artistHeroAside b { color: var(--portal-accent); font-weight: 500; }
+.artistHeroAside .cpTextButton { justify-content: end; font-size: var(--cp-text-xs); }
+.artistSectionTabs { display: flex; gap: 6px; padding: 6px; width: fit-content; max-width: 100%; border: 1px solid var(--cp-line); background: rgba(255,255,255,.025); border-radius: 16px; }
+.artistSectionTabs > button { width: auto; margin: 0; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 12px 17px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--cp-text-muted); font-size: var(--cp-text-sm); font-weight: 450; cursor: pointer; }
+.artistSectionTabs > button[aria-selected="true"] { color: white; border-color: color-mix(in srgb,var(--portal-accent) 25%,transparent); background: var(--portal-wash); }
+.artistSectionTabs > button:hover { color: white; }
+.artistTabCount { min-width: 22px; padding: 2px 6px; background: rgba(255,255,255,.08); border-radius: 6px; font-size: 11px; font-variant-numeric: tabular-nums; }
+.artistLibraryLayout { display: grid; grid-template-columns: 290px minmax(0,1fr); gap: 20px; align-items: start; }
+.artistDesk .artistLibrary { padding: 20px; }
+.artistLibrary header { align-items: center; gap: 10px; }
+.artistLibrary h2 { margin: 7px 0 0; font-size: 21px; font-weight: 450; letter-spacing: -.025em; }
+.artistLibrary header .cpTextButton { font-size: 12px; flex-shrink: 0; }
+.artistLibrarySearch { position: relative; display: flex; align-items: center; gap: 10px; margin: 17px 0 8px; padding: 10px 11px; border: 1px solid var(--cp-line-strong); border-radius: 11px; color: var(--cp-text-muted); background: rgba(0,0,0,.25); }
+.artistLibrarySearch input { min-width: 0; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: white; font-size: 13px; box-shadow: none; }
+.artistLibrarySearch:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px var(--portal-wash); }
+.artistLibrarySearch input:focus-visible { outline: none; }
+.artistLibrarySearch > svg { flex-shrink: 0; }
+.artistLibraryHint { font-size: 12px; color: var(--cp-text-muted); margin: 15px 0 12px; }
+.artistWorkList { list-style: none; display: grid; gap: 8px; margin: 0; padding: 0; }
+.artistWorkButton { display: flex; align-items: center; gap: 11px; width: 100%; margin: 0; padding: 11px; text-align: left; color: white; background: rgba(255,255,255,.02); border: 1px solid var(--cp-line); border-radius: 13px; cursor: pointer; transform: none; }
+.artistWorkButton:hover, .artistWorkButton.isSelected { background: var(--portal-wash); border-color: color-mix(in srgb,var(--portal-accent) 55%,transparent); transform: none; }
+.artistWorkButton .cpArtworkThumb { width: 46px; height: 52px; border-radius: 8px; }
+.artistWorkIdentity { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.artistWorkIdentity b { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; line-height: 1.5; }
+.artistWorkIdentity > span { font-size: 11px; line-height: 1.5; color: var(--cp-text-muted); overflow-wrap: anywhere; }
+.artistWorkIdentity small { color: var(--portal-accent); font-size: 10px; line-height: 1.5; }
+.artistWorkButton > svg { flex-shrink: 0; color: var(--cp-text-faint); }
+.artistWorkButton.isSelected > svg { color: var(--portal-accent); }
+.artistDesk .artistAddWork { display: flex; gap: 7px; padding: 11px; width: 100%; margin-top: 18px; font-size: 12px; }
+.artistShowMore { margin-top: 11px; font-size: 12px; }
+.artistLibraryEmpty { display: grid; gap: 12px; justify-items: start; padding: 24px 0 4px; }
+.artistLibraryEmpty > svg { color: var(--portal-accent); }
+.artistLibraryEmpty h3 { margin: 0; font-size: 17px; font-weight: 450; }
+.artistLibraryEmpty p { color: var(--cp-text-muted); font-size: 13px; line-height: 1.7; margin: 0 0 7px; }
+.artistSelectedWork { min-width: 0; }
+.artistDesk .artistWorkspace .cpWorkspaceIntro { padding: 24px 24px 20px; }
+.artistDesk .artistWorkspace .cpWorkspaceIntro .cpArtworkThumb { width: 55px; height: 55px; }
+.artistDesk .artistWorkspace .cpWorkspaceIntro h2 { font-size: 23px; line-height: 1.4; margin: 5px 0; }
+.artistDesk .artistWorkspace .cpWorkspaceIntro p { font-size: 12px; line-height: 1.65; }
+.artistDesk .artistWorkspace .cpTabs { padding: 0 14px; gap: 2px; }
+.artistDesk .artistWorkspace .cpTabs > button { padding: 15px 10px; font-size: 12px; gap: 6px; }
+.artistDesk .artistWorkspace > [role="tabpanel"] { padding: 23px; }
+.artistDesk .artistWorkspace .cpPanelHeading h2 { font-size: 22px; }
+.artistDesk .artistWorkspace .cpDescription { font-size: 13px; margin-bottom: 18px; }
+.artistDesk .artistWorkspace .cpPermissionRow { grid-template-columns: minmax(0,1fr) 138px; gap: 10px; }
+.artistDesk .artistWorkspace .cpPermissionGroup { padding: 15px; }
+.artistDesk .artistWorkspace .cpPermissionGroup h3 { font-size: 14px; }
+.artistDesk .artistWorkspace .cpPermissionRow b { font-size: 12px; }
+.artistDesk .artistWorkspace .cpPermissionRow small { font-size: 11px; }
+.artistDesk .artistWorkspace .cpPermissionRow select { font-size: 11px; padding: 9px 7px; }
+.artistDesk .artistWorkspace .cpPermissionGroups { gap: 12px; }
+.artistDesk .artistWorkspace .cpFormFooter { align-items: start; gap: 15px; }
+.artistDesk .artistWorkspace .cpFormFooter p { font-size: 11px; }
+.artistDesk .artistWorkspace .cpFormFooter .portalPrimary { font-size: 12px; padding: 11px 15px; }
+.artistRecordDetails { margin: 14px 0 0; }
+.artistRegistrationFacts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 17px; margin: 0; }
+.artistRegistrationFacts dt { color: var(--cp-text-muted); font-size: 11px; margin-bottom: 6px; }
+.artistRegistrationFacts dd { color: var(--cp-text-secondary); font-size: 12px; margin: 0; line-height: 1.65; overflow-wrap: anywhere; }
+.artistDesk .artistWelcome { padding: 35px; min-height: 330px; }
+.artistWelcomeIcon { display: inline-grid; place-items: center; padding: 15px; border: 1px solid var(--cp-line-strong); border-radius: 16px; background: var(--portal-wash); color: var(--portal-accent); }
+.artistWelcome h2 { font-size: 26px; font-weight: 400; letter-spacing: -.025em; margin: 23px 0 12px; }
+.artistWelcome > p { max-width: 55ch; color: var(--cp-text-muted); font-size: 14px; line-height: 1.8; }
+.artistWelcomeSteps { display: grid; gap: 11px; margin: 24px 0 30px; }
+.artistWelcomeSteps span { display: flex; gap: 12px; align-items: center; color: var(--cp-text-secondary); font-size: 13px; }
+.artistWelcomeSteps b { display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid var(--cp-line-strong); border-radius: 8px; font-size: 11px; color: var(--portal-accent); font-weight: 400; }
+.artistDesk .artistRegisterPanel { max-width: 800px; width: 100%; padding: 28px; }
+.artistRegisterPanel h2 { margin: 9px 0 0; font-size: 26px; font-weight: 450; letter-spacing: -.03em; }
+.artistOriginNotice { display: flex; gap: 10px; align-items: start; color: var(--cp-text-muted); font-size: 12px; line-height: 1.7; border: 1px solid var(--cp-line); background: var(--portal-wash); padding: 14px; border-radius: 13px; margin-bottom: 24px; }
+.artistOriginNotice > svg { flex-shrink: 0; color: var(--portal-accent); margin-top: 2px; }
+.artistOriginNotice summary { color: var(--portal-accent); font-size: 11px; cursor: pointer; margin-top: 5px; }
+.artistOriginNotice p { margin: 8px 0 0; }
+.artistDesk .artistRegisterForm { gap: 18px; }
+.artistAdvancedRegistration { margin: 0; }
+.artistRegisterFooter { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-top: 20px; border-top: 1px solid var(--cp-line); }
+.artistRegisterFooter p { margin: 0; color: var(--cp-text-muted); font-size: 12px; line-height: 1.7; }
+.artistRegisterFooter .portalPrimary { flex-shrink: 0; gap: 7px; }
+.artistRefusalDetails summary { margin-top: 16px; color: var(--cp-text-secondary); font-size: 12px; cursor: pointer; }
+.artistDesk :is(.artistSectionTabs > button,.artistWorkButton,.artistAddWork,.artistLibraryEmpty button,.artistWelcome button):focus-visible { outline: 2px solid var(--portal-accent); outline-offset: 3px; }
+.artistDesk .artistPolicyAdvanced { margin-top: 20px; }
+.artistDesk .artistPolicyAdvanced .cpHistoryBar { margin: 3px 0 15px; }
+.artistDesk .artistPolicyAdvanced .cpSubpanel { margin: 12px 0; }
+.artistDesk .artistPresetNote { color: var(--cp-text-muted); font-size: 12px; line-height: 1.6; margin: -8px 0 17px; }
+@media (max-width: 1080px) {
+  .artistLibraryLayout { grid-template-columns: 255px minmax(0,1fr); gap: 16px; }
+  .artistDesk .artistLibrary { padding: 16px; }
+  .artistDesk .artistWorkspace .cpPermissionGroups { grid-template-columns: 1fr; }
+  .artistDesk .artistWorkspace .cpPermissionRow { grid-template-columns: minmax(0,1fr) 165px; }
+  .artistDesk .artistWorkspace .cpFormFooter { flex-direction: column; }
+}
+@media (max-width: 760px) {
+  .artistDesk .artistHero { padding: 23px; align-items: start; flex-direction: column; gap: 17px; }
+  .artistHeroAside { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; }
+  .artistLibraryLayout { grid-template-columns: 1fr; }
+  .artistDesk .artistLibrary { padding: 18px; }
+  .artistWorkList { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .artistDesk .artistWorkspace .cpFormFooter { flex-direction: row; }
+  .artistDesk .artistWorkspace .cpPermissionGroups { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .artistDesk .artistWorkspace .cpPermissionRow { grid-template-columns: 1fr; }
+  .artistSectionTabs { width: 100%; }
+  .artistSectionTabs > button { flex: 1; padding: 12px 10px; font-size: 12px; }
+  .artistTabCount { display: none; }
+  .artistDesk .artistRegisterPanel { padding: 22px; }
+}
+@media (max-width: 480px) {
+  .artistHeroAside { flex-wrap: wrap; }
+  .artistWorkList { grid-template-columns: 1fr; }
+  .artistWorkIdentity b { font-size: 14px; }
+  .artistDesk .artistWorkspace .cpWorkspaceIntro { padding: 20px 18px; }
+  .artistDesk .artistWorkspace > [role="tabpanel"] { padding: 18px; }
+  .artistDesk .artistWorkspace .cpTabs { padding: 0 7px; }
+  .artistDesk .artistWorkspace .cpTabs > button { padding: 13px 9px; font-size: 11px; }
+  .artistDesk .artistWorkspace .cpPermissionGroups { grid-template-columns: 1fr; }
+  .artistDesk .artistWorkspace .cpPermissionRow { grid-template-columns: minmax(0,1fr) 145px; }
+  .artistDesk .artistWorkspace .cpFormFooter { flex-direction: column; }
+  .artistDesk .artistWelcome { padding: 25px; }
+  .artistDesk .artistRegisterPanel { padding: 20px; }
+  .artistRegisterFooter { align-items: start; flex-direction: column; }
+  .artistRegisterForm .cpFormGrid { grid-template-columns: 1fr; }
+}
+
+/* Permissions stay grouped; open only the area the artist wants to adjust. */
+.artistDesk .artistWorkspace .cpPermissionGroups { grid-template-columns: 1fr; }
+.artistDesk .artistWorkspace .cpPermissionGroup { padding: 0; }
+.artistDesk .artistWorkspace .cpPermissionGroup > summary { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 17px 16px 34px; color: var(--portal-accent); cursor: pointer; list-style: none; }
+.artistDesk .artistWorkspace .cpPermissionGroup > summary::-webkit-details-marker { display: none; }
+.artistDesk .artistWorkspace .cpPermissionGroup > summary::before { content: "›"; position: absolute; left: 15px; color: var(--cp-text-muted); font-size: 19px; line-height: 1; transition: transform .15s; }
+.artistDesk .artistWorkspace .cpPermissionGroup[open] > summary::before { transform: rotate(90deg); }
+.artistDesk .artistWorkspace .cpPermissionGroup > summary > span { font-size: 14px; font-weight: 450; }
+.artistDesk .artistWorkspace .cpPermissionGroup > summary small { color: var(--cp-text-muted); font-size: 11px; line-height: 1.5; text-align: right; }
+.artistDesk .artistWorkspace .cpPermissionGroup > div { padding: 0 17px 4px; }
+.artistDesk .artistWorkspace .cpPermissionGroup > summary:focus-visible { outline: 2px solid var(--portal-accent); outline-offset: 3px; border-radius: inherit; }
+.artistDesk .artistWorkspace .cpPermissionRow { grid-template-columns: minmax(0,1fr) 165px; }
+@media (max-width: 480px) { .artistDesk .artistWorkspace .cpPermissionRow { grid-template-columns: minmax(0,1fr) 145px; } }
+@media (max-width: 600px) {
+  .artistDesk .artistWorkspace .cpTabs { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); overflow: visible; padding: 8px; gap: 4px; }
+  .artistDesk .artistWorkspace .cpTabs > button { padding: 12px 8px; border-radius: 9px; }
+}

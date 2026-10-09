@@ -1,0 +1,21 @@
+.cpUseContextFields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.cpAdminReviewReceipt { padding: 24px; border: 1px solid rgba(114, 150, 225, .28); border-radius: 20px; background: linear-gradient(125deg, rgba(53, 95, 172, .12), rgba(15, 19, 29, .5)); }
+.cpAdminReviewReceiptHeading { display: flex; gap: 12px; align-items: center; }
+.cpAdminReviewReceiptHeading > svg { color: #92b3ed; flex: 0 0 auto; }
+.cpAdminReviewReceiptHeading > div { flex: 1; }
+.cpAdminReviewReceiptHeading small { color: #92b3ed; font-size: 10px; font-weight: 600; letter-spacing: .12em; }
+.cpAdminReviewReceiptHeading h3 { margin: 5px 0 0; font-size: 20px; line-height: 1.25; letter-spacing: -.04em; }
+.cpAdminReviewReceipt > p { color: rgba(241, 243, 247, .7); line-height: 1.7; font-size: 13px; margin: 18px 0; }
+.cpAdminReviewReceiptFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
+.cpAdminReviewReceiptFacts dt { color: #8f98a8; font-size: 11px; margin-bottom: 5px; }
+.cpAdminReviewReceiptFacts dd { margin: 0; font-size: 12px; color: #d5ddea; overflow-wrap: anywhere; }
+.cpAdminReviewReceiptFacts a { display: inline-flex; align-items: center; gap: 5px; color: #b5cfff; text-decoration: none; }
+.cpAdminReviewReceiptReasons { display: flex; gap: 6px; flex-wrap: wrap; margin: 20px 0 12px; }
+.cpAdminReviewReceiptReasons span { font-size: 10px; padding: 6px 9px; border-radius: 6px; background: rgba(111, 151, 233, .09); color: #b5c5e1; }
+.cpAdminReviewReceiptNote { display: block; margin-top: 16px; font-size: 11px; line-height: 1.6; color: #8490a3; }
+.cpSubmissionHint { font-size: 12px; line-height: 1.65; color: #99a7bc; margin: 0 0 20px; }
+.cpSourceScanContext { margin: 20px 0; border: 1px solid rgba(255, 255, 255, .1); border-radius: 12px; padding: 14px 16px; }
+.cpSourceScanContext > summary { cursor: pointer; color: #bec7d7; font-size: 12px; }
+.cpSourceScanContext > .cpFormGrid { margin-top: 18px; }
+.cpSourceScanContext small, .portalFieldLabel > small { color: #8f98a8; font-weight: 400; }
+@media (max-width: 620px) { .cpAdminReviewReceipt { padding: 20px; } .cpAdminReviewReceiptHeading { flex-wrap: wrap; } .cpAdminReviewReceiptHeading > a { width: 100%; margin-top: 5px; justify-content: center; } .cpAdminReviewReceiptFacts { grid-template-columns: 1fr; } }

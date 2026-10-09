@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./styles/phase1.css";
 
 export const metadata: Metadata = {
   title: "CreatorProof — Pre-publication creative-rights evidence",

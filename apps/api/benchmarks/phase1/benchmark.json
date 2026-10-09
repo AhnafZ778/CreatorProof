@@ -1,0 +1,665 @@
+{
+  "ai_image_to_image": {
+    "cases": 0,
+    "generation_model": null,
+    "reason_code": "NO_AUTHORIZED_GENERATOR_FIXTURES",
+    "state": "UNAVAILABLE"
+  },
+  "cases": [
+    {
+      "ground_truth_query_bbox": null,
+      "group": "EXACT_DUPLICATE",
+      "id": "source-000-EXACT_DUPLICATE",
+      "label": true,
+      "query": "images/source-000.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "JPEG_RECOMPRESSION",
+      "id": "source-000-JPEG_RECOMPRESSION",
+      "label": true,
+      "query": "images/source-000-jpeg_recompression.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RESIZE",
+      "id": "source-000-RESIZE",
+      "label": true,
+      "query": "images/source-000-resize.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "CROP",
+      "id": "source-000-CROP",
+      "label": true,
+      "query": "images/source-000-crop.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "MIRROR",
+      "id": "source-000-MIRROR",
+      "label": true,
+      "query": "images/source-000-mirror.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "ROTATION",
+      "id": "source-000-ROTATION",
+      "label": true,
+      "query": "images/source-000-rotation.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "OVERLAY",
+      "id": "source-000-OVERLAY",
+      "label": true,
+      "query": "images/source-000-overlay.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "TEXT_OVERLAY",
+      "id": "source-000-TEXT_OVERLAY",
+      "label": true,
+      "query": "images/source-000-text_overlay.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "COLOR_SHIFT",
+      "id": "source-000-COLOR_SHIFT",
+      "label": true,
+      "query": "images/source-000-color_shift.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RECOLORING",
+      "id": "source-000-RECOLORING",
+      "label": true,
+      "query": "images/source-000-recoloring.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.2604166666666667,
+        0.21875,
+        0.8333333333333334,
+        0.828125
+      ],
+      "group": "PARTIAL_REUSE",
+      "id": "source-000-PARTIAL_REUSE",
+      "label": true,
+      "query": "images/source-000-partial_reuse.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.04716981132075472,
+        0.11538461538461539,
+        0.9528301886792453,
+        0.9358974358974359
+      ],
+      "group": "SCREENSHOT",
+      "id": "source-000-SCREENSHOT",
+      "label": true,
+      "query": "images/source-000-screenshot.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "group": "UNRELATED_SIMILAR_SUBJECT",
+      "id": "source-000-UNRELATED_SIMILAR_SUBJECT",
+      "label": false,
+      "query": "images/source-000-unrelated_similar_subject.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "independent-731-0-0"
+    },
+    {
+      "group": "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "id": "source-000-SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "label": false,
+      "query": "images/source-000-same_subject_different_creator_proxy.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "independent-731-0-1"
+    },
+    {
+      "group": "SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "id": "source-000-SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "label": false,
+      "query": "images/source-000-same_palette_different_composition.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "independent-731-0-2"
+    },
+    {
+      "group": "STYLE_LIKE_NON_COPYING",
+      "id": "source-000-STYLE_LIKE_NON_COPYING",
+      "label": false,
+      "query": "images/source-000-style_like_non_copying.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "independent-731-0-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "EXACT_DUPLICATE",
+      "id": "source-001-EXACT_DUPLICATE",
+      "label": true,
+      "query": "images/source-001.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "JPEG_RECOMPRESSION",
+      "id": "source-001-JPEG_RECOMPRESSION",
+      "label": true,
+      "query": "images/source-001-jpeg_recompression.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RESIZE",
+      "id": "source-001-RESIZE",
+      "label": true,
+      "query": "images/source-001-resize.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "CROP",
+      "id": "source-001-CROP",
+      "label": true,
+      "query": "images/source-001-crop.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "MIRROR",
+      "id": "source-001-MIRROR",
+      "label": true,
+      "query": "images/source-001-mirror.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "ROTATION",
+      "id": "source-001-ROTATION",
+      "label": true,
+      "query": "images/source-001-rotation.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "OVERLAY",
+      "id": "source-001-OVERLAY",
+      "label": true,
+      "query": "images/source-001-overlay.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "TEXT_OVERLAY",
+      "id": "source-001-TEXT_OVERLAY",
+      "label": true,
+      "query": "images/source-001-text_overlay.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "COLOR_SHIFT",
+      "id": "source-001-COLOR_SHIFT",
+      "label": true,
+      "query": "images/source-001-color_shift.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RECOLORING",
+      "id": "source-001-RECOLORING",
+      "label": true,
+      "query": "images/source-001-recoloring.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.2604166666666667,
+        0.21875,
+        0.8333333333333334,
+        0.828125
+      ],
+      "group": "PARTIAL_REUSE",
+      "id": "source-001-PARTIAL_REUSE",
+      "label": true,
+      "query": "images/source-001-partial_reuse.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.04716981132075472,
+        0.11538461538461539,
+        0.9528301886792453,
+        0.9358974358974359
+      ],
+      "group": "SCREENSHOT",
+      "id": "source-001-SCREENSHOT",
+      "label": true,
+      "query": "images/source-001-screenshot.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "group": "UNRELATED_SIMILAR_SUBJECT",
+      "id": "source-001-UNRELATED_SIMILAR_SUBJECT",
+      "label": false,
+      "query": "images/source-001-unrelated_similar_subject.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "independent-731-1-0"
+    },
+    {
+      "group": "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "id": "source-001-SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "label": false,
+      "query": "images/source-001-same_subject_different_creator_proxy.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "independent-731-1-1"
+    },
+    {
+      "group": "SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "id": "source-001-SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "label": false,
+      "query": "images/source-001-same_palette_different_composition.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "independent-731-1-2"
+    },
+    {
+      "group": "STYLE_LIKE_NON_COPYING",
+      "id": "source-001-STYLE_LIKE_NON_COPYING",
+      "label": false,
+      "query": "images/source-001-style_like_non_copying.png",
+      "reference": "images/source-001.png",
+      "source_lineage_id": "independent-731-1-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "EXACT_DUPLICATE",
+      "id": "source-002-EXACT_DUPLICATE",
+      "label": true,
+      "query": "images/source-002.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "JPEG_RECOMPRESSION",
+      "id": "source-002-JPEG_RECOMPRESSION",
+      "label": true,
+      "query": "images/source-002-jpeg_recompression.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RESIZE",
+      "id": "source-002-RESIZE",
+      "label": true,
+      "query": "images/source-002-resize.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "CROP",
+      "id": "source-002-CROP",
+      "label": true,
+      "query": "images/source-002-crop.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "MIRROR",
+      "id": "source-002-MIRROR",
+      "label": true,
+      "query": "images/source-002-mirror.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "ROTATION",
+      "id": "source-002-ROTATION",
+      "label": true,
+      "query": "images/source-002-rotation.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "OVERLAY",
+      "id": "source-002-OVERLAY",
+      "label": true,
+      "query": "images/source-002-overlay.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "TEXT_OVERLAY",
+      "id": "source-002-TEXT_OVERLAY",
+      "label": true,
+      "query": "images/source-002-text_overlay.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "COLOR_SHIFT",
+      "id": "source-002-COLOR_SHIFT",
+      "label": true,
+      "query": "images/source-002-color_shift.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RECOLORING",
+      "id": "source-002-RECOLORING",
+      "label": true,
+      "query": "images/source-002-recoloring.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.2604166666666667,
+        0.21875,
+        0.8333333333333334,
+        0.828125
+      ],
+      "group": "PARTIAL_REUSE",
+      "id": "source-002-PARTIAL_REUSE",
+      "label": true,
+      "query": "images/source-002-partial_reuse.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.04716981132075472,
+        0.11538461538461539,
+        0.9528301886792453,
+        0.9358974358974359
+      ],
+      "group": "SCREENSHOT",
+      "id": "source-002-SCREENSHOT",
+      "label": true,
+      "query": "images/source-002-screenshot.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "group": "UNRELATED_SIMILAR_SUBJECT",
+      "id": "source-002-UNRELATED_SIMILAR_SUBJECT",
+      "label": false,
+      "query": "images/source-002-unrelated_similar_subject.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "independent-731-2-0"
+    },
+    {
+      "group": "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "id": "source-002-SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "label": false,
+      "query": "images/source-002-same_subject_different_creator_proxy.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "independent-731-2-1"
+    },
+    {
+      "group": "SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "id": "source-002-SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "label": false,
+      "query": "images/source-002-same_palette_different_composition.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "independent-731-2-2"
+    },
+    {
+      "group": "STYLE_LIKE_NON_COPYING",
+      "id": "source-002-STYLE_LIKE_NON_COPYING",
+      "label": false,
+      "query": "images/source-002-style_like_non_copying.png",
+      "reference": "images/source-002.png",
+      "source_lineage_id": "independent-731-2-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "EXACT_DUPLICATE",
+      "id": "source-003-EXACT_DUPLICATE",
+      "label": true,
+      "query": "images/source-003.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "JPEG_RECOMPRESSION",
+      "id": "source-003-JPEG_RECOMPRESSION",
+      "label": true,
+      "query": "images/source-003-jpeg_recompression.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RESIZE",
+      "id": "source-003-RESIZE",
+      "label": true,
+      "query": "images/source-003-resize.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "CROP",
+      "id": "source-003-CROP",
+      "label": true,
+      "query": "images/source-003-crop.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "MIRROR",
+      "id": "source-003-MIRROR",
+      "label": true,
+      "query": "images/source-003-mirror.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "ROTATION",
+      "id": "source-003-ROTATION",
+      "label": true,
+      "query": "images/source-003-rotation.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "OVERLAY",
+      "id": "source-003-OVERLAY",
+      "label": true,
+      "query": "images/source-003-overlay.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "TEXT_OVERLAY",
+      "id": "source-003-TEXT_OVERLAY",
+      "label": true,
+      "query": "images/source-003-text_overlay.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "COLOR_SHIFT",
+      "id": "source-003-COLOR_SHIFT",
+      "label": true,
+      "query": "images/source-003-color_shift.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": null,
+      "group": "RECOLORING",
+      "id": "source-003-RECOLORING",
+      "label": true,
+      "query": "images/source-003-recoloring.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.2604166666666667,
+        0.21875,
+        0.8333333333333334,
+        0.828125
+      ],
+      "group": "PARTIAL_REUSE",
+      "id": "source-003-PARTIAL_REUSE",
+      "label": true,
+      "query": "images/source-003-partial_reuse.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "ground_truth_query_bbox": [
+        0.04716981132075472,
+        0.11538461538461539,
+        0.9528301886792453,
+        0.9358974358974359
+      ],
+      "group": "SCREENSHOT",
+      "id": "source-003-SCREENSHOT",
+      "label": true,
+      "query": "images/source-003-screenshot.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "group": "UNRELATED_SIMILAR_SUBJECT",
+      "id": "source-003-UNRELATED_SIMILAR_SUBJECT",
+      "label": false,
+      "query": "images/source-003-unrelated_similar_subject.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "independent-731-3-0"
+    },
+    {
+      "group": "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "id": "source-003-SAME_SUBJECT_DIFFERENT_CREATOR_PROXY",
+      "label": false,
+      "query": "images/source-003-same_subject_different_creator_proxy.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "independent-731-3-1"
+    },
+    {
+      "group": "SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "id": "source-003-SAME_PALETTE_DIFFERENT_COMPOSITION",
+      "label": false,
+      "query": "images/source-003-same_palette_different_composition.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "independent-731-3-2"
+    },
+    {
+      "group": "STYLE_LIKE_NON_COPYING",
+      "id": "source-003-STYLE_LIKE_NON_COPYING",
+      "label": false,
+      "query": "images/source-003-style_like_non_copying.png",
+      "reference": "images/source-003.png",
+      "source_lineage_id": "independent-731-3-3"
+    },
+    {
+      "catalog_id": "benchmark-catalog",
+      "copy_metrics_eligible": false,
+      "expected_abstention": null,
+      "expected_policy": "PASS_BY_POLICY",
+      "group": "POLICY_AND_COVERAGE",
+      "id": "policy-licensed",
+      "intended_use": "marketing/social",
+      "label": true,
+      "query": "images/source-000.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "catalog_id": "benchmark-catalog",
+      "copy_metrics_eligible": false,
+      "expected_abstention": null,
+      "expected_policy": "REVIEW",
+      "group": "POLICY_AND_COVERAGE",
+      "id": "policy-unlicensed-use",
+      "intended_use": "commercial/unlicensed",
+      "label": true,
+      "query": "images/source-000.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "catalog_id": "empty-catalog",
+      "copy_metrics_eligible": false,
+      "expected_abstention": true,
+      "expected_policy": "REVIEW",
+      "group": "POLICY_AND_COVERAGE",
+      "id": "scope-empty",
+      "intended_use": "marketing/social",
+      "label": false,
+      "query": "images/source-000.png",
+      "reference": "images/source-000.png",
+      "source_lineage_id": "procedural-lineage-731-0"
+    }
+  ],
+  "corpus_manifest_paths": [
+    "corpus.json"
+  ],
+  "limitations": [
+    "Procedural smoke fixtures, not a held-out real-world accuracy corpus.",
+    "Creator and style negative cohorts are artificial proxies.",
+    "Procedural synthesis is not evidence of AI-generator origin."
+  ],
+  "references": [
+    "images/source-000.png",
+    "images/source-001.png",
+    "images/source-002.png",
+    "images/source-003.png"
+  ],
+  "schema": "creatorproof.phase1_benchmark_manifest.v1",
+  "seed": 731
+}

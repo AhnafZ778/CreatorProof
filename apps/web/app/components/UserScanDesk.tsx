@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_CATALOG_ID, readCatalogWorks } from "@/app/lib/catalog";
 import { buildScenario, type DemoScenario } from "@/app/lib/demoScenarios";
 import { submitImageForm, UploadValidationError } from "@/app/lib/uploadClient";
+import { USE_CONTEXT_KEYS, useContextFromForm } from "@/app/lib/phase1Contract";
 
 import CoAttestationPanel from "./CoAttestationPanel";
 import DemoScenarioPicker from "./DemoScenarioPicker";
@@ -15,8 +16,17 @@ import EvidenceMicroscope, {
 } from "./EvidenceMicroscope";
 import PortalFileField from "./PortalFileField";
 import ProofPanel from "./ProofPanel";
+import MarketplaceMonitorPanel from "./MarketplaceMonitorPanel";
 import ScanVerdict from "./ScanVerdict";
 import StageTimelinePanel, { type StageTimeline } from "./StageTimeline";
+import EvidenceMatrixPanel from "./EvidenceMatrixPanel";
+import ProvenancePanel from "./ProvenancePanel";
+import ShareVerification from "./ShareVerification";
+import UseContextFields from "./UseContextFields";
+import NoticeCountryField from "./NoticeCountryField";
+import ScanAdminReviewNotice from "./ScanAdminReviewNotice";
+import { errorMessage } from "@/app/lib/phase1";
+import "../styles/user-alerts.css";
 
 type ApiResult = Record<string, unknown>;
 type ScanProgress = {
@@ -28,7 +38,9 @@ type ScanProgress = {
 const SCAN_POLL_BUDGET_MS = 180_000;
 
 function scrollToResult(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document
+    .getElementById(id)
+    ?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function progressFrom(result: ApiResult): ScanProgress | null {
@@ -37,7 +49,8 @@ function progressFrom(result: ApiResult): ScanProgress | null {
   const progress = (packet as ApiResult).progress;
   if (!progress || typeof progress !== "object") return null;
   const row = progress as ApiResult;
-  if (typeof row.label !== "string" || typeof row.percent !== "number") return null;
+  if (typeof row.label !== "string" || typeof row.percent !== "number")
+    return null;
   return {
     stage: typeof row.stage === "string" ? row.stage : "PROCESSING",
     label: row.label,
@@ -53,13 +66,19 @@ function progressFrom(result: ApiResult): ScanProgress | null {
  * it. Silence when the count is unknown: guessing at zero would invent the
  * alarming case out of an unreachable API.
  */
-function CatalogSize({ catalogId, count }: { catalogId: string; count: number | null }) {
+function CatalogSize({
+  catalogId,
+  count,
+}: {
+  catalogId: string;
+  count: number | null;
+}) {
   if (count === null) return null;
   if (count === 0) {
     return (
       <small className="catalogSize isEmpty" role="status">
-        No works registered in <b>{catalogId}</b> — a scan here can only report AI origin.
-        Register work in the Artist portal first.
+        No works registered in <b>{catalogId}</b> — a scan here can only report
+        AI origin. Register work in the Artist portal first.
       </small>
     );
   }
@@ -72,7 +91,8 @@ function CatalogSize({ catalogId, count }: { catalogId: string; count: number | 
 
 export default function UserScanDesk() {
   const [scanResult, setScanResult] = useState<ApiResult | null>(null);
-  const [candidatePreview, setCandidatePreview] = useState<LocalImagePreview | null>(null);
+  const [candidatePreview, setCandidatePreview] =
+    useState<LocalImagePreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scanProgress, setScanProgress] = useState<ScanProgress | null>(null);
@@ -116,9 +136,12 @@ export default function UserScanDesk() {
 
   const refreshTimeline = useCallback(async (scanId: string) => {
     try {
-      const response = await fetch(`/api/scans/${encodeURIComponent(scanId)}/stages`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `/api/scans/${encodeURIComponent(scanId)}/stages`,
+        {
+          cache: "no-store",
+        },
+      );
       if (!response.ok) return;
       setTimeline((await response.json()) as StageTimeline);
     } catch {
@@ -131,10 +154,13 @@ export default function UserScanDesk() {
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, 2_000));
       try {
-        const response = await fetch(`/api/scans/${encodeURIComponent(scanId)}`, {
-          cache: "no-store",
-          signal: AbortSignal.timeout(85_000),
-        });
+        const response = await fetch(
+          `/api/scans/${encodeURIComponent(scanId)}`,
+          {
+            cache: "no-store",
+            signal: AbortSignal.timeout(85_000),
+          },
+        );
         if (!response.ok) continue;
         const body = (await response.json()) as ApiResult;
         setScanResult(body);
@@ -168,12 +194,19 @@ export default function UserScanDesk() {
           const progress = progressFrom(body);
           if (progress) setScanProgress(progress);
           void refreshTimeline(scanId);
-          if (body.state === "COMPLETED" || body.state === "FAILED" || body.state === "CANCELLED") {
+          if (
+            body.state === "COMPLETED" ||
+            body.state === "FAILED" ||
+            body.state === "CANCELLED"
+          ) {
             setBusy(false);
             setPendingScanId(null);
             setScanWaitPaused(false);
             setScanProgress(null);
-            if (body.state === "COMPLETED" && body.anchor_status === "PENDING") {
+            if (
+              body.state === "COMPLETED" &&
+              body.anchor_status === "PENDING"
+            ) {
               void refreshPendingProof(scanId);
             }
             if (body.state === "FAILED") {
@@ -182,14 +215,18 @@ export default function UserScanDesk() {
               );
             }
             if (body.state === "CANCELLED") {
-              setError("This scan was cancelled. No evidence packet was produced.");
+              setError(
+                "This scan was cancelled. No evidence packet was produced.",
+              );
             }
             return;
           }
         } catch {
           consecutiveErrors += 1;
           if (consecutiveErrors >= 3) {
-            setError("Live progress was interrupted. The server may still be working; use Check again.");
+            setError(
+              "Live progress was interrupted. The server may still be working; use Check again.",
+            );
             break;
           }
         }
@@ -200,13 +237,48 @@ export default function UserScanDesk() {
     [refreshTimeline],
   );
 
-  async function startScan(form: FormData, candidateFile: File | null) {
-    setBusy(true);
+  function acceptMarketplaceScan(body: {
+    scan: Record<string, unknown>;
+    selected: { provider: string; external_id: string; image_url: string };
+  }) {
+    const scan = body.scan;
+    if (typeof scan.id !== "string") {
+      setError("The marketplace scan started without a usable scan ID.");
+      return;
+    }
     setError(null);
     setTimeline(null);
     setScanWaitPaused(false);
     setScanElapsedSeconds(0);
-    setScanProgress({ stage: "UPLOADING", label: "Uploading the image", percent: 0 });
+    setCandidatePreview({
+      url: body.selected.image_url,
+      name: `${body.selected.provider} · ${body.selected.external_id}`,
+    });
+    setScanResult(scan);
+    setPendingScanId(scan.id);
+    setScanProgress(
+      progressFrom(scan) ?? {
+        stage: "QUEUED",
+        label: "Waiting to start",
+        percent: 1,
+      },
+    );
+    void pollScan(scan.id);
+  }
+
+  async function startScan(form: FormData, candidateFile: File | null) {
+    setBusy(true);
+    setError(null);
+    setTimeline(null);
+    setScanResult(null);
+    setPendingScanId(null);
+    setScanWaitPaused(false);
+    setScanElapsedSeconds(0);
+    setScanProgress({
+      stage: "UPLOADING",
+      label: "Uploading the image",
+      percent: 0,
+    });
     if (candidateFile) setCandidatePreview(preview(candidateFile));
     try {
       const response = await submitImageForm({
@@ -217,19 +289,25 @@ export default function UserScanDesk() {
       });
       const body = (await response.json()) as ApiResult;
       if (!response.ok) {
-        setError(`The scan could not start. ${JSON.stringify(body)}`);
+        setError(errorMessage(body, "The scan could not start."));
         setBusy(false);
         return;
       }
       if (typeof body.id !== "string") {
-        setError("The scan started without a usable scan ID. Check the API logs.");
+        setError(
+          "The scan started without a usable scan ID. Check the API logs.",
+        );
         setBusy(false);
         return;
       }
       setScanResult(body);
       setPendingScanId(body.id);
       setScanProgress(
-        progressFrom(body) ?? { stage: "QUEUED", label: "Waiting to start", percent: 1 },
+        progressFrom(body) ?? {
+          stage: "QUEUED",
+          label: "Waiting to start",
+          percent: 1,
+        },
       );
       await pollScan(body.id);
     } catch (caught) {
@@ -237,8 +315,8 @@ export default function UserScanDesk() {
         caught instanceof UploadValidationError
           ? caught.message
           : caught instanceof Error && caught.name === "TimeoutError"
-          ? "The API did not accept the scan before the deployment timeout. It may still be waking."
-          : "The scan request was interrupted. Check the API connection and try again.";
+            ? "The API did not accept the scan before the deployment timeout. It may still be waking."
+            : "The scan request was interrupted. Check the API connection and try again.";
       setError(message);
       setBusy(false);
     }
@@ -248,6 +326,13 @@ export default function UserScanDesk() {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
+    const context = useContextFromForm(form);
+    for (const key of USE_CONTEXT_KEYS) form.delete(`use_${key}`);
+    if (Object.keys(context).length) form.set("use_context", JSON.stringify(context));
+    for (const key of ["country_code", "source_url"]) {
+      const value = String(form.get(key) || "").trim();
+      if (value) form.set(key, value); else form.delete(key);
+    }
     const uploadedFile = form.get("file");
     await startScan(form, uploadedFile instanceof File ? uploadedFile : null);
   }
@@ -282,7 +367,9 @@ export default function UserScanDesk() {
           form: registration,
         });
         if (!response.ok) {
-          throw new Error(`The demo reference could not be registered (${response.status}).`);
+          throw new Error(
+            `The demo reference could not be registered (${response.status}).`,
+          );
         }
       }
 
@@ -335,21 +422,27 @@ export default function UserScanDesk() {
     : null;
 
   const scanCompleted = scanResult?.state === "COMPLETED";
-  const scanIsRunning = scanResult?.state === "QUEUED" || scanResult?.state === "PROCESSING";
+  const scanIsRunning =
+    scanResult?.state === "QUEUED" || scanResult?.state === "PROCESSING";
 
   return (
     <div className="userScanDesk">
-      <section id="scan-work" className="workflowArea" style={{ paddingTop: 0 }}>
+      <section
+        id="scan-work"
+        className="workflowArea"
+        style={{ paddingTop: 0 }}
+      >
         <form className="card scanCard" onSubmit={submitScan}>
           <div className="cardHeading">
             <span>02</span>
             <div>
               <small>PRE-PUBLICATION SCAN</small>
-              <h3>Challenge the catalog</h3>
+              <h3>Check an image</h3>
             </div>
           </div>
           <p className="cardSummary">
-            Scan for AI-origin intelligence, stored-work reuse, and creator-profile signals.
+            Compare an image with registered artwork and check AI-origin signals.
+            Flagged scans are saved for Admin to review with their evidence.
           </p>
           <div className="formColumns portalForm">
             <div className="full">
@@ -372,29 +465,46 @@ export default function UserScanDesk() {
             </label>
             <label className="portalField">
               <span className="portalFieldLabel">Intended use</span>
-              <input required name="intended_use" defaultValue="marketing/social" />
+              <input
+                required
+                name="intended_use"
+                defaultValue="marketing/social"
+              />
             </label>
+            <NoticeCountryField disabled={busy} />
+            <label className="portalField">
+              <span className="portalFieldLabel">Public image or page URL <small>(optional)</small></span>
+              <input aria-label="Public image or page URL" type="url" name="source_url" maxLength={2048} pattern="https?://.+" placeholder="https://example.com/post" disabled={busy} />
+              <small className="portalFieldHint">If the image is published, add its page so Admin can find it. Leave blank for a local file.</small>
+            </label>
+            <UseContextFields disabled={busy} />
           </div>
           <div className="contract">
             <b>What CreatorProof checks</b>
             <span>
-              AI-origin signals, verified visual reuse, creator-profile resemblance, and the recorded
-              rights path.
+              AI-origin signals, verified visual reuse, creator-profile
+              resemblance, and the recorded rights path.
             </span>
           </div>
           <button className="scanAction" disabled={busy}>
-            {busy ? "Running CreatorProof analysis…" : "Run CreatorProof analysis"}
+            {busy
+              ? "Running CreatorProof analysis…"
+              : "Run CreatorProof analysis"}
           </button>
           {pendingScanId && (scanIsRunning || scanWaitPaused) && (
             <div className="scanProgressPanel" role="status" aria-live="polite">
               <div className="scanProgressHeading">
-                <span>{scanWaitPaused ? "Scan still running" : "Scan in progress"}</span>
+                <span>
+                  {scanWaitPaused ? "Scan still running" : "Scan in progress"}
+                </span>
                 <b>{scanProgress?.percent ?? 1}%</b>
               </div>
               <div className="scanProgressTrack" aria-hidden="true">
                 <i style={{ width: `${scanProgress?.percent ?? 1}%` }} />
               </div>
-              <strong>{scanProgress?.label ?? "Waiting for the next update"}</strong>
+              <strong>
+                {scanProgress?.label ?? "Waiting for the next update"}
+              </strong>
               <p>
                 {scanWaitPaused
                   ? "Live updates paused after three minutes. Your scan was not cancelled."
@@ -402,7 +512,10 @@ export default function UserScanDesk() {
               </p>
               <small>Scan ID: {pendingScanId}</small>
               {scanWaitPaused && (
-                <button type="button" onClick={() => void pollScan(pendingScanId)}>
+                <button
+                  type="button"
+                  onClick={() => void pollScan(pendingScanId)}
+                >
                   Check again
                 </button>
               )}
@@ -412,13 +525,15 @@ export default function UserScanDesk() {
 
         {/* Stays up while a scenario prepares so the chosen card can show its
             progress, and gives way to the stage timeline once the scan starts. */}
-        {!scanResult && !scanIsRunning && (demoScenarioId !== null || !busy) && (
-          <DemoScenarioPicker
-            onRun={(scenario) => void runDemoScenario(scenario)}
-            runningId={demoScenarioId}
-            disabled={busy || demoScenarioId !== null}
-          />
-        )}
+        {!scanResult &&
+          !scanIsRunning &&
+          (demoScenarioId !== null || !busy) && (
+            <DemoScenarioPicker
+              onRun={(scenario) => void runDemoScenario(scenario)}
+              runningId={demoScenarioId}
+              disabled={busy || demoScenarioId !== null}
+            />
+          )}
 
         {(scanIsRunning || (timeline && !scanCompleted)) && (
           <StageTimelinePanel
@@ -429,6 +544,11 @@ export default function UserScanDesk() {
           />
         )}
       </section>
+      <MarketplaceMonitorPanel
+        defaultCatalogId={catalogId}
+        disabled={busy}
+        onScanAccepted={acceptMarketplaceScan}
+      />
 
       {error && (
         <div className="error" role="alert">
@@ -448,15 +568,24 @@ export default function UserScanDesk() {
             onOpenProof={() => scrollToResult("proof")}
           />
 
-          <section className="evidenceSection" id="evidence" aria-label="Evidence workspace">
+          <ScanAdminReviewNotice scan={scanResult} />
+
+          <EvidenceMatrixPanel key={`matrix-${scanResult.id}`} scanId={String(scanResult.id)} />
+
+          <section
+            className="evidenceSection"
+            id="evidence"
+            aria-label="Evidence workspace"
+          >
             <header className="evidenceSectionHead">
               <div>
                 <small>THE EVIDENCE</small>
                 <h3>Why the scan reached that result</h3>
               </div>
               <p>
-                Matched regions, the AI-origin ledger, and the creator profile behind each lane —
-                with every raw score kept one click away rather than on the surface.
+                Matched regions, the AI-origin ledger, and the creator profile
+                behind each lane — with every raw score kept one click away
+                rather than on the surface.
               </p>
             </header>
             <EvidenceMicroscope
@@ -468,6 +597,8 @@ export default function UserScanDesk() {
           </section>
 
           <ProofPanel scan={scanResult} />
+          <section className="portalPanel"><ProvenancePanel key={`provenance-${scanResult.id}`} resource="scans" resourceId={String(scanResult.id)} /></section>
+          <section className="portalPanel"><ShareVerification key={`share-${scanResult.id}`} resource="scans" resourceId={String(scanResult.id)} /></section>
           <CoAttestationPanel scan={scanResult} />
         </div>
       )}

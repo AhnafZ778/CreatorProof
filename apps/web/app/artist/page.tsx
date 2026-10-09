@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { ArrowRight, Images, Plus, Search, ShieldCheck } from "lucide-react";
 
+import ArtistWorkspace from "@/app/components/ArtistWorkspace";
+import ArtworkThumbnail from "@/app/components/ArtworkThumbnail";
 import PortalFileField from "@/app/components/PortalFileField";
 import PortalNav from "@/app/components/PortalNav";
+import { dateLabel } from "@/app/lib/phase1";
 import { DEFAULT_CATALOG_ID } from "@/app/lib/catalog";
 import { readPortalSession } from "@/app/lib/portalSession";
 import { submitImageForm } from "@/app/lib/uploadClient";
+import "@/app/styles/artist-workspace.css";
 
 type RegisteredWork = {
   id: string;
@@ -73,19 +78,31 @@ function registrationFault(body: Record<string, unknown>): string {
 }
 
 const LIBRARY_KEY = "creatorproof.artist.library";
+const SECTIONS = [
+  { key: "library", label: "Artwork library", Icon: Images },
+  { key: "register", label: "Register artwork", Icon: Plus },
+] as const;
+
+const CLAIM_LABELS: Record<string, string> = {
+  ASSERTED: "Artist-recorded",
+  CORROBORATED: "Supporting record declared",
+  DISPUTED: "Under review",
+  REVOKED: "Withdrawn",
+};
 
 function loadLibrary(): RegisteredWork[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(LIBRARY_KEY);
-    return raw ? (JSON.parse(raw) as RegisteredWork[]) : [];
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((work): work is RegisteredWork => isRecord(work) && typeof work.id === "string" && typeof work.title === "string" && typeof work.catalogId === "string") : [];
   } catch {
     return [];
   }
 }
 
 function saveLibrary(works: RegisteredWork[]) {
-  window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(works));
+  try { window.localStorage.setItem(LIBRARY_KEY, JSON.stringify(works)); } catch { /* The server remains the source of truth when browser storage is unavailable. */ }
 }
 
 export default function ArtistPortalPage() {
@@ -104,25 +121,63 @@ function ArtistPortal() {
   const [message, setMessage] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<OriginRefusal | null>(null);
   const [fileKey, setFileKey] = useState(0);
-  const [libraryExpanded, setLibraryExpanded] = useState(false);
+  const [section, setSection] = useState<(typeof SECTIONS)[number]["key"]>("library");
+  const [libraryQuery, setLibraryQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(8);
+  const [selectedWorkId, setSelectedWorkId] = useState<string | null>(null);
+  const [libraryLoading, setLibraryLoading] = useState(true);
+  const [libraryError, setLibraryError] = useState<string | null>(null);
+  const pageTabs = useRef<Array<HTMLButtonElement | null>>([]);
+  const libraryRequest = useRef(0);
+
+  async function refreshLibrary(signal?: AbortSignal) {
+    const requestId = ++libraryRequest.current;
+    setLibraryLoading(true); setLibraryError(null);
+    try {
+      const response = await fetch("/api/works", { cache: "no-store", signal });
+      const body: unknown = await response.json();
+      if (!response.ok || !Array.isArray(body)) throw new Error("The saved library could not be loaded. Cached references may be out of date.");
+      const works = body.filter(isRecord).filter((work) => typeof work.id === "string").map((work) => ({ id: String(work.id), title: text(work.title, "Untitled work"), claimant: text(work.claimant, "Claimant not recorded"), claimState: text(work.claim_state, "ASSERTED"), catalogId: text(work.catalog_id, DEFAULT_CATALOG_ID), createdAt: text(work.created_at) }));
+      if (signal?.aborted || requestId !== libraryRequest.current) return;
+      setLibrary(works); saveLibrary(works); setSelectedWorkId((old) => works.some((work) => work.id === old) ? old : works[0]?.id || null);
+    } catch (e) { if (!signal?.aborted && requestId === libraryRequest.current) setLibraryError(e instanceof Error ? e.message : "Could not load your saved library."); }
+    finally { if (!signal?.aborted && requestId === libraryRequest.current) setLibraryLoading(false); }
+  }
 
   useEffect(() => {
     const session = readPortalSession();
     if (session?.name) setName(session.name);
-    setLibrary(loadLibrary());
+    const cached = loadLibrary();
+    setLibrary(cached); setSelectedWorkId(cached[0]?.id || null);
+    const controller = new AbortController();
+    const syncSectionFromHash = () => {
+      if (window.location.hash === "#register") setSection("register");
+      else if (window.location.hash === "#library") setSection("library");
+    };
+    syncSectionFromHash();
+    window.addEventListener("hashchange", syncSectionFromHash);
+    void refreshLibrary(controller.signal);
+    return () => {
+      controller.abort();
+      window.removeEventListener("hashchange", syncSectionFromHash);
+    };
   }, []);
 
-  const profileReady = library.length >= 3;
-  const assertedCount = useMemo(
-    () => library.filter((work) => work.claimState === "ASSERTED").length,
-    [library],
+  const selectedWork = library.find((work) => work.id === selectedWorkId);
+  const matchingLibrary = library.filter((work) =>
+    `${work.title} ${work.claimant}`.toLocaleLowerCase().includes(libraryQuery.trim().toLocaleLowerCase()),
   );
-  const libraryPreviewCount = 4;
-  const libraryCanCollapse = library.length > libraryPreviewCount;
-  const visibleLibrary =
-    libraryExpanded || !libraryCanCollapse ? library : library.slice(0, libraryPreviewCount);
-  const peekLibraryWork =
-    !libraryExpanded && libraryCanCollapse ? library[libraryPreviewCount] ?? null : null;
+  const visibleLibrary = matchingLibrary.slice(0, visibleCount);
+
+  function navigateSection(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    const next = event.key === "ArrowRight" ? (index + 1) % SECTIONS.length
+      : event.key === "ArrowLeft" ? (index + SECTIONS.length - 1) % SECTIONS.length
+      : event.key === "Home" ? 0 : event.key === "End" ? SECTIONS.length - 1 : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    setSection(SECTIONS[next].key);
+    pageTabs.current[next]?.focus();
+  }
 
   async function onRegister(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -152,18 +207,29 @@ function ArtistPortal() {
         }
         throw new Error(registrationFault(body));
       }
+      if (typeof body.id !== "string") throw new Error("The registration response did not identify a saved artwork. Refresh the library before retrying.");
       const entry: RegisteredWork = {
-        id: String(body.id ?? crypto.randomUUID()),
+        id: body.id,
         title: String(form.get("title") || "Untitled work"),
         claimant: String(form.get("claimant") || name),
         claimState: String(form.get("claim_state") || "ASSERTED"),
         catalogId: String(form.get("catalog_id") || DEFAULT_CATALOG_ID),
         createdAt: new Date().toISOString(),
       };
-      const next = [entry, ...library];
-      setLibrary(next);
-      saveLibrary(next);
-      setMessage("Work registered and added to your artist library.");
+      // A library request begun before this registration must not replace it
+      // with an older server snapshot after enrollment has completed.
+      libraryRequest.current += 1;
+      setLibraryLoading(false);
+      setLibrary((old) => {
+        const next = [entry, ...old.filter((work) => work.id !== entry.id)];
+        saveLibrary(next);
+        return next;
+      });
+      setSelectedWorkId(entry.id);
+      setLibraryQuery("");
+      setSection("library");
+      pageTabs.current[0]?.focus();
+      setMessage(`“${entry.title}” registered. Set its permissions below; new artwork starts with unspecified permissions.`);
       formElement.reset();
       setFileKey((value) => value + 1);
     } catch (err) {
@@ -174,243 +240,172 @@ function ArtistPortal() {
   }
 
   return (
-    <div className="portalPage isArtist">
+    <div className="portalPage isArtist artistDesk">
       <PortalNav active="artist" />
       <main className="portalMain">
-        <section className="portalHero">
-          <div className="portalHeroKicker">Artist portal</div>
-          <h1>Protect your work before it circulates.</h1>
-          <p>
-            Register references, assert authorship, and build a consent-backed creator profile.
-            Teams checking assets before publish use the User portal — your works stay yours.
-          </p>
-          <div className="portalHeroActions">
-            <a className="portalPrimary" href="#register">
-              Register a work
-            </a>
-            <Link className="portalSecondary" href="/user">
-              Switch to User portal
-            </Link>
+        <section className="portalHero artistHero">
+          <div>
+            <div className="portalHeroKicker">Artist workspace</div>
+            <h1>Your artwork, in one place.</h1>
+            <p>Register your art, set its permissions, and keep a record of how you made it.</p>
+          </div>
+          <div className="artistHeroAside">
+            <span><b>{library.length}</b> registered {library.length === 1 ? "artwork" : "artworks"}</span>
+            <Link className="cpTextButton" href="/pipeline">How protection works <ArrowRight size={15} /></Link>
           </div>
         </section>
 
-        <section className="portalGrid" aria-label="Artist status">
-          <article className="portalCard">
-            <h3>Work library</h3>
-            <div className="portalStat">{library.length}</div>
-            <p>Registered references in this browser session.</p>
-          </article>
-          <article className="portalCard">
-            <h3>Creator profile</h3>
-            <div className="portalStat">{profileReady ? "Ready" : `${library.length}/3`}</div>
-            <p>
-              {profileReady
-                ? "Enough works for a multi-work creator profile."
-                : "Add at least 3 representative works for a stronger profile."}
-            </p>
-          </article>
-          <article className="portalCard">
-            <h3>Asserted claims</h3>
-            <div className="portalStat">{assertedCount}</div>
-            <p>Claims waiting for operator corroboration when needed.</p>
-          </article>
-        </section>
-
-        <section id="register" className="portalPanel">
-          <header>
-            <div>
-              <small>Enrollment</small>
-              <h2>Register protected work</h2>
-            </div>
-          </header>
-          <p className="originGateNotice">
-            <span className="originGateNoticeMark" aria-hidden="true">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                <path d="m9 12 2 2 4-4" />
-              </svg>
-            </span>
-            <span>
-              <b>Every submission is screened for AI generation.</b> A file the origin lane
-              identifies as AI-generated is refused, so this catalog only ever vouches for work
-              a person made.
-            </span>
-          </p>
-          <form className="portalForm" onSubmit={onRegister}>
-            <PortalFileField
-              key={fileKey}
-              required
-              name="file"
-              label="Reference image"
-              hint="PNG, JPG, or WEBP · max 4 MB / 6 MP"
-            />
-            <label className="portalField">
-              <span className="portalFieldLabel">Title</span>
-              <input required name="title" defaultValue="Untitled work" />
-            </label>
-            <label className="portalField">
-              <span className="portalFieldLabel">Artist / claimant name</span>
-              <input required name="claimant" defaultValue={name} />
-            </label>
-            <label className="portalField">
-              <span className="portalFieldLabel">Catalog</span>
-              <input required name="catalog_id" defaultValue={DEFAULT_CATALOG_ID} />
-            </label>
-            <label className="portalField">
-              <span className="portalFieldLabel">Claim state</span>
-              <select name="claim_state" defaultValue="ASSERTED">
-                <option value="ASSERTED">ASSERTED — artist-recorded</option>
-                <option value="CORROBORATED">CORROBORATED — verified record</option>
-                <option value="DISPUTED">DISPUTED — active review</option>
-                <option value="REVOKED">REVOKED — withdrawn</option>
-              </select>
-            </label>
-            <button className="portalPrimary" disabled={busy} type="submit">
-              {busy ? "Screening for AI origin…" : "Register reference"}
+        <div className="artistSectionTabs" role="tablist" aria-label="Artist sections">
+          {SECTIONS.map(({ key, label, Icon }, index) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              id={`artist-tab-${key}`}
+              aria-selected={section === key}
+              aria-controls={`artist-panel-${key}`}
+              tabIndex={section === key ? 0 : -1}
+              ref={(element) => { pageTabs.current[index] = element; }}
+              onClick={() => setSection(key)}
+              onKeyDown={(event) => navigateSection(event, index)}
+            >
+              <Icon size={17} aria-hidden="true" />{label}
+              {key === "library" && <span className="artistTabCount">{library.length}</span>}
             </button>
+          ))}
+        </div>
+
+        {message && <p className="cpFeedback" role="status">{message}</p>}
+
+        <div
+          role="tabpanel"
+          id="artist-panel-library"
+          aria-labelledby="artist-tab-library"
+          hidden={section !== "library"}
+          className="artistLibraryLayout"
+        >
+          <section className="portalPanel artistLibrary" aria-label="Artist library" aria-busy={libraryLoading}>
+            <header>
+              <div><small>Your collection</small><h2>Artwork library</h2></div>
+              <button type="button" className="cpTextButton" disabled={libraryLoading} onClick={() => void refreshLibrary()}>
+                {libraryLoading ? "Syncing…" : "Refresh"}
+              </button>
+            </header>
+            {libraryError && <p className="cpFeedback isError" role="alert">{libraryError}</p>}
+            {library.length > 0 && (
+              <label className="artistLibrarySearch">
+                <Search size={16} aria-hidden="true" />
+                <input aria-label="Find your artwork" type="search" placeholder="Find an artwork…" value={libraryQuery} onChange={(event) => { setLibraryQuery(event.target.value); setVisibleCount(8); }} />
+              </label>
+            )}
+            {libraryLoading && library.length === 0 ? (
+              <p className="portalMuted" role="status">Loading your saved artworks…</p>
+            ) : library.length === 0 ? (
+              <div className="artistLibraryEmpty">
+                <Images size={27} aria-hidden="true" />
+                <h3>Add your first artwork.</h3>
+                <p>Upload a reference image to start your library and set its permissions.</p>
+                <button type="button" className="portalPrimary" onClick={() => setSection("register")}><Plus size={16} />Register artwork</button>
+              </div>
+            ) : (
+              <>
+                <p className="artistLibraryHint">Choose an artwork to open its tools.</p>
+                <ul className="artistWorkList">
+                  {visibleLibrary.map((work) => (
+                    <li key={work.id}>
+                      <button
+                        type="button"
+                        className={`artistWorkButton${selectedWorkId === work.id ? " isSelected" : ""}`}
+                        aria-label={`Open workspace for ${work.title}`}
+                        aria-pressed={selectedWorkId === work.id}
+                        onClick={() => {
+                          setSelectedWorkId(work.id);
+                          if (window.matchMedia("(max-width: 760px)").matches) {
+                            requestAnimationFrame(() => document.getElementById("artwork-workspace")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+                          }
+                        }}
+                      >
+                        <ArtworkThumbnail workId={work.id} title={work.title} />
+                        <span className="artistWorkIdentity">
+                          <b>{work.title}</b>
+                          <span>{work.claimant}</span>
+                          <small>{CLAIM_LABELS[work.claimState] || "Claim not recorded"}</small>
+                        </span>
+                        <ArrowRight size={15} aria-hidden="true" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                {matchingLibrary.length === 0 && <p className="portalMuted">No artworks match this search.</p>}
+                {matchingLibrary.length > visibleCount && <button type="button" className="cpTextButton artistShowMore" onClick={() => setVisibleCount((old) => old + 8)}>Show more ({matchingLibrary.length - visibleCount} remaining)</button>}
+                <button type="button" className="portalSecondary artistAddWork" onClick={() => setSection("register")}><Plus size={16} />Register another artwork</button>
+              </>
+            )}
+          </section>
+          {selectedWork ? (
+            <div className="artistSelectedWork">
+              <ArtistWorkspace key={selectedWork.id} workId={selectedWork.id} title={selectedWork.title} />
+              <details className="cpDetails artistRecordDetails">
+                <summary>Artwork registration details</summary>
+                <dl className="cpDetailBody artistRegistrationFacts">
+                  <div><dt>Artist / claimant</dt><dd>{selectedWork.claimant}</dd></div>
+                  <div><dt>Registered</dt><dd>{dateLabel(selectedWork.createdAt)}</dd></div>
+                  <div><dt>Claim</dt><dd>{CLAIM_LABELS[selectedWork.claimState] || selectedWork.claimState}</dd></div>
+                  <div><dt>Catalog</dt><dd>{selectedWork.catalogId}</dd></div>
+                  <div><dt>Artwork ID</dt><dd>{selectedWork.id}</dd></div>
+                </dl>
+              </details>
+            </div>
+          ) : (
+            <section id="artwork-workspace" className="portalPanel artistWelcome" aria-label="Artwork tools">
+              <span className="artistWelcomeIcon"><ShieldCheck size={29} aria-hidden="true" /></span>
+              <h2>Start with your artwork.</h2>
+              <p>Once you register an image, its permissions, creation history, origin evidence, and sharing tools will appear here.</p>
+              <div className="artistWelcomeSteps">
+                <span><b>1</b>Register your reference</span>
+                <span><b>2</b>Decide how it may be used</span>
+                <span><b>3</b>Keep and share your record</span>
+              </div>
+              <button type="button" className="portalPrimary" onClick={() => setSection("register")}>Register your first artwork <ArrowRight size={16} /></button>
+            </section>
+          )}
+        </div>
+
+        <section
+          id="artist-panel-register"
+          role="tabpanel"
+          aria-labelledby="artist-tab-register"
+          hidden={section !== "register"}
+          className="portalPanel artistRegisterPanel"
+        >
+          <header id="register"><div><small>Add to your library</small><h2>Register your artwork</h2></div></header>
+          <p className="cpDescription">Upload your reference image and name the artist. After registration, you can set permissions and document your creative process.</p>
+          <div className="artistOriginNotice"><ShieldCheck size={17} aria-hidden="true" /><span>We check submissions for available AI-origin evidence before enrollment.<details><summary>About this check</summary><p>Enrollment policy may refuse a flagged image. A passed screening or missing Content Credentials does not independently establish human authorship or ownership.</p></details></span></div>
+          <form className="portalForm artistRegisterForm" onSubmit={onRegister}>
+            <PortalFileField key={fileKey} required name="file" label="Reference image" hint="PNG, JPG, or WEBP · max 4 MB / 6 MP" />
+            <div className="cpFormGrid">
+              <label className="portalField"><span className="portalFieldLabel">Title</span><input required name="title" placeholder="Give your artwork a name" /></label>
+              <label className="portalField"><span className="portalFieldLabel">Artist / claimant name</span><input required name="claimant" defaultValue={name} /></label>
+            </div>
+            <details className="cpDetails artistAdvancedRegistration">
+              <summary>Advanced registration settings</summary>
+              <div className="cpDetailBody cpFormGrid">
+                <label className="portalField"><span className="portalFieldLabel">Catalog</span><input aria-label="Catalog" aria-describedby="artist-catalog-hint" required name="catalog_id" defaultValue={DEFAULT_CATALOG_ID} /><small id="artist-catalog-hint" className="portalFieldHint">The default catalog works for ordinary registration.</small></label>
+                <label className="portalField"><span className="portalFieldLabel">Claim state</span><select aria-label="Claim state" name="claim_state" defaultValue="ASSERTED"><option value="ASSERTED">Artist-recorded</option><option value="CORROBORATED">Supporting record declared</option><option value="DISPUTED">Under review</option><option value="REVOKED">Withdrawn</option></select><small className="portalFieldHint">Only declare supporting records when you have them available.</small></label>
+              </div>
+            </details>
+            <div className="artistRegisterFooter"><p>You can change your use preferences after saving.</p><button className="portalPrimary" disabled={busy} type="submit"><Plus size={16} />{busy ? "Checking and registering…" : "Register reference"}</button></div>
           </form>
           {refusal && (
             <section className="originRefusal" role="alert" aria-label="Registration refused">
-              <div className="originRefusalHead">
-                <span className="originRefusalTag">Not registered</span>
-                <b>{refusal.headline}</b>
-              </div>
+              <div className="originRefusalHead"><span className="originRefusalTag">Not registered</span><b>{refusal.headline}</b></div>
               <p className="originRefusalLead">{refusal.message}</p>
               {refusal.summary && <p className="originRefusalBody">{refusal.summary}</p>}
-              <dl className="originRefusalFacts">
-                <div>
-                  <dt>Origin state</dt>
-                  <dd>{refusal.originState}</dd>
-                </div>
-                <div>
-                  <dt>Classification</dt>
-                  <dd>{refusal.classification}</dd>
-                </div>
-                <div>
-                  <dt>Evidence tier</dt>
-                  <dd>{refusal.evidenceTier}</dd>
-                </div>
-              </dl>
-              {refusal.boundary && <p className="originRefusalBoundary">{refusal.boundary}</p>}
+              <details className="artistRefusalDetails"><summary>Screening details</summary><dl className="originRefusalFacts"><div><dt>Origin state</dt><dd>{refusal.originState}</dd></div><div><dt>Classification</dt><dd>{refusal.classification}</dd></div><div><dt>Evidence tier</dt><dd>{refusal.evidenceTier}</dd></div></dl>{refusal.boundary && <p className="originRefusalBoundary">{refusal.boundary}</p>}</details>
+              <p className="originRefusalBody">Choose another reference image to try again. Your form details are kept.</p>
             </section>
           )}
-          {message && <p className="portalMuted">{message}</p>}
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-        </section>
-
-        <section className="portalPanel" aria-label="Artist library">
-          <header>
-            <div>
-              <small>Library</small>
-              <h2>My registered works</h2>
-            </div>
-          </header>
-          {library.length === 0 ? (
-            <p className="portalMuted">No works yet. Register your first reference above.</p>
-          ) : (
-            <div
-              className={`portalLibraryStack${libraryExpanded || !libraryCanCollapse ? " isExpanded" : " isCollapsed"}`}
-            >
-              <ul className="portalList">
-                {visibleLibrary.map((work) => (
-                  <li key={work.id}>
-                    <div>
-                      <b>{work.title}</b>
-                      <span>
-                        {work.claimant} · {work.catalogId} ·{" "}
-                        {new Date(work.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <span className="portalBadge" data-state={work.claimState}>
-                      {work.claimState}
-                    </span>
-                  </li>
-                ))}
-                {peekLibraryWork && (
-                  <li className="portalListPeek" aria-hidden="true">
-                    <div>
-                      <b>{peekLibraryWork.title}</b>
-                      <span>
-                        {peekLibraryWork.claimant} · {peekLibraryWork.catalogId} ·{" "}
-                        {new Date(peekLibraryWork.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <span className="portalBadge" data-state={peekLibraryWork.claimState}>
-                      {peekLibraryWork.claimState}
-                    </span>
-                  </li>
-                )}
-              </ul>
-              {libraryCanCollapse && (
-                <button
-                  type="button"
-                  className="portalLibraryToggle"
-                  aria-expanded={libraryExpanded}
-                  onClick={() => setLibraryExpanded((open) => !open)}
-                >
-                  <span>
-                    {libraryExpanded
-                      ? "Show less"
-                      : `Show full history (${library.length - libraryPreviewCount} more)`}
-                  </span>
-                  <svg
-                    className={libraryExpanded ? "isUp" : undefined}
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M4 6l4 4 4-4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
-          )}
-        </section>
-
-        <section className="portalGrid">
-          <article className="portalCard">
-            <h3>Proofs & receipts</h3>
-            <p>
-              After teams scan against your catalog, verification packages remain independently
-              checkable from the User portal proof tools.
-            </p>
-            <div className="portalHeroActions">
-              <Link className="portalSecondary" href="/user#proof">
-                Open User proof tools
-              </Link>
-            </div>
-          </article>
-          <article className="portalCard">
-            <h3>Match review</h3>
-            <p>
-              When a User-portal scan cites your work or profile, reviewers inspect evidence there —
-              without giving away org admin controls on this Artist portal.
-            </p>
-            <div className="portalHeroActions">
-              <Link className="portalSecondary" href="/user#scan-work">
-                Open User scan desk
-              </Link>
-            </div>
-          </article>
-          <article className="portalCard">
-            <h3>Boundary</h3>
-            <p>
-              CreatorProof returns evidence and policy outcomes. It is not a legal infringement
-              determination or automatic clearance.
-            </p>
-          </article>
+          {error && <p className="cpFeedback isError" role="alert">{error}</p>}
         </section>
       </main>
     </div>

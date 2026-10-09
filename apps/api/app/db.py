@@ -12,6 +12,13 @@ class Base(DeclarativeBase):
     pass
 
 
+@event.listens_for(Base.metadata, "after_create")
+def _install_sqlite_integrity_after_create(_metadata, connection, **_kwargs) -> None:
+    from app.sqlite_integrity import install_sqlite_integrity_guards
+
+    install_sqlite_integrity_guards(connection)
+
+
 _STARTUP_ADVISORY_LOCK_ID = 74_148_833_103_174
 
 # This mirrors the tenant policies installed by revisions 0003 and 0004. Keeping
@@ -37,8 +44,20 @@ _RLS_REQUIRED_TABLES = frozenset(
         "licenses",
         "rights_events",
         "policy_versions",
+        "rights_policy_versions",
+        "provenance_records",
+        "provenance_ingredients",
+        "evidence_signals",
+        "evidence_coverages",
+        "evidence_matrices",
+        "contribution_events",
+        "investigation_runs",
+        "investigation_outputs",
+        "public_verification_tokens",
         "review_cases",
         "review_events",
+        "marketplace_assets",
+        "takedown_drafts",
         "webhook_endpoints",
         "webhook_deliveries",
         "usage_records",
@@ -180,6 +199,7 @@ def _configure_sqlite_connection(dbapi_connection, _connection_record):
     and the API request thread write at nearly the same time.
     """
     cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute("PRAGMA busy_timeout=5000")
     cursor.execute("PRAGMA synchronous=NORMAL")

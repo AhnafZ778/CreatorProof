@@ -1,0 +1,106 @@
+{
+  "assertions": {
+    "corrupt_input_parse_error": true,
+    "no_implicit_human_origin_or_trust": true,
+    "png_and_bin_bytes_identical": true,
+    "png_and_bin_unsigned_manifest_absent": true
+  },
+  "available": true,
+  "binary_sha256": "cceb21184cf0f5f3e4dce38275a225ad8ea50d2cda559df7a90ca0737248ad70",
+  "cases": [
+    {
+      "filename": "generated.png",
+      "input_sha256": "47429719d4e4baabdfa856a3e7fbc7dfba98caabb2aec93ad61a7c5cdc34400d",
+      "manifest_summary": null,
+      "normalized_status": "ABSENT",
+      "reason_codes": [
+        "C2PA_MANIFEST_NOT_PRESENT",
+        "ABSENCE_DOES_NOT_ESTABLISH_HUMAN_ORIGIN"
+      ],
+      "status": "NOT_PRESENT",
+      "trust_details": {
+        "ingredient_chain_state": "NOT_PRESENT",
+        "manifest_present": false,
+        "manifest_valid": null,
+        "relevant_ai_assertion_present": null,
+        "signature_valid": null,
+        "signer_trust_state": "NOT_EVALUATED",
+        "signer_trusted": null,
+        "trust_policy_id": "creatorproof-c2patool-default-trust-evaluation-v1",
+        "validation_tool": "c2patool-official"
+      }
+    },
+    {
+      "filename": "generated.bin",
+      "input_sha256": "47429719d4e4baabdfa856a3e7fbc7dfba98caabb2aec93ad61a7c5cdc34400d",
+      "manifest_summary": null,
+      "normalized_status": "ABSENT",
+      "reason_codes": [
+        "C2PA_MANIFEST_NOT_PRESENT",
+        "ABSENCE_DOES_NOT_ESTABLISH_HUMAN_ORIGIN"
+      ],
+      "status": "NOT_PRESENT",
+      "trust_details": {
+        "ingredient_chain_state": "NOT_PRESENT",
+        "manifest_present": false,
+        "manifest_valid": null,
+        "relevant_ai_assertion_present": null,
+        "signature_valid": null,
+        "signer_trust_state": "NOT_EVALUATED",
+        "signer_trusted": null,
+        "trust_policy_id": "creatorproof-c2patool-default-trust-evaluation-v1",
+        "validation_tool": "c2patool-official"
+      }
+    },
+    {
+      "filename": "corrupt.png",
+      "input_sha256": "6341a95148e2dd516abcf07f6bbfb3807f93f2ff3065c87f3d6302d6caac981e",
+      "manifest_summary": null,
+      "normalized_status": "PARSE_ERROR",
+      "reason_codes": [
+        "C2PA_OUTPUT_NOT_JSON",
+        "C2PA_INSPECTION_FAILED"
+      ],
+      "status": "ERROR",
+      "trust_details": {
+        "ingredient_chain_state": "NOT_EVALUATED",
+        "manifest_present": null,
+        "manifest_valid": null,
+        "relevant_ai_assertion_present": null,
+        "signature_valid": null,
+        "signer_trust_state": "NOT_EVALUATED",
+        "signer_trusted": null,
+        "trust_policy_id": "creatorproof-c2patool-default-trust-evaluation-v1",
+        "validation_tool": "c2patool-official"
+      }
+    }
+  ],
+  "fixture": "locally generated unsigned 32x32 RGB PNG; no customer media",
+  "fixture_recipe": {
+    "color": [
+      23,
+      61,
+      141
+    ],
+    "dimensions": [
+      32,
+      32
+    ],
+    "format": "PNG",
+    "mode": "RGB"
+  },
+  "inspection_checked": true,
+  "limits": [
+    "Unsigned/corrupt fixtures only; this does not qualify signed trusted, tampered or AI-asserting credential cases.",
+    "No remote provider, customer media, certificate signing or online revocation request was used."
+  ],
+  "network_fetch": {
+    "ocsp_fetch": false,
+    "remote_manifest_fetch": false
+  },
+  "provider": "c2patool-official",
+  "qualification": "UNSIGNED_AND_CORRUPT_LOCAL_SMOKE_ONLY",
+  "recorded_at": "2026-10-09T08:23:19.498991+00:00",
+  "schema": "creatorproof.c2pa_local_smoke.v1",
+  "tool_version": "0.27.7"
+}

@@ -1,6 +1,7 @@
 import hashlib
 import json
 import logging
+from dataclasses import asdict
 from datetime import UTC, datetime
 from io import BytesIO
 from typing import Annotated
@@ -171,6 +172,14 @@ def _register_bytes(
         )
         db.add(license_row)
     db.flush()
+    from app.services.rights_baseline import ensure_unknown_rights_baseline
+
+    rights_baseline = ensure_unknown_rights_baseline(
+        db,
+        work=work,
+        created_by_principal_id=auth.principal_id,
+        credential_id=auth.credential_id,
+    )
     integrity_events = [
         prepare_integrity_event(
             db,
@@ -181,6 +190,10 @@ def _register_bytes(
             subject_id=work_id,
             attributes={
                 "asset_version": 1,
+                "rights_policy_id": rights_baseline.id,
+                "rights_policy_version": rights_baseline.version,
+                "rights_policy_digest_sha256": rights_baseline.digest_sha256,
+                "rights_policy_source": "SYSTEM_REGISTRATION_UNKNOWN",
                 "catalog_id": catalog_id,
                 "title_sha256": hashlib.sha256(title.strip().encode()).hexdigest(),
                 "sha256": fingerprints.sha256,
@@ -258,6 +271,24 @@ def _register_bytes(
                 # Registration remains available if an optional AI model fails. The scan
                 # packet exposes the fallback provider instead of pretending AI was used.
                 ai_embedding_key = None
+        # Store the read-only source inspection independently of origin policy.
+        # Reuse the gate's inspection when present; OFF still records provenance.
+        provenance = origin_gate.provenance
+        if provenance is None:
+            with container.storage.materialized_path(key, raw=raw) as path:
+                provenance = container.provenance.inspect(path)
+        from app.services.provenance_records import persist_provenance
+
+        persist_provenance(
+            db,
+            tenant_id=tenant_id,
+            subject_type="work",
+            subject_id=work_id,
+            input_sha256=fingerprints.sha256,
+            evidence=asdict(provenance),
+            provider_status=container.provenance.status(),
+            raw=raw,
+        )
         db.commit()
     except Exception:
         db.rollback()
@@ -376,6 +407,8 @@ def register_work_from_upload(
     direct_work_id = "wrk_upl_" + hashlib.sha256(claims.nonce.encode()).hexdigest()[:40]
     existing = db.get(Work, direct_work_id)
     if existing is not None:
+        if existing.deleted_at is not None:
+            raise HTTPException(status_code=410, detail="This registered work was deleted")
         expected_claimant = payload.claimant.strip() if payload.claimant else None
         if (
             existing.tenant_id == auth.tenant_id
@@ -522,7 +555,7 @@ def get_work_media(
     media bytes in the Evidence Packet.
     """
     work = db.get(Work, work_id)
-    if work is None or work.tenant_id != auth.tenant_id:
+    if work is None or work.tenant_id != auth.tenant_id or work.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Work not found")
     asset_version = db.scalar(
         select(AssetVersion)
@@ -603,7 +636,11 @@ def list_works(
     db: Annotated[Session, Depends(get_db)],
     catalog_id: str | None = None,
 ) -> list[Work]:
-    stmt = select(Work).where(Work.tenant_id == auth.tenant_id).order_by(Work.created_at.desc())
+    stmt = (
+        select(Work)
+        .where(Work.tenant_id == auth.tenant_id, Work.deleted_at.is_(None))
+        .order_by(Work.created_at.desc())
+    )
     if catalog_id:
         stmt = stmt.where(Work.catalog_id == catalog_id)
     return list(db.scalars(stmt))
@@ -684,7 +721,48 @@ def delete_work(
             continue
     retained.extend({"key": key, "reason": "STILL_PRESENT_AFTER_DELETE"} for key in remaining)
 
-    db.delete(work)
+    from sqlalchemy import update
+
+    from app.models import (
+        ContributionEvent,
+        ProvenanceRecord,
+        PublicVerificationToken,
+        RightsPolicyVersion,
+    )
+
+    history = any(
+        db.scalar(
+            select(model)
+            .where(model.tenant_id == auth.tenant_id, model.work_id == work_id)
+            .limit(1)
+        )
+        is not None
+        for model in (RightsPolicyVersion, ProvenanceRecord, ContributionEvent)
+    )
+    db.execute(
+        update(PublicVerificationToken)
+        .where(
+            PublicVerificationToken.tenant_id == auth.tenant_id,
+            PublicVerificationToken.resource_type == "work",
+            PublicVerificationToken.resource_id == work_id,
+            PublicVerificationToken.revoked_at.is_(None),
+        )
+        .values(revoked_at=datetime.now(UTC), revoked_by=auth.principal_id or auth.actor_label)
+    )
+    if history:
+        # Preserve immutable factual history and its foreign-key identity while
+        # removing the work from discovery and deleting all source media.
+        work.deleted_at = datetime.now(UTC)
+        work.claimant = None
+        work.title = "Deleted work"
+        receipt.requested_scope = {
+            **receipt.requested_scope,
+            "immutable_history_retained": True,
+            "work_tombstoned": True,
+            "media_retained": False,
+        }
+    else:
+        db.delete(work)
     receipt.state = (
         DeletionReceiptState.COMPLETED
         if not retained

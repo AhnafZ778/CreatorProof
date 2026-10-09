@@ -21,6 +21,7 @@ from app.observability import METRICS, configure_logging, correlation_scope, log
 from app.services.evidence import process_scan
 from app.services.jobs import RedisJobQueue, RedisStreamsJobQueue
 from app.services.orchestration import OutboxDispatcher, StageLedger, worker_identity
+from app.services.retention import purge_expired_candidates
 from app.services.scan_runner import recover_orphaned_scans
 from app.services.webhooks import WebhookDispatcher
 
@@ -68,6 +69,7 @@ def _run_streams(container, settings: Settings, consumer: str) -> None:
             last_maintenance = now
             outbox.dispatch_once()
             webhooks.dispatch_once()
+            purge_expired_candidates(container)
             if container.blockchain is not None:
                 container.blockchain.dispatch_once()
             db = container.database.system_session()
@@ -111,6 +113,7 @@ def _run_list(container, settings: Settings) -> None:
         if now - last_recovery >= settings.redis_job_recovery_interval_seconds:
             last_recovery = now
             queue.recover_stale()
+            purge_expired_candidates(container)
             if container.blockchain is not None:
                 container.blockchain.dispatch_once()
         job = queue.claim(timeout=settings.redis_job_claim_timeout_seconds)

@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -24,6 +25,7 @@ def scan_headers(api_key) -> dict[str, str]:
 @pytest.fixture
 def client(tmp_path, api_key):
     settings = Settings(
+        _env_file=None,
         environment="test",
         database_url=f"sqlite:///{tmp_path / 'test.db'}",
         storage_root=tmp_path / "objects",
@@ -38,6 +40,14 @@ def client(tmp_path, api_key):
         c2pa_mode="off",
         visible_ai_marker_mode="off",
         copy_retrieval_requirement="BASELINE_ALLOWED",
+        model_bundle_path=Path(__file__).parents[1]
+        / "model_lab"
+        / "bundles"
+        / "creatorproof-runtime-ready-v1.json",
+        style_profile_manifest_path=Path(__file__).parents[1]
+        / "model_lab"
+        / "profiles"
+        / "demo-profiles.v1.json",
     )
     app = create_app(settings)
     with TestClient(app) as test_client:

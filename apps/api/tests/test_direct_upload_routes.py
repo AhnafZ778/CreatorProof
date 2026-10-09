@@ -108,11 +108,17 @@ def test_direct_scan_upload_is_consumed(client, image_bytes, tmp_path):
             "upload_token": grant["upload_token"],
             "catalog_id": "demo-catalog",
             "intended_use": "editorial",
+            "country_code": "GB",
+            "source_url": "https://publisher.example/submitted-image",
         },
     )
 
     assert response.status_code == 202, response.text
     assert response.json()["catalog_id"] == "demo-catalog"
+    assert response.json()["submission_context"]["country_code"] == "GB"
+    assert response.json()["submission_context"]["source_url"] == (
+        "https://publisher.example/submitted-image"
+    )
     assert store.exists(claims.key) is False
     replay = client.post(
         "/v1/scans/from-upload",
@@ -121,10 +127,24 @@ def test_direct_scan_upload_is_consumed(client, image_bytes, tmp_path):
             "upload_token": grant["upload_token"],
             "catalog_id": "demo-catalog",
             "intended_use": "editorial",
+            "country_code": "GB",
+            "source_url": "https://publisher.example/submitted-image",
         },
     )
     assert replay.status_code == 202
     assert replay.json()["id"] == response.json()["id"]
+    changed_source = client.post(
+        "/v1/scans/from-upload",
+        headers={"X-API-Key": client.app.state.container.settings.dev_api_key},
+        json={
+            "upload_token": grant["upload_token"],
+            "catalog_id": "demo-catalog",
+            "intended_use": "editorial",
+            "country_code": "GB",
+            "source_url": "https://publisher.example/different-image",
+        },
+    )
+    assert changed_source.status_code == 409
 
 
 def test_direct_work_upload_and_media_redirect(client, image_bytes, tmp_path):

@@ -14,6 +14,7 @@ __pycache__/
 # corrupts the database.
 node_modules/
 .next/
+.next-frontend-validation/
 coverage/
 data/
 dist/

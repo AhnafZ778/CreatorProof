@@ -652,6 +652,8 @@ def build_evidence_packet(
     )
     report("PREPARING_IMAGE", "Preparing the image", 5)
     stage_started = time.perf_counter()
+    if hashlib.sha256(candidate_raw).hexdigest() != scan.candidate_sha256:
+        raise ValueError("CANDIDATE_IMAGE_INTEGRITY_MISMATCH")
     query_image = decode_image(
         candidate_raw,
         max_bytes=settings.max_upload_bytes,
@@ -666,6 +668,18 @@ def build_evidence_packet(
         scan.candidate_storage_key, raw=candidate_raw
     ) as candidate_path:
         provenance = container.provenance.inspect(candidate_path)
+    from app.services.provenance_records import persist_provenance
+
+    persist_provenance(
+        db,
+        tenant_id=scan.tenant_id,
+        subject_type="scan",
+        subject_id=scan.id,
+        input_sha256=scan.candidate_sha256,
+        evidence=asdict(provenance),
+        provider_status=container.provenance.status(),
+        raw=candidate_raw,
+    )
     record_duration("provenance", (time.perf_counter() - stage_started) * 1000)
     report("CHECKING_VISIBLE_LABELS", "Looking for visible AI labels", 20)
     report("CHECKING_AI_SIGNALS", "Checking AI-use signals", 32)
@@ -914,6 +928,9 @@ def build_evidence_packet(
         tenant_id=scan.tenant_id,
         work_id=matched_work.id if matched_work is not None else None,
         intended_use=scan.intended_use,
+        scope_context=(input_binding.requested_capabilities or {}).get("use_context")
+        if input_binding is not None
+        else None,
     )
     if policy_version is None:
         policy_evaluation = {
@@ -1043,6 +1060,36 @@ def build_evidence_packet(
             "semantics": "OPERATIONAL_DIAGNOSTICS_NOT_ACCURACY_METRICS",
         }
     )
+    joint_risk = _joint_risk_summary(
+        match_status=match_status,
+        policy_action=policy_action,
+        style_analysis=style_analysis,
+        synthetic_analysis=synthetic_analysis,
+        origin_policy_mode=origin_policy_mode,
+        coverage_status=str(snapshot.get("coverage_status")),
+    )
+    protection_posture = {
+        "schema": "creatorproof.protection_posture.v1",
+        "mode": "PRE_PUBLICATION_EVIDENCE_TO_ACTION",
+        "strategy": "DETECT_CORROBORATE_EXPLAIN_ACT_PRESERVE",
+        "case_action": joint_risk["case_action"],
+        "recommended_action": joint_risk["recommended_action"],
+        "uncertainty": {
+            "coverage_status": snapshot.get("coverage_status"),
+            "origin_policy_mode": str(origin_policy_mode),
+            "calibration_state": synthetic_analysis.get("calibration", {}).get("state")
+            if isinstance(synthetic_analysis.get("calibration"), dict)
+            else "NOT_REPORTED",
+        },
+        "behavioral_intelligence": {
+            "state": "HISTORY_NOT_CONNECTED",
+            "message": (
+                "This packet is a source-scoped pre-publication check. Repeat-offender "
+                "and marketplace monitoring require an explicit verified source connector."
+            ),
+        },
+        "legal_boundary": "NOT_A_LEGAL_INFRINGEMENT_DETERMINATION",
+    }
     packet = {
         "schema": "creatorproof.evidence_packet.v1",
         "packet_id": f"pkt_{scan.id}",
@@ -1052,6 +1099,12 @@ def build_evidence_packet(
             "sha256": scan.candidate_sha256,
             "request_digest": scan.request_digest,
         },
+        "source_observation": (
+            (input_binding.requested_capabilities or {}).get("marketplace_observation")
+            if input_binding is not None
+            else None
+        ),
+        "submission_context": scan.submission_context,
         "scope": snapshot,
         "model_bundle": {
             **container.model_bundle.packet_record(
@@ -1119,6 +1172,7 @@ def build_evidence_packet(
         "matches": [asdict(item) for item in evidence[:3]],
         "style_analysis": style_analysis,
         "runtime_telemetry": runtime_telemetry,
+        "protection": protection_posture,
         "decision": {
             "match_status": match_status,
             "policy_action": policy_action,
@@ -1151,14 +1205,7 @@ def build_evidence_packet(
             "synthetic_origin_classification": synthetic_analysis.get("classification"),
             "synthetic_origin_policy_mode": str(origin_policy_mode),
             "coverage_status": snapshot.get("coverage_status"),
-            "joint_risk": _joint_risk_summary(
-                match_status=match_status,
-                policy_action=policy_action,
-                style_analysis=style_analysis,
-                synthetic_analysis=synthetic_analysis,
-                origin_policy_mode=origin_policy_mode,
-                coverage_status=str(snapshot.get("coverage_status")),
-            ),
+            "joint_risk": joint_risk,
         },
         "proof": {
             "anchor_status": "PENDING",

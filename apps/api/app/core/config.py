@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     app_name: str = "CreatorProof API"
     environment: Literal["development", "test", "production"] = "development"
     database_url: str = "sqlite:///./creatorproof.db"
+    # Explicit trusted origin for share links; never derive this from request Host.
+    public_verification_base_url: str = ""
     storage_provider: Literal["local", "s3"] = "local"
     storage_root: Path = Path("./data")
     s3_bucket: str = ""
@@ -227,6 +229,37 @@ class Settings(BaseSettings):
     synthetic_external_timeout_seconds: int = Field(default=120, ge=5, le=600)
     synthetic_policy_mode: OriginPolicyMode = OriginPolicyMode.INFORMATIONAL
 
+    # Server-side image-source connectors. These values are secrets and are never
+    # returned by the API or sent to the browser.
+    unsplash_access_key: str = Field(default="", repr=False)
+    pixabay_api_key: str = Field(default="", repr=False)
+    ebay_client_id: str = Field(default="", repr=False)
+    ebay_client_secret: str = Field(default="", repr=False)
+    # Dev ID is retained for legacy eBay APIs; Browse OAuth uses only ID + secret.
+    ebay_dev_id: str = Field(default="", repr=False)
+    ebay_environment: Literal["sandbox", "production"] = "sandbox"
+    ebay_marketplace_id: str = Field(default="EBAY_US", pattern=r"^EBAY_[A-Z_]{2,12}$")
+    marketplace_timeout_seconds: float = Field(default=20.0, ge=1.0, le=120.0)
+    marketplace_max_results: int = Field(default=30, ge=3, le=30)
+    marketplace_max_download_bytes: int = Field(default=12 * 1024 * 1024, ge=1_048_576)
+
+    # AI & Inference is used only for operator-reviewable notice drafting. The
+    # key is deliberately excluded from repr/log output and is never sent to
+    # the browser.
+    aiand_api_key: str = Field(default="", repr=False)
+    aiand_base_url: str = "https://api.aiand.com/v1"
+    aiand_model: str = "deepseek-ai/deepseek-v4-flash"
+    aiand_timeout_seconds: float = Field(default=30.0, ge=1.0, le=120.0)
+    # The investigation assistant is deliberately bounded.  These limits apply
+    # before a request leaves the API process and keep an untrusted evidence
+    # packet from turning into an unbounded provider bill or response payload.
+    aiand_max_attempts: int = Field(default=2, ge=1, le=3)
+    aiand_retry_backoff_seconds: float = Field(default=0.25, ge=0.0, le=10.0)
+    aiand_response_max_bytes: int = Field(default=512 * 1024, ge=16 * 1024, le=4 * 1024 * 1024)
+    aiand_prompt_max_chars: int = Field(default=120_000, ge=10_000, le=1_000_000)
+    aiand_circuit_breaker_failures: int = Field(default=5, ge=1, le=100)
+    aiand_circuit_breaker_cooldown_seconds: float = Field(default=60.0, ge=1.0, le=3600.0)
+
     # Enrollment gate. A protected-works catalog is a record of human authorship,
     # so the origin lane also runs when a work is registered and BLOCK refuses the
     # file once it reports AI indicators. It never refuses on an inconclusive or
@@ -351,6 +384,42 @@ class Settings(BaseSettings):
     )
 
     @model_validator(mode="after")
+    def _validate_public_verification_origin(self) -> "Settings":
+        value = self.public_verification_base_url.strip()
+        if not value:
+            self.public_verification_base_url = ""
+            return self
+        parsed = urlsplit(value)
+        local_http = (
+            self.environment != "production"
+            and parsed.scheme == "http"
+            and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        )
+        if (
+            not parsed.hostname
+            or (parsed.scheme != "https" and not local_http)
+            or parsed.username
+            or parsed.password
+            or parsed.query
+            or parsed.fragment
+            or parsed.path not in {"", "/"}
+            or any(ord(character) < 33 for character in value)
+        ):
+            raise ValueError(
+                "CREATORPROOF_PUBLIC_VERIFICATION_BASE_URL must be a trusted HTTPS origin "
+                "without credentials, paths, query data or fragments; development may "
+                "use a loopback HTTP origin"
+            )
+        try:
+            _ = parsed.port
+        except ValueError as exc:
+            raise ValueError(
+                "CREATORPROOF_PUBLIC_VERIFICATION_BASE_URL has an invalid port"
+            ) from exc
+        self.public_verification_base_url = value.rstrip("/")
+        return self
+
+    @model_validator(mode="after")
     def _validate_object_storage(self) -> "Settings":
         """Refuse an incomplete or unsafe durable-storage selection at startup."""
 
@@ -421,6 +490,33 @@ class Settings(BaseSettings):
                 )
             if self.environment == "production" and parsed.scheme != "https":
                 raise ValueError(f"{url_name} must use HTTPS in production")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_aiand_endpoint(self) -> "Settings":
+        """Keep the server-side AI provider endpoint unambiguous and safe.
+
+        The provider is optional, but when configured its URL must be an
+        absolute origin without embedded credentials or query parameters.  A
+        production deployment may only send evidence to an HTTPS endpoint.
+        """
+        url = self.aiand_base_url.strip()
+        parsed = urlsplit(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError("CREATORPROOF_AIAND_BASE_URL must be an absolute HTTP(S) URL")
+        if not parsed.hostname or any(character.isspace() for character in parsed.hostname):
+            raise ValueError("CREATORPROOF_AIAND_BASE_URL must contain a valid hostname")
+        try:
+            _ = parsed.port
+        except ValueError as exc:
+            raise ValueError("CREATORPROOF_AIAND_BASE_URL must contain a valid port") from exc
+        if parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise ValueError(
+                "CREATORPROOF_AIAND_BASE_URL must not contain credentials, a query string, "
+                "or a fragment"
+            )
+        if self.environment == "production" and parsed.scheme != "https":
+            raise ValueError("CREATORPROOF_AIAND_BASE_URL must use HTTPS in production")
         return self
 
     @model_validator(mode="after")

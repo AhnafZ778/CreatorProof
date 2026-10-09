@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session
 
 from app.domain.platform import WebhookDeliveryState
 from app.observability import METRICS, current_correlation_id, log_event
+from app.services.safe_http import safe_urlopen
 
 logger = logging.getLogger("creatorproof.webhooks")
 
@@ -225,8 +226,9 @@ class WebhookDispatcher:
             )
             if urllib.parse.urlparse(endpoint.url).scheme not in {"http", "https"}:
                 raise ValueError("WEBHOOK_UNSUPPORTED_SCHEME")
-            with urllib.request.urlopen(  # noqa: S310 - scheme validated above
-                request, timeout=self._settings.webhook_timeout_seconds
+            with safe_urlopen(
+                request, timeout=self._settings.webhook_timeout_seconds,
+                allow_private=self._settings.webhook_allow_private_hosts,
             ) as response:
                 row.response_status = int(response.status)
             row.state = str(WebhookDeliveryState.DELIVERED)

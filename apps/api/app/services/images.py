@@ -17,6 +17,8 @@ def decode_image(raw: bytes, *, max_bytes: int, max_pixels: int) -> Image.Image:
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             probe = Image.open(BytesIO(raw))
+            if probe.format not in {"JPEG", "PNG", "WEBP"}:
+                raise HTTPException(status_code=400, detail="Unsupported image format")
             width, height = probe.size
             if width * height > max_pixels:
                 raise HTTPException(
@@ -29,7 +31,12 @@ def decode_image(raw: bytes, *, max_bytes: int, max_pixels: int) -> Image.Image:
         return image
     except HTTPException:
         raise
-    except (UnidentifiedImageError, OSError, Image.DecompressionBombWarning) as exc:
+    except (
+        UnidentifiedImageError,
+        OSError,
+        Image.DecompressionBombWarning,
+        Image.DecompressionBombError,
+    ) as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unsupported or invalid image",

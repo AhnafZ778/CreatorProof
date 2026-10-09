@@ -1,0 +1,1191 @@
+{
+  "dataset_id": "phase1-internal-procedural-v1",
+  "domain_id": "INTERNAL_PROCEDURAL_ART",
+  "items": [
+    {
+      "asset_id": "source-000",
+      "cohorts": [
+        "REFERENCE"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "d49ccd8fbe6eebd70c102dc75c402640d0baec2ce1dc7818bcac2b05bad3639b",
+      "source_lineage_id": "procedural-lineage-731-0"
+    },
+    {
+      "asset_id": "source-000-jpeg_recompression",
+      "cohorts": [
+        "JPEG_RECOMPRESSION"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-jpeg_recompression.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "fa89a23f8d698a569947a2222b66429a86d1a8070dd70924e6f6506a0fdb1cff",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "JPEG_RECOMPRESSION"
+    },
+    {
+      "asset_id": "source-000-resize",
+      "cohorts": [
+        "RESIZE"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-resize.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "3dd05f2077cddff0c63326ab84db6f0a6cf7952f7b2cfd16de44ea48df94a99f",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "RESIZE"
+    },
+    {
+      "asset_id": "source-000-crop",
+      "cohorts": [
+        "CROP"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-crop.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "79f80fd17b391d36bfcdd7f96d64faff4e5efa6f8c033ac9562b79244ed1744c",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "CROP"
+    },
+    {
+      "asset_id": "source-000-mirror",
+      "cohorts": [
+        "MIRROR"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-mirror.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "993514e0cd14f15b4a16226d4401915fc14ba2c1fcaacad0436435f50824b541",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "MIRROR"
+    },
+    {
+      "asset_id": "source-000-rotation",
+      "cohorts": [
+        "ROTATION"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-rotation.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "ac1d34b0b24b27f82937c4260505539e4423b6c5029bd9b3181a043be44c6284",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "ROTATION"
+    },
+    {
+      "asset_id": "source-000-overlay",
+      "cohorts": [
+        "OVERLAY"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "42adaa55dda51ff1fc4d30bdb845444bcafab0252a5fb792531d3599fe4644cf",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "OVERLAY"
+    },
+    {
+      "asset_id": "source-000-text_overlay",
+      "cohorts": [
+        "TEXT_OVERLAY"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-text_overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "8c596a9123c529d9b279f48b34b484b956c37624e48a4dd33fc8b202c7d71c9e",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "TEXT_OVERLAY"
+    },
+    {
+      "asset_id": "source-000-color_shift",
+      "cohorts": [
+        "COLOR_SHIFT"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-color_shift.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "4be927d75a5dcacc4efc167035306537c07fe948147be3bb03ba5cd8b465251d",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "COLOR_SHIFT"
+    },
+    {
+      "asset_id": "source-000-recoloring",
+      "cohorts": [
+        "RECOLORING"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-recoloring.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "d9bae8ba8169c3981445d9547391d21fb3182f68fdf294dcd8cecaff5c3e8048",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "RECOLORING"
+    },
+    {
+      "asset_id": "source-000-partial_reuse",
+      "cohorts": [
+        "PARTIAL_REUSE"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-partial_reuse.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "b8fa871961f196592fe086c7f17c68f03aaff6961cab003d27fc07439657029b",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "PARTIAL_REUSE"
+    },
+    {
+      "asset_id": "source-000-screenshot",
+      "cohorts": [
+        "SCREENSHOT"
+      ],
+      "derived_from_asset_id": "source-000",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-000-screenshot.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "6bea8e147b12a598684e80a983e14517356b9718e802124bd6dc19400fdb3849",
+      "source_lineage_id": "procedural-lineage-731-0",
+      "transformation_id": "SCREENSHOT"
+    },
+    {
+      "asset_id": "source-000-unrelated_similar_subject",
+      "cohorts": [
+        "UNRELATED_SIMILAR_SUBJECT"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-000-unrelated_similar_subject.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "d29dff00d916edc5ea317966ac221b1605a12110df528dd5a33cbfd541dffeb5",
+      "source_lineage_id": "independent-731-0-0"
+    },
+    {
+      "asset_id": "source-000-same_subject_different_creator_proxy",
+      "cohorts": [
+        "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-000-same_subject_different_creator_proxy.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "46ef92605418023f8298af5cb980b83b6f9d27c0f538a675714b5ca47ab52fbb",
+      "source_lineage_id": "independent-731-0-1"
+    },
+    {
+      "asset_id": "source-000-same_palette_different_composition",
+      "cohorts": [
+        "SAME_PALETTE_DIFFERENT_COMPOSITION"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-000-same_palette_different_composition.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "776aa1c76111fb8e5a89361b01e05e6209f551d74ad81cf6f1689e626a73389a",
+      "source_lineage_id": "independent-731-0-2"
+    },
+    {
+      "asset_id": "source-000-style_like_non_copying",
+      "cohorts": [
+        "STYLE_LIKE_NON_COPYING"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-000-style_like_non_copying.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "9ab51503badc32265bbee2e282c7ce21c2eee1aa990e7788193e57b889b0a113",
+      "source_lineage_id": "independent-731-0-3"
+    },
+    {
+      "asset_id": "source-001",
+      "cohorts": [
+        "REFERENCE"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "87debfa6d43554a972416b29f457ee1c7799a478e04e7903b0ab85b4cfb711f7",
+      "source_lineage_id": "procedural-lineage-731-1"
+    },
+    {
+      "asset_id": "source-001-jpeg_recompression",
+      "cohorts": [
+        "JPEG_RECOMPRESSION"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-jpeg_recompression.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "0930c6f7c81daeac281bc5b62bd5e8b18b867932b28c1c4585bcd8592e937a0d",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "JPEG_RECOMPRESSION"
+    },
+    {
+      "asset_id": "source-001-resize",
+      "cohorts": [
+        "RESIZE"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-resize.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "8ea77afcc6e8ef9c7ad7c22add27eb2b92ce8a58b81065a8dd61688a69e5e01f",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "RESIZE"
+    },
+    {
+      "asset_id": "source-001-crop",
+      "cohorts": [
+        "CROP"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-crop.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "b0052d484d2f35dd45365ce361ecf5fb24c017036f31bd774cee3c0903272079",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "CROP"
+    },
+    {
+      "asset_id": "source-001-mirror",
+      "cohorts": [
+        "MIRROR"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-mirror.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "1408dc3405e024fbe1be81b3bbd45ca31f78a8fc977656f5320a4ac8d36990e4",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "MIRROR"
+    },
+    {
+      "asset_id": "source-001-rotation",
+      "cohorts": [
+        "ROTATION"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-rotation.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "ebbeb5e7c3959a5d7acb30bfe2535d694f70c5794bf6bee3fad6c76470691af6",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "ROTATION"
+    },
+    {
+      "asset_id": "source-001-overlay",
+      "cohorts": [
+        "OVERLAY"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "fb9d9ddd58d677fecd2abd8364e93b7d83f827feca4b7163650607ed940bdde4",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "OVERLAY"
+    },
+    {
+      "asset_id": "source-001-text_overlay",
+      "cohorts": [
+        "TEXT_OVERLAY"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-text_overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "9aae57b2babfb0d02f84aaaee25864dd0da2318da65ef5277499118101aaf5ea",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "TEXT_OVERLAY"
+    },
+    {
+      "asset_id": "source-001-color_shift",
+      "cohorts": [
+        "COLOR_SHIFT"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-color_shift.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "f7bc3e6c6d96a232ffde5800cc1ee397ee2792ff68a8c195bc037e6faddfacd7",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "COLOR_SHIFT"
+    },
+    {
+      "asset_id": "source-001-recoloring",
+      "cohorts": [
+        "RECOLORING"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-recoloring.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "cdca8420bc559e0d6fe57e9a2f7264a95a6738e2fecd5f5f402aa7416f13b226",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "RECOLORING"
+    },
+    {
+      "asset_id": "source-001-partial_reuse",
+      "cohorts": [
+        "PARTIAL_REUSE"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-partial_reuse.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "87d869cb13b4b95c259c3b368113d891ce02016fb1537f2d1ba125545c33bf06",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "PARTIAL_REUSE"
+    },
+    {
+      "asset_id": "source-001-screenshot",
+      "cohorts": [
+        "SCREENSHOT"
+      ],
+      "derived_from_asset_id": "source-001",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-001-screenshot.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "c8238ab35f422c81a81bfdafdc31264d18f20f748163b33c808f90e691d0b176",
+      "source_lineage_id": "procedural-lineage-731-1",
+      "transformation_id": "SCREENSHOT"
+    },
+    {
+      "asset_id": "source-001-unrelated_similar_subject",
+      "cohorts": [
+        "UNRELATED_SIMILAR_SUBJECT"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-001-unrelated_similar_subject.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "eb5288a08b3ff4e2953df9e0b97590d2c0ebcdc0906b2578a5f6136d2e4802ab",
+      "source_lineage_id": "independent-731-1-0"
+    },
+    {
+      "asset_id": "source-001-same_subject_different_creator_proxy",
+      "cohorts": [
+        "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-001-same_subject_different_creator_proxy.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "4d88ea0303ca855316a2d40423482a8c927db2b5f04919c09960fd67f92507e7",
+      "source_lineage_id": "independent-731-1-1"
+    },
+    {
+      "asset_id": "source-001-same_palette_different_composition",
+      "cohorts": [
+        "SAME_PALETTE_DIFFERENT_COMPOSITION"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-001-same_palette_different_composition.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "0055f3dd839250f4e2d4363e9e585168929f981dfbd1ce14466387aa5081c018",
+      "source_lineage_id": "independent-731-1-2"
+    },
+    {
+      "asset_id": "source-001-style_like_non_copying",
+      "cohorts": [
+        "STYLE_LIKE_NON_COPYING"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-001-style_like_non_copying.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "9b9da4a2e4c6db645553d4c87d1c448b1ebe38b5782520d9cf31436f26a3c9b4",
+      "source_lineage_id": "independent-731-1-3"
+    },
+    {
+      "asset_id": "source-002",
+      "cohorts": [
+        "REFERENCE"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "49cce5aa80c82196d4a50068489745c7d9a01582d1a260c3cbfe4cc192c97042",
+      "source_lineage_id": "procedural-lineage-731-2"
+    },
+    {
+      "asset_id": "source-002-jpeg_recompression",
+      "cohorts": [
+        "JPEG_RECOMPRESSION"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-jpeg_recompression.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "edabf12c2060a2b0dd572c406fb8be4e9e6a035d01b3fadb198c8083189804ba",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "JPEG_RECOMPRESSION"
+    },
+    {
+      "asset_id": "source-002-resize",
+      "cohorts": [
+        "RESIZE"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-resize.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "c9b67525f65b2fa969146b989122c244d8b860e80eb268541d059db1a1dddbfa",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "RESIZE"
+    },
+    {
+      "asset_id": "source-002-crop",
+      "cohorts": [
+        "CROP"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-crop.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "4009cbd7ffe2bb26658e65c4f4dff07ade2013aa5956cbf75b7bb3e812c0b6f9",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "CROP"
+    },
+    {
+      "asset_id": "source-002-mirror",
+      "cohorts": [
+        "MIRROR"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-mirror.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "ab12fa2fcafeddd6ab2daacc57f444e265cab4b2979096385c371cf92c7d25c0",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "MIRROR"
+    },
+    {
+      "asset_id": "source-002-rotation",
+      "cohorts": [
+        "ROTATION"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-rotation.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "0bbcf29da92476374934263520db5f8e5c565ccf9d84556247d0b8453cbd74b3",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "ROTATION"
+    },
+    {
+      "asset_id": "source-002-overlay",
+      "cohorts": [
+        "OVERLAY"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "4b16bededbd6d416972ce67a0f0e5e5647ca09db33cf68c06555ac2d939fd3b8",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "OVERLAY"
+    },
+    {
+      "asset_id": "source-002-text_overlay",
+      "cohorts": [
+        "TEXT_OVERLAY"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-text_overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "cdb570b0970dcd326c45a7b2eb6184228b1091996f04d2e75b4214cf60b327b1",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "TEXT_OVERLAY"
+    },
+    {
+      "asset_id": "source-002-color_shift",
+      "cohorts": [
+        "COLOR_SHIFT"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-color_shift.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "b84f7bee231118d95bc0c0b84b222bee477f60f298994a9cba1cd346221f3ded",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "COLOR_SHIFT"
+    },
+    {
+      "asset_id": "source-002-recoloring",
+      "cohorts": [
+        "RECOLORING"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-recoloring.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "b88b475ecb009e7f36bcdb075a6ee615bb94a32dafb8dbe20c7e5b7b41f94ab8",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "RECOLORING"
+    },
+    {
+      "asset_id": "source-002-partial_reuse",
+      "cohorts": [
+        "PARTIAL_REUSE"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-partial_reuse.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "887e3425dc2918614b5a7d055347333170294f5cb7c188e81831127e160ee760",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "PARTIAL_REUSE"
+    },
+    {
+      "asset_id": "source-002-screenshot",
+      "cohorts": [
+        "SCREENSHOT"
+      ],
+      "derived_from_asset_id": "source-002",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-002-screenshot.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "e979d40c24a67c445f1a7f33d57daa161d48eedf9fceb3cf9ec1af34a76efe9f",
+      "source_lineage_id": "procedural-lineage-731-2",
+      "transformation_id": "SCREENSHOT"
+    },
+    {
+      "asset_id": "source-002-unrelated_similar_subject",
+      "cohorts": [
+        "UNRELATED_SIMILAR_SUBJECT"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-002-unrelated_similar_subject.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "3bcdc4c3e7c74ed5918c6b6e6c61b1803f84a5eb566592333fc3c9a7ee5630a7",
+      "source_lineage_id": "independent-731-2-0"
+    },
+    {
+      "asset_id": "source-002-same_subject_different_creator_proxy",
+      "cohorts": [
+        "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-002-same_subject_different_creator_proxy.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "8f00bd98e959a3ea801eb6f9ba3d762b3f7e6599954ee56157a517c5699323a3",
+      "source_lineage_id": "independent-731-2-1"
+    },
+    {
+      "asset_id": "source-002-same_palette_different_composition",
+      "cohorts": [
+        "SAME_PALETTE_DIFFERENT_COMPOSITION"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-002-same_palette_different_composition.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "c205222cc2c42048ae7c0023a7384cce286591f9e27af9009f920cbfee7c6d1e",
+      "source_lineage_id": "independent-731-2-2"
+    },
+    {
+      "asset_id": "source-002-style_like_non_copying",
+      "cohorts": [
+        "STYLE_LIKE_NON_COPYING"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-002-style_like_non_copying.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "531e20e38a352207357f0c8de454a16697700cb6ed400acc8f630597ffb038c1",
+      "source_lineage_id": "independent-731-2-3"
+    },
+    {
+      "asset_id": "source-003",
+      "cohorts": [
+        "REFERENCE"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "bb82ac5c61605c667e5b39dcd78ce1a7780298533da564e4e3401ff4faff2460",
+      "source_lineage_id": "procedural-lineage-731-3"
+    },
+    {
+      "asset_id": "source-003-jpeg_recompression",
+      "cohorts": [
+        "JPEG_RECOMPRESSION"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-jpeg_recompression.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "342f38b1e87e21867bce12da14e1be2d16a9e0cabaaf02c88de7993128208781",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "JPEG_RECOMPRESSION"
+    },
+    {
+      "asset_id": "source-003-resize",
+      "cohorts": [
+        "RESIZE"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-resize.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "c1f33e4c9116559ad5f334aeeb922de549638f001805bfff7beacc600964b7b9",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "RESIZE"
+    },
+    {
+      "asset_id": "source-003-crop",
+      "cohorts": [
+        "CROP"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-crop.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "93da5d6f3cc7032b17c3734bdc124982a2ffdf0a2fe153c4cb39c0b2af880cc1",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "CROP"
+    },
+    {
+      "asset_id": "source-003-mirror",
+      "cohorts": [
+        "MIRROR"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-mirror.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "f137e0d92f794a2a87c726f1e542d2fff762354e5db9350d6fe70a6a0a9d2545",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "MIRROR"
+    },
+    {
+      "asset_id": "source-003-rotation",
+      "cohorts": [
+        "ROTATION"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-rotation.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "51f244566e83116722d4c43c7d6b95350bb0808e8cd79a949bfb64258117ecd4",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "ROTATION"
+    },
+    {
+      "asset_id": "source-003-overlay",
+      "cohorts": [
+        "OVERLAY"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "b636b8812a920dd3f669b10a4101ac671923e15758ec495c4f6ccb3a4b082219",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "OVERLAY"
+    },
+    {
+      "asset_id": "source-003-text_overlay",
+      "cohorts": [
+        "TEXT_OVERLAY"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-text_overlay.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "2122b6b0de4bba634a438bc74c390009e777692ff0a07df58b6a4d9bee0e54c8",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "TEXT_OVERLAY"
+    },
+    {
+      "asset_id": "source-003-color_shift",
+      "cohorts": [
+        "COLOR_SHIFT"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-color_shift.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "d0a0276197683b57d557c2af4fee714df5b331fcb563d1ed294f44e44989feea",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "COLOR_SHIFT"
+    },
+    {
+      "asset_id": "source-003-recoloring",
+      "cohorts": [
+        "RECOLORING"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-recoloring.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "3feddaedef5532a59bc469a5b4c2c9bfd10c82043df46e7d5b0e9625aa04e2a2",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "RECOLORING"
+    },
+    {
+      "asset_id": "source-003-partial_reuse",
+      "cohorts": [
+        "PARTIAL_REUSE"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-partial_reuse.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "86cc6421bee0d44be82a7577f90aa6b9c0649a52c5eed0acee2b6d30aa04856e",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "PARTIAL_REUSE"
+    },
+    {
+      "asset_id": "source-003-screenshot",
+      "cohorts": [
+        "SCREENSHOT"
+      ],
+      "derived_from_asset_id": "source-003",
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": true
+      },
+      "location": "images/source-003-screenshot.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "0b2dccba573d7a9a2d14ea328f8a4ef5eeebfda20f45719103300992f31cff18",
+      "source_lineage_id": "procedural-lineage-731-3",
+      "transformation_id": "SCREENSHOT"
+    },
+    {
+      "asset_id": "source-003-unrelated_similar_subject",
+      "cohorts": [
+        "UNRELATED_SIMILAR_SUBJECT"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-003-unrelated_similar_subject.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "78e2f4a96a6966b5f7c783193e213776e1da249068f1ebbe7da138f498c24824",
+      "source_lineage_id": "independent-731-3-0"
+    },
+    {
+      "asset_id": "source-003-same_subject_different_creator_proxy",
+      "cohorts": [
+        "SAME_SUBJECT_DIFFERENT_CREATOR_PROXY"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-003-same_subject_different_creator_proxy.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "7ad830368beb06e5ad96ef4bd2d0530f19ee33e9c461926db5cb29c44e8a1a71",
+      "source_lineage_id": "independent-731-3-1"
+    },
+    {
+      "asset_id": "source-003-same_palette_different_composition",
+      "cohorts": [
+        "SAME_PALETTE_DIFFERENT_COMPOSITION"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-003-same_palette_different_composition.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "0295b1445305c6d9262d4bcb296ebbc8f28bf19774e1dddbdb4b7addf2903fdd",
+      "source_lineage_id": "independent-731-3-2"
+    },
+    {
+      "asset_id": "source-003-style_like_non_copying",
+      "cohorts": [
+        "STYLE_LIKE_NON_COPYING"
+      ],
+      "exposure_state": "DEMO_EXPOSED",
+      "label": {
+        "match": false
+      },
+      "location": "images/source-003-style_like_non_copying.png",
+      "rights": {
+        "reference": "repository-procedural-fixture-generator",
+        "state": "AUTHORIZED"
+      },
+      "sha256": "21118df5944236c329267e6f57e745086c933c1d7fb5a69d3f09135d1fbd75fd",
+      "source_lineage_id": "independent-731-3-3"
+    }
+  ],
+  "lane": "COPY",
+  "limitations": [
+    "Procedural smoke fixtures, not a held-out real-world accuracy corpus.",
+    "Creator and style negative cohorts are artificial proxies.",
+    "Procedural synthesis is not evidence of AI-generator origin."
+  ],
+  "manifest_id": "phase1-procedural-731-v1",
+  "partition": "DEMO",
+  "schema": "creatorproof.corpus_manifest.v1"
+}

@@ -768,6 +768,14 @@ button { min-height: 44px; font-size: 14px; }
 
 .verdictNext p { margin: var(--cp-2) 0 0; max-width: 68ch; font-size: 13.5px; line-height: 1.6; }
 
+.verdictNext .verdictProtectionNote {
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  letter-spacing: .02em;
+}
+
+.verdictProtectionNote b { color: var(--cp-text-secondary); }
+
 .verdictActions { display: flex; gap: var(--cp-2); flex-wrap: wrap; margin-top: var(--cp-4); }
 
 .verdictActions button {
@@ -805,6 +813,95 @@ button { min-height: 44px; font-size: 14px; }
 
 .verdictProofChip b { font-size: 12.5px; font-weight: 600; }
 .verdictProofChip span { color: var(--cp-text-faint); font: 600 11px/1.4 var(--cp-font-mono); }
+
+/* ── Protection action ───────────────────────────────────────────────────
+   Detection ends at a policy boundary. This surface gives a reviewer one
+   explicit, attributable next step without turning a model result into an
+   automatic takedown. */
+.protectionAction {
+  margin: 0 max(20px, calc((100vw - 1660px) / 2)) 26px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+.userScanResults .protectionAction { margin-left: 0; margin-right: 0; }
+.protectionAction.action-block { border-color: rgba(248, 113, 113, .34); }
+.protectionAction.action-review { border-color: rgba(251, 191, 36, .32); }
+.protectionAction.action-pass_by_policy { border-color: rgba(52, 211, 153, .32); }
+.protectionActionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--cp-4);
+  padding: var(--cp-6);
+  border-bottom: 1px solid var(--line-soft);
+}
+.protectionActionHead small {
+  color: var(--portal-accent, var(--cp-accent-soft));
+  font: 700 9.5px/1.2 var(--cp-font-mono);
+  letter-spacing: .16em;
+}
+.protectionActionHead h3 {
+  margin: var(--cp-2) 0 0;
+  color: var(--cp-text);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -.03em;
+}
+.protectionActionBadge {
+  flex: 0 0 auto;
+  padding: 6px 11px;
+  border: 1px solid rgba(251, 191, 36, .4);
+  border-radius: var(--cp-r-pill);
+  color: var(--cp-review);
+  font: 700 10px/1.2 var(--cp-font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.protectionActionBadge.isResolved { border-color: rgba(52, 211, 153, .42); color: var(--cp-pass); }
+.protectionActionBody { padding: var(--cp-6); }
+.protectionActionGuidance { max-width: 74ch; }
+.protectionActionGuidance b { color: var(--cp-text); font-size: 15px; font-weight: 600; }
+.protectionActionGuidance p { margin: var(--cp-2) 0 0; color: var(--cp-text-secondary); font-size: 13.5px; line-height: 1.6; }
+.protectionActionGuidance small { display: block; margin-top: var(--cp-3); color: var(--cp-text-faint); font-size: 11.5px; line-height: 1.55; }
+.protectionActionForm { margin-top: var(--cp-5); }
+.protectionActionOptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-2); }
+.protectionActionOptions button {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  min-height: 86px;
+  margin: 0;
+  padding: var(--cp-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--cp-r-md);
+  background: rgba(255, 255, 255, .025);
+  color: var(--cp-text-secondary);
+  text-align: left;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+}
+.protectionActionOptions button:hover { border-color: var(--line-strong); background: rgba(255, 255, 255, .06); color: var(--cp-text); }
+.protectionActionOptions button.isSelected { border-color: var(--cp-accent-soft); background: rgba(103, 168, 255, .12); color: var(--cp-text); box-shadow: 0 0 0 1px rgba(103, 168, 255, .14); }
+.protectionActionOptions button b { font-size: 13px; font-weight: 600; }
+.protectionActionOptions button span { color: var(--cp-text-muted); font-size: 11.5px; line-height: 1.45; }
+.protectionActionOptions button.isSelected span { color: var(--cp-text-secondary); }
+.protectionActionSelected { margin: var(--cp-3) 0 0; color: var(--cp-accent-soft); font: 600 11px/1.4 var(--cp-font-mono); }
+.protectionActionForm label { display: grid; gap: 7px; margin-top: var(--cp-4); color: var(--cp-text-secondary); font-size: 12px; }
+.protectionActionForm label span { color: var(--cp-text-faint); font-weight: 400; }
+.protectionActionForm textarea { width: 100%; resize: vertical; padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--cp-r-sm); background: rgba(0, 0, 0, .24); color: var(--cp-text); font: inherit; font-size: 12px; line-height: 1.5; }
+.protectionActionForm textarea:focus { outline: 3px solid rgba(55, 212, 220, .16); border-color: var(--cp-accent-soft); }
+.protectionActionSubmit { width: auto; min-width: 150px; margin-top: var(--cp-4); padding: 10px 16px; border: 1px solid #fff; border-radius: var(--cp-r-pill); background: #fff; color: #000; font-size: 12px; font-weight: 700; }
+.protectionActionSubmit:hover:not(:disabled) { background: rgba(255, 255, 255, .88); }
+.protectionActionSubmit:disabled { opacity: .45; cursor: not-allowed; }
+.protectionActionStatus, .protectionActionClear, .protectionActionResolved { margin-top: var(--cp-5); padding: var(--cp-4); border: 1px solid var(--line-soft); border-radius: var(--cp-r-md); background: rgba(0, 0, 0, .2); }
+.protectionActionStatus { color: var(--cp-text-muted); font-size: 12.5px; }
+.protectionActionStatus.isWarning { border-color: rgba(251, 191, 36, .3); color: var(--cp-review); line-height: 1.55; }
+.protectionActionClear, .protectionActionResolved { display: flex; gap: var(--cp-3); align-items: flex-start; border-color: rgba(52, 211, 153, .3); }
+.protectionActionClear > span, .protectionActionResolved > span { color: var(--cp-pass); font-size: 18px; line-height: 1; }
+.protectionActionClear b, .protectionActionResolved b { color: var(--cp-text); font-size: 13px; font-weight: 600; }
+.protectionActionClear p, .protectionActionResolved p { margin: 4px 0 0; color: var(--cp-text-muted); font-size: 12px; line-height: 1.5; }
+.protectionActionError { margin: var(--cp-4) 0 0; color: var(--cp-block); font-size: 12px; line-height: 1.5; }
 
 /* ── Lane cards ───────────────────────────────────────────────────────────
    The ring is drawn in the lane's own hue whatever it found, because a hue
@@ -937,6 +1034,8 @@ button { min-height: 44px; font-size: 14px; }
   .verdictHero { grid-template-columns: 1fr; }
   .verdictCoverage { border-right: 0; border-bottom: 1px solid var(--line); }
   .verdictLanes { grid-template-columns: 1fr; }
+  .protectionActionHead { flex-direction: column; }
+  .protectionActionOptions { grid-template-columns: 1fr; }
 }
 
 /* ── Evidence section wrapper ─────────────────────────────────────────── */
@@ -1346,6 +1445,7 @@ button { min-height: 44px; font-size: 14px; }
   font-weight: 550;
   letter-spacing: .01em;
 }
+.portalFieldHint { color: var(--cp-text-muted); font-size: var(--cp-text-xs); line-height: 1.45; }
 
 /* What the named catalog holds. Quiet when it holds something, because the
    count is only reassurance then; raised when it is empty, because that is the
@@ -1777,6 +1877,101 @@ button { min-height: 44px; font-size: 14px; }
   background: #fff;
 }
 
+.marketplaceMonitor {
+  padding: 22px;
+}
+
+.marketplaceControls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 14px;
+}
+
+.marketplaceSearch {
+  width: auto;
+  min-width: 150px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+  font-weight: 600;
+}
+
+.marketplaceSearch:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .16);
+}
+
+.marketplaceMessage {
+  margin: 12px 0 0;
+  color: #ffb4b4;
+  font-size: 13px;
+}
+
+.marketplaceResults {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.marketplaceResult {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, .10);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, .22);
+}
+
+.marketplaceResult > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  background: rgba(255, 255, 255, .05);
+}
+
+.marketplaceResult > div {
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+}
+
+.marketplaceResult strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.marketplaceResult small,
+.marketplaceResult a {
+  color: rgba(255, 255, 255, .54);
+  font-size: 11px;
+}
+
+.marketplaceResult a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.marketplaceResult button {
+  width: auto;
+  margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .marketplaceControls,
+  .marketplaceResults {
+    grid-template-columns: 1fr;
+  }
+}
+
 .userScanDesk .error {
   border: 1px solid rgba(248, 113, 113, .35);
   border-radius: 16px;
@@ -2103,3 +2298,224 @@ button { min-height: 44px; font-size: 14px; }
   .originRefusal { padding: var(--cp-4); }
   .originRefusalFacts > div { flex: 1 1 100%; }
 }
+/* Admin uses the portal surfaces, typography and controls above. These rules
+   only arrange operator-specific content and apply its blue portal accent. */
+.adminConsole {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.adminHero .portalHeroActions { gap: var(--cp-3); }
+.adminConsole .portalPrimary,
+.adminConsole .portalSecondary { gap: var(--cp-2); }
+.adminConsole .portalPrimary:disabled,
+.adminConsole .portalSecondary:disabled { cursor: not-allowed; }
+.adminOverview h3 { display: flex; align-items: center; gap: var(--cp-2); }
+.adminOverview h3 svg { color: var(--portal-accent); flex-shrink: 0; }
+.adminPanel { min-width: 0; }
+.adminSectionHead > div { min-width: 0; }
+.adminSectionHead h2 {
+  margin: var(--cp-2) 0 0;
+  font: 400 var(--cp-text-xl) / 1.3 var(--cp-font-sans);
+  letter-spacing: var(--cp-tracking-display);
+}
+.adminSectionSummary {
+  max-width: 72ch;
+  margin: 0 0 var(--cp-6);
+  color: var(--cp-text-muted);
+  font-size: var(--cp-text-sm);
+  line-height: 1.6;
+}
+.adminStatus {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-2);
+  padding: var(--cp-2) var(--cp-3);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-r-pill);
+  background: var(--cp-surface);
+  color: var(--cp-text-secondary);
+  font-size: var(--cp-text-xs);
+  line-height: 1.3;
+}
+.adminStatus i { width: 6px; height: 6px; border-radius: 50%; background: var(--cp-text-faint); }
+.adminStatus.isLive {
+  color: var(--portal-accent);
+  border-color: color-mix(in srgb, var(--portal-accent) 30%, transparent);
+  background: var(--portal-wash);
+}
+.adminStatus.isLive i { background: currentColor; }
+.adminFormGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.adminConsole .portalField { min-width: 0; }
+.adminConsole input, .adminConsole select { min-width: 0; }
+.adminActions { display: flex; align-items: center; gap: var(--cp-3); flex-wrap: wrap; margin-top: var(--cp-6); }
+.adminMonitorTiming { color: var(--cp-text-muted); font-size: var(--cp-text-xs); line-height: 1.5; }
+.adminFootnote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-2);
+  margin-top: var(--cp-6);
+  padding-top: var(--cp-4);
+  border-top: 1px solid var(--cp-line);
+  color: var(--cp-text-muted);
+  font-size: var(--cp-text-xs);
+  line-height: 1.6;
+}
+.adminFootnote svg { margin-top: 2px; flex-shrink: 0; color: var(--portal-accent); }
+.adminError { color: var(--cp-block); font-size: var(--cp-text-sm); line-height: 1.6; }
+.adminImageGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--cp-4); }
+.adminAssetCard {
+  display: grid;
+  grid-template-rows: 160px auto;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-r-lg);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  text-align: left;
+  transition: border-color .18s ease, background-color .18s ease;
+}
+.adminConsole .adminAssetCard:hover {
+  border-color: color-mix(in srgb, var(--portal-accent) 45%, transparent);
+  background: var(--cp-surface-raised);
+}
+.adminAssetCard img { width: 100%; height: 160px; object-fit: cover; background: var(--cp-bg); }
+.adminAssetCard > span { display: grid; gap: var(--cp-2); min-width: 0; padding: var(--cp-4); }
+.adminAssetCard b { font-size: var(--cp-text-sm); font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.adminAssetCard small { color: var(--cp-text-muted); font-size: var(--cp-text-xs); font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
+.adminEmpty {
+  display: grid;
+  justify-items: center;
+  gap: var(--cp-3);
+  padding: var(--cp-8) var(--cp-6);
+  border: 1px dashed var(--cp-line);
+  border-radius: var(--cp-r-lg);
+  background: rgba(0, 0, 0, .15);
+  text-align: center;
+}
+.adminEmptyIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-r-md);
+  background: var(--cp-surface);
+  color: var(--portal-accent);
+}
+.adminEmpty b { color: var(--cp-text-secondary); font-size: var(--cp-text-sm); font-weight: 500; }
+.adminEmpty p { max-width: 48ch; margin: 0; color: var(--cp-text-muted); font-size: var(--cp-text-sm); line-height: 1.6; }
+.adminSplit { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-4); }
+.adminClassification { min-width: 0; padding: var(--cp-4); border: 1px solid var(--cp-line); border-radius: var(--cp-r-lg); }
+.adminClassification h3 { display: flex; align-items: center; gap: var(--cp-2); margin: 0 0 var(--cp-4); font-size: var(--cp-text-base); font-weight: 400; letter-spacing: -.02em; }
+.adminClassification h3 > span { margin-left: auto; color: var(--cp-text-muted); font: 400 var(--cp-text-xs) / 1.4 var(--cp-font-mono); }
+.adminClassification.lane-origin h3 svg { color: var(--cp-lane-origin); }
+.adminClassification.lane-copy h3 svg { color: var(--cp-lane-copy); }
+.adminClassification .adminEmpty { border: 0; background: transparent; padding: var(--cp-6) var(--cp-2); }
+.adminClassification .adminEmptyIcon { color: var(--cp-text-muted); }
+.adminClassification .adminAssetCard { grid-template-columns: 80px minmax(0, 1fr); grid-template-rows: auto; margin-top: var(--cp-3); }
+.adminClassification .adminAssetCard img { height: 100%; min-height: 88px; }
+.adminClassification .adminAssetCard > span { padding: var(--cp-3); }
+.adminCaseList { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--cp-3); margin-bottom: var(--cp-6); }
+.adminCaseList button {
+  display: grid;
+  gap: var(--cp-2);
+  min-width: 0;
+  margin: 0;
+  padding: var(--cp-4);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-r-lg);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  text-align: left;
+}
+.adminCaseList button:hover { background: var(--cp-surface-raised); border-color: var(--cp-line-strong); }
+.adminCaseList button.isSelected { border-color: var(--portal-accent); background: var(--portal-wash); }
+.adminCaseTitle { display: flex; align-items: center; gap: var(--cp-2); min-width: 0; }
+.adminCaseTitle svg { color: var(--portal-accent); flex-shrink: 0; }
+.adminCaseTitle b { font-size: var(--cp-text-sm); font-weight: 500; overflow-wrap: anywhere; }
+.adminCaseList button > span { color: var(--cp-text-secondary); font-size: var(--cp-text-xs); font-weight: 400; }
+.adminCaseList button > small { color: var(--cp-text-faint); font: 400 var(--cp-text-xs) / 1.4 var(--cp-font-mono); overflow-wrap: anywhere; }
+.adminDetectionList { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--cp-3); }
+.adminDetectionList button { display: grid; gap: var(--cp-2); min-width: 0; padding: var(--cp-4); border: 1px solid var(--cp-line); border-radius: var(--cp-r-lg); background: var(--cp-surface); color: var(--cp-text); text-align: left; }
+.adminDetectionList button:hover, .adminDetectionList button.isSelected { border-color: var(--portal-accent); background: var(--portal-wash); }
+.adminDetectionList button > div { display: grid; gap: var(--cp-1); }
+.adminDetectionList b { font-size: var(--cp-text-sm); font-weight: 500; }
+.adminDetectionList span, .adminDetectionList small { color: var(--cp-text-muted); font-size: var(--cp-text-xs); line-height: 1.5; overflow-wrap: anywhere; }
+.adminDetectionList small { font-family: var(--cp-font-mono); color: var(--cp-text-faint); }
+.adminComparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--cp-4); margin-bottom: var(--cp-6); }
+.adminComparisonFigure { min-width: 0; margin: 0; padding: var(--cp-3); border: 1px solid var(--cp-line); border-radius: var(--cp-r-lg); background: var(--cp-surface); }
+.adminComparisonFigure figcaption { margin-bottom: var(--cp-3); color: var(--cp-text-muted); font-size: var(--cp-text-xs); }
+.adminComparisonFigure img, .adminComparisonMissing { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: contain; border-radius: var(--cp-r-md); background: #05070c; }
+.adminComparisonMissing { display: grid; place-items: center; color: var(--cp-text-muted); font-size: var(--cp-text-sm); }
+.adminSelectedAsset { display: flex; gap: var(--cp-4); align-items: center; padding: var(--cp-4); margin-bottom: var(--cp-6); border: 1px solid var(--cp-line); border-radius: var(--cp-r-lg); background: var(--cp-surface); }
+.adminSelectedAsset img { width: 80px; height: 80px; flex-shrink: 0; object-fit: cover; border-radius: var(--cp-r-md); }
+.adminSelectedAsset > div { min-width: 0; overflow-wrap: anywhere; }
+.adminSelectedAsset b { font-size: var(--cp-text-base); font-weight: 500; }
+.adminSelectedAsset p { margin: var(--cp-2) 0; color: var(--cp-text-muted); font-size: var(--cp-text-sm); line-height: 1.5; }
+.adminSelectedAsset a { display: inline-flex; align-items: center; gap: var(--cp-1); color: var(--portal-accent); font-size: var(--cp-text-xs); }
+.adminDraftForm { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.adminDraftForm .adminFull { grid-column: 1 / -1; }
+.adminDraftForm .adminActions { margin-top: var(--cp-2); }
+.adminDraftForm textarea, .adminDraftOutput textarea {
+  width: 100%;
+  padding: var(--cp-4);
+  border: 1px solid var(--cp-line-strong);
+  border-radius: var(--cp-r-lg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .03));
+  color: var(--cp-text);
+  font: 400 var(--cp-text-sm) / 1.6 var(--cp-font-sans);
+  resize: vertical;
+}
+.adminDraftForm textarea:focus-visible, .adminDraftOutput textarea:focus-visible { outline: none; border-color: var(--portal-accent); box-shadow: 0 0 0 4px var(--portal-wash); }
+.adminDraftOutput { margin-top: var(--cp-6); padding-top: var(--cp-6); border-top: 1px solid var(--cp-line); }
+.adminDraftOutput h3 { margin: 0 0 var(--cp-4); font-size: var(--cp-text-lg); font-weight: 400; letter-spacing: var(--cp-tracking-display); overflow-wrap: anywhere; }
+.adminDraftOutput textarea { min-height: 320px; }
+.adminHint { color: var(--cp-text-muted); font-size: var(--cp-text-sm); line-height: 1.6; }
+/* Keep the reused decision panel inside the same neutral portal surface. */
+.adminConsole .protectionAction { --line: var(--cp-line-strong); --line-soft: var(--cp-line); --surface: var(--cp-surface); margin: var(--cp-6) 0 0; border-radius: var(--cp-r-xl); }
+.adminConsole .protectionActionHead small { font-size: var(--cp-text-xs); }
+.adminConsole .protectionActionGuidance p, .adminConsole .protectionActionClear p, .adminConsole .protectionActionResolved p { font-size: var(--cp-text-sm); }
+.adminConsole .protectionActionGuidance small, .adminConsole .protectionActionOptions button span { font-size: var(--cp-text-xs); }
+.adminConsole .protectionActionOptions button b { font-size: var(--cp-text-sm); }
+.adminConsole .protectionActionOptions { margin-top: var(--cp-6); }
+.adminConsole .protectionActionOptions button:hover { border-color: var(--cp-line-strong); }
+.adminConsole .protectionActionStatus, .adminConsole .protectionActionClear, .adminConsole .protectionActionResolved { margin-top: var(--cp-6); }
+@media (max-width: 900px) {
+  .adminFormGrid, .adminDraftForm { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .adminImageGrid, .adminCaseList, .adminDetectionList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  /* Three portal tabs must still fit beside the brand mark on small phones. */
+  .portalNavInner { gap: var(--cp-2); }
+  .portalBrand > span:last-child { display: none; }
+  .portalToggle a { gap: 5px; padding: 8px 10px; font-size: var(--cp-text-xs); }
+  .portalToggle a svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .adminConsole .portalHero { padding: var(--cp-6); }
+  .adminConsole .portalPanel { padding: var(--cp-4); }
+  .adminConsole .adminSectionHead { align-items: flex-start; flex-direction: column; }
+  .adminFormGrid, .adminDraftForm, .adminSplit, .adminCaseList, .adminDetectionList, .adminComparison { grid-template-columns: minmax(0, 1fr); }
+  .adminSelectedAsset { align-items: flex-start; }
+  .adminConsole .protectionActionHead { flex-direction: column; }
+  .adminConsole .protectionActionOptions { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 380px) {
+  .adminImageGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Source status uses the same quiet blue accents as the portal controls. */
+.marketplaceSourceHint {
+  color: var(--muted, #94a3b8);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.marketplaceSourceHint.isSandbox { color: #93b7ef; }
+.marketplaceSourceField { align-self: start; }
+.adminFormGrid:has(.marketplaceSourceField),
+.marketplaceControls:has(.marketplaceSourceField) { align-items: start; }

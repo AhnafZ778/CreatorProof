@@ -14,7 +14,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const web = dirname(dirname(fileURLToPath(import.meta.url)));
-const standalone = join(web, ".next", "standalone");
+const outputDirectory = process.env.CREATORPROOF_WEB_DIST_DIR || ".next";
+const standalone = join(web, outputDirectory, "standalone");
 
 if (process.env.VERCEL === "1") {
   console.log("finalize-standalone: skipped on Vercel (Next.js is hosted natively)");
@@ -30,7 +31,7 @@ if (!existsSync(standalone)) {
 
 for (const [from, to] of [
   [join(web, "public"), join(standalone, "public")],
-  [join(web, ".next", "static"), join(standalone, ".next", "static")],
+  [join(web, outputDirectory, "static"), join(standalone, outputDirectory, "static")],
 ]) {
   if (!existsSync(from)) continue;
   mkdirSync(dirname(to), { recursive: true });

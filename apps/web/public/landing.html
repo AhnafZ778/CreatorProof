@@ -11,6 +11,25 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <style>
 body { font-family: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+/* Keep the page scrollable while removing the browser's visual scrollbar. */
+html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+.site-navbar {
+    position: fixed !important;
+    top: 16px;
+    right: 16px;
+    left: 16px;
+    z-index: 1000 !important;
+    isolation: isolate;
+}
 .sf-pro-display { font-family: "Geist", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
 .fade-in { opacity: 0; animation: fadeIn 1.2s ease-out forwards; }
 .slide-up { transform: translateY(40px); opacity: 0; animation: slideUp 1s ease-out forwards; }
@@ -185,6 +204,63 @@ canvas#neuro {
     z-index: 1;
     opacity: 0;
     transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The attached hero animation is kept behind the landing content and tuned to
+   CreatorProof's blue visual language. */
+.hero-unicorn {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 900px;
+    width: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    filter: hue-rotate(185deg) saturate(1.4) brightness(1.1);
+    transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, rgba(0, 0, 0, .92) 66%, rgba(0, 0, 0, .35) 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 48%, rgba(0, 0, 0, .92) 66%, rgba(0, 0, 0, .35) 86%, transparent 100%);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+}
+
+/* The original CreatorProof scene carries the faint editor/control-panel
+   imagery and its hover reveal. Keep it as a second, blue-tinted layer. */
+.hero-legacy-ui {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 900px;
+    width: 100%;
+    z-index: 1;
+    pointer-events: auto;
+    overflow: hidden;
+    opacity: .2;
+    filter: grayscale(1) sepia(1) hue-rotate(190deg) saturate(4.2) brightness(1.08) contrast(1.04);
+    transition: opacity .45s ease, filter .45s ease;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 48%, rgba(0, 0, 0, .92) 66%, rgba(0, 0, 0, .35) 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 48%, rgba(0, 0, 0, .92) 66%, rgba(0, 0, 0, .35) 86%, transparent 100%);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+}
+
+.hero-legacy-ui.is-hovering,
+.hero-legacy-ui:hover {
+    opacity: .58;
+    filter: grayscale(1) sepia(1) hue-rotate(190deg) saturate(4.6) brightness(1.14) contrast(1.06);
+}
+
+.hero-legacy-ui::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(37, 121, 255, .2), transparent 60%),
+        rgba(20, 100, 255, .16);
+    mix-blend-mode: screen;
 }
 
 /* Capability rail: a looping selector on the left, a synced description on the
@@ -881,15 +957,33 @@ canvas#neuro {
 
 <body class="min-h-full overflow-x-hidden text-white bg-black">
     <canvas id="neuro"></canvas>
-    <div class="spline-container absolute top-0 w-full h-1200 -z-10">
-<div data-us-project="5lHoGfe3FLqHAGyFDn3C" style="width:full; height: 900px"></div>
+    <div id="hero-unicorn-background" class="hero-unicorn z-0">
+        <div data-us-project="AhqzKk9mZE0EnlENMQDi" class="absolute inset-0 w-full h-full opacity-95"></div>
+    </div>
+    <div id="hero-legacy-ui" class="hero-legacy-ui">
+        <div data-us-project="5lHoGfe3FLqHAGyFDn3C" class="absolute inset-0 w-full h-full"></div>
+    </div>
 <script type="text/javascript">
-    !function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.29/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head || document.body).appendChild(i)}}();
+    !function(){if(!window.UnicornStudio){window.UnicornStudio={isInitialized:!1};var i=document.createElement("script");i.src="https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v1.4.34/dist/unicornStudio.umd.js",i.onload=function(){window.UnicornStudio.isInitialized||(UnicornStudio.init(),window.UnicornStudio.isInitialized=!0)},(document.head || document.body).appendChild(i)}}();
 </script>
+<script>
+    (() => {
+        const legacy = document.getElementById("hero-legacy-ui");
+        if (!legacy) return;
 
-</div>
+        const updateLegacyHover = (event) => {
+            const rect = legacy.getBoundingClientRect();
+            const inside = event.clientX >= rect.left && event.clientX <= rect.right
+                && event.clientY >= rect.top && event.clientY <= rect.bottom;
+            legacy.classList.toggle("is-hovering", inside);
+        };
+
+        window.addEventListener("pointermove", updateLegacyHover, { passive: true });
+        window.addEventListener("blur", () => legacy.classList.remove("is-hovering"));
+    })();
+</script>
     <!-- Navigation -->
-    <header class="fixed top-4 left-4 right-4 z-50 fade-in">
+    <header class="site-navbar fade-in">
         <div class="max-w-7xl mx-auto">
             <div class="h-14 flex glass-effect bg-white/5 border-white/10 border rounded-full pr-3 pl-3 items-center justify-between">
                 <a href="/" class="flex gap-2 items-center">
@@ -960,10 +1054,6 @@ canvas#neuro {
                     Prove what you checked.
                 </h1>
                 
-                <p class="slide-up stagger-2 max-w-2xl leading-relaxed text-lg font-normal text-white/60 mb-12 ml-0">
-                    CreatorProof helps agencies, brands, and marketplaces answer three questions before publishing — was AI involved, does this reuse a registered work, and does it resemble a known creator — then applies your policy as PASS, REVIEW, or BLOCK. Optional proof commits a packet hash you can verify independently. It returns evidence and policy outcomes, not a legal infringement finding.
-                </p>
-
                 <div class="slide-up stagger-3 flex flex-col sm:flex-row gap-4 justify-start">
 
                     
@@ -1113,7 +1203,7 @@ canvas#neuro {
                 <h2 class="text-3xl sm:text-5xl sf-pro-display tracking-tight mb-4 font-light">Choose your portal.</h2>
                 <p class="text-lg text-white/60 max-w-2xl mx-auto">Artists protect and enroll works. Users check assets before publish — each portal keeps the tools for its job.</p>
             </div>
-            <div class="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mt-36">
                 <a href="/artist" class="group block p-8 rounded-3xl border border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/[0.07] transition-all">
                     <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-6 group-hover:scale-105 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"></path></svg>

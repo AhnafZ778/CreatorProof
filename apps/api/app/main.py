@@ -4,9 +4,14 @@ from fastapi import FastAPI
 
 from app import __version__
 from app.api.routes import (
+    admin,
     credentials,
     health,
+    investigations,
+    marketplaces,
     network,
+    passports,
+    phase1,
     policies,
     proof,
     review,
@@ -42,6 +47,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         # Work accepted before a crash is re-published before new traffic arrives,
         # so an API or worker restart cannot strand a scan.
         recover_orphaned_scans(container)
+        from app.services.retention import purge_expired_candidates
+
+        purge_expired_candidates(container)
         container.start_background_workers()
         try:
             yield
@@ -74,6 +82,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.add_middleware(CorrelationMiddleware)
     app.include_router(health.router)
+    app.include_router(admin.router)
+    app.include_router(investigations.router)
+    app.include_router(marketplaces.router)
     app.include_router(works.router)
     app.include_router(scans.router)
     app.include_router(uploads.router)
@@ -85,6 +96,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(proof.router)
     app.include_router(network.router)
     app.include_router(usage.router)
+    app.include_router(phase1.router)
+    app.include_router(passports.router)
+    app.include_router(passports.public_router)
     return app
 
 

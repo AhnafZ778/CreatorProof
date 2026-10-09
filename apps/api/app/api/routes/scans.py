@@ -1,3 +1,5 @@
+import hashlib
+import json
 from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from typing import Annotated
@@ -13,6 +15,8 @@ from fastapi import (
     UploadFile,
     status,
 )
+from PIL import Image
+from pydantic import HttpUrl, TypeAdapter, ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -35,6 +39,7 @@ from app.schemas import (
     ScanFromUploadRequest,
     ScanRead,
     ScanStageTimelineRead,
+    ScanUseContext,
     StatementStatusRequest,
     StatementVerificationRead,
 )
@@ -54,8 +59,10 @@ from app.services.upload_tokens import UploadGrantError, load_verified_upload, v
 router = APIRouter(prefix="/v1/scans", tags=["scans"])
 
 
-def _replay_or_conflict(existing: Scan, requested_digest: str) -> Scan:
-    if existing.request_digest == requested_digest:
+def _replay_or_conflict(existing: Scan, requested_digest: str, db: Session) -> Scan:
+    binding = db.scalar(select(ScanInputBinding).where(ScanInputBinding.scan_id == existing.id))
+    existing_digest = binding.request_digest if binding is not None else existing.request_digest
+    if existing_digest == requested_digest:
         return existing
     raise HTTPException(
         status_code=status.HTTP_409_CONFLICT,
@@ -63,7 +70,7 @@ def _replay_or_conflict(existing: Scan, requested_digest: str) -> Scan:
             "code": "IDEMPOTENCY_PAYLOAD_MISMATCH",
             "message": "This Idempotency-Key is already bound to a different scan request.",
             "existing_scan_id": existing.id,
-            "existing_request_digest": existing.request_digest,
+            "existing_request_digest": existing_digest,
             "requested_request_digest": requested_digest,
         },
     )
@@ -116,10 +123,48 @@ async def create_scan(
     auth: Annotated[AuthContext, Depends(require_scope(CredentialScope.SCANS_WRITE))],
     db: Annotated[Session, Depends(get_db)],
     container: Annotated[Container, Depends(get_container)],
+    country_code: Annotated[str | None, Form(min_length=2, max_length=2)] = None,
+    use_context: Annotated[str | None, Form(max_length=4096)] = None,
+    source_url: Annotated[str | None, Form(max_length=2048)] = None,
 ) -> Scan:
+    try:
+        context = ScanUseContext.model_validate_json(use_context) if use_context else None
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422, detail="Invalid use_context JSON or use dimension"
+        ) from exc
+    raw = await file.read(container.settings.max_upload_bytes + 1)
+    return _create_scan_bytes(
+        raw=raw,
+        catalog_id=catalog_id,
+        intended_use=intended_use,
+        country_code=country_code,
+        source_url=source_url,
+        use_context=context.model_dump(exclude_none=True) if context else None,
+        idempotency_key=idempotency_key,
+        auth=auth,
+        db=db,
+        container=container,
+    )
+
+
+def _create_scan_bytes(
+    *,
+    raw: bytes,
+    catalog_id: str,
+    intended_use: str,
+    idempotency_key: str,
+    auth: AuthContext,
+    db: Session,
+    container: Container,
+    source_observation: dict | None = None,
+    country_code: str | None = None,
+    use_context: dict | None = None,
+    source_url: str | None = None,
+) -> Scan:
+    """Shared intake; only trusted server-side connectors can bind source metadata."""
     tenant_id = auth.tenant_id
     _enforce_daily_quota(db, container, tenant_id)
-    raw = await file.read(container.settings.max_upload_bytes + 1)
     image = decode_image(
         raw,
         max_bytes=container.settings.max_upload_bytes,
@@ -128,10 +173,32 @@ async def create_scan(
     fingerprints = container.fingerprints.compute(raw, image)
     normalized_catalog_id = normalize_scan_text(catalog_id)
     normalized_intended_use = normalize_scan_text(intended_use)
+    normalized_country_code = (country_code or "").strip().upper() or None
+    if normalized_country_code is not None and (
+        len(normalized_country_code) != 2
+        or not normalized_country_code.isascii()
+        or not normalized_country_code.isalpha()
+    ):
+        raise HTTPException(status_code=422, detail="country_code must be a two-letter ISO code")
+    normalized_source_url = None
+    if source_url:
+        try:
+            parsed_url = TypeAdapter(HttpUrl).validate_python(source_url)
+            if parsed_url.username or parsed_url.password or len(str(parsed_url)) > 2048:
+                raise ValueError("Source URLs must not contain credentials")
+            normalized_source_url = str(parsed_url)
+        except (ValidationError, ValueError) as exc:
+            raise HTTPException(
+                422,
+                detail="source_url must be HTTP(S), without credentials (max 2048 characters)",
+            ) from exc
     requested_digest = scan_request_digest(
         candidate_sha256=fingerprints.sha256,
         catalog_id=normalized_catalog_id,
         intended_use=normalized_intended_use,
+        country_code=normalized_country_code,
+        use_context=use_context,
+        source_url=normalized_source_url,
     )
     existing = db.scalar(
         select(Scan).where(
@@ -140,7 +207,7 @@ async def create_scan(
         )
     )
     if existing is not None:
-        return _replay_or_conflict(existing, requested_digest)
+        return _replay_or_conflict(existing, requested_digest, db)
 
     scan_id = new_id("scn")
     storage_key = f"scans/{tenant_id}/{scan_id}/candidate.bin"
@@ -179,6 +246,22 @@ async def create_scan(
             requested_capabilities={
                 "copy_retrieval_requirement": str(container.settings.copy_retrieval_requirement),
                 "origin_policy_mode": str(container.settings.synthetic_policy_mode),
+                **({"use_context": use_context} if use_context else {}),
+                **(
+                    {"submission_source_url": normalized_source_url}
+                    if normalized_source_url
+                    else {}
+                ),
+                **(
+                    {"submission_country_code": normalized_country_code}
+                    if normalized_country_code is not None
+                    else {}
+                ),
+                **(
+                    {"marketplace_observation": source_observation}
+                    if source_observation is not None
+                    else {}
+                ),
             },
         )
     )
@@ -200,7 +283,7 @@ async def create_scan(
             )
         )
         if duplicate is not None:
-            return _replay_or_conflict(duplicate, requested_digest)
+            return _replay_or_conflict(duplicate, requested_digest, db)
         raise
 
     record_audit_event(
@@ -264,19 +347,19 @@ async def create_scan_from_upload(
             )
         )
         if existing is not None:
-            if existing.catalog_id == normalize_scan_text(
-                payload.catalog_id
-            ) and existing.intended_use == normalize_scan_text(payload.intended_use):
-                container.storage.delete(claims.key)
-                return existing
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "code": "IDEMPOTENCY_PAYLOAD_MISMATCH",
-                    "message": "This upload token is already bound to a different scan request.",
-                    "existing_scan_id": existing.id,
-                },
+            digest = scan_request_digest(
+                candidate_sha256=existing.candidate_sha256,
+                catalog_id=payload.catalog_id,
+                intended_use=payload.intended_use,
+                country_code=payload.country_code,
+                use_context=payload.use_context.model_dump(exclude_none=True)
+                if payload.use_context
+                else None,
+                source_url=str(payload.source_url) if payload.source_url else None,
             )
+            result = _replay_or_conflict(existing, digest, db)
+            container.storage.delete(claims.key)
+            return result
         raw = load_verified_upload(
             container.storage,
             claims,
@@ -293,6 +376,11 @@ async def create_scan_from_upload(
         result = await create_scan(
             catalog_id=payload.catalog_id,
             intended_use=payload.intended_use,
+            country_code=payload.country_code,
+            source_url=str(payload.source_url) if payload.source_url else None,
+            use_context=json.dumps(payload.use_context.model_dump(exclude_none=True))
+            if payload.use_context
+            else None,
             file=upload,
             idempotency_key=direct_idempotency_key,
             auth=auth,
@@ -315,6 +403,40 @@ def get_scan(
     db: Annotated[Session, Depends(get_db)],
 ) -> Scan:
     return _load_scan(db, scan_id, auth.tenant_id)
+
+
+@router.get("/{scan_id}/media")
+def get_scan_media(
+    scan_id: str,
+    auth: Annotated[AuthContext, Depends(require_scope(CredentialScope.SCANS_READ))],
+    db: Annotated[Session, Depends(get_db)],
+    container: Annotated[Container, Depends(get_container)],
+) -> Response:
+    """Serve the retained submitted candidate for operator comparison."""
+    scan = _load_scan(db, scan_id, auth.tenant_id)
+    from app.services.retention import candidate_expired, purge_candidate_media
+
+    if candidate_expired(scan, container.settings.candidate_retention_seconds):
+        purge_candidate_media(container, db, scan)
+        raise HTTPException(status_code=404, detail="Submitted scan media retention expired")
+    if not scan.candidate_storage_key:
+        raise HTTPException(status_code=404, detail="Submitted scan media is not retained")
+    try:
+        raw = container.storage.read(scan.candidate_storage_key)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Submitted scan media not found") from exc
+    if hashlib.sha256(raw).hexdigest() != scan.candidate_sha256:
+        raise HTTPException(status_code=409, detail="CANDIDATE_IMAGE_INTEGRITY_MISMATCH")
+    try:
+        with Image.open(BytesIO(raw)) as opened:
+            media_type = opened.get_format_mimetype() or "application/octet-stream"
+    except Exception:
+        media_type = "application/octet-stream"
+    return Response(
+        content=raw,
+        media_type=media_type,
+        headers={"Cache-Control": "private, max-age=300"},
+    )
 
 
 @router.get("/{scan_id}/stages", response_model=ScanStageTimelineRead)

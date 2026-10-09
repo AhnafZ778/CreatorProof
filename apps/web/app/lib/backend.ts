@@ -12,6 +12,7 @@ type ProxyOptions = {
   retry?: boolean;
   /** Wake a sleeping Render service before sending a non-replayable mutation. */
   warmup?: boolean;
+  redirect?: RequestRedirect;
 };
 
 type BackendFetchOptions = ProxyOptions & {

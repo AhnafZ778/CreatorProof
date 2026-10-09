@@ -1,4 +1,4 @@
-export type PortalRole = "artist" | "user";
+export type PortalRole = "artist" | "user" | "admin";
 
 export type PortalSession = {
   role: PortalRole;
@@ -14,7 +14,7 @@ export function readPortalSession(): PortalSession | null {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as PortalSession;
-    if (parsed?.role !== "artist" && parsed?.role !== "user") return null;
+    if (parsed?.role !== "artist" && parsed?.role !== "user" && parsed?.role !== "admin") return null;
     return parsed;
   } catch {
     return null;
@@ -30,5 +30,7 @@ export function clearPortalSession() {
 }
 
 export function portalPath(role: PortalRole) {
-  return role === "artist" ? "/artist" : "/user";
+  if (role === "artist") return "/artist";
+  if (role === "admin") return "/admin";
+  return "/user";
 }

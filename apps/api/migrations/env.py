@@ -9,7 +9,8 @@ from __future__ import annotations
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from alembic.ddl.postgresql import PostgresqlImpl
+from sqlalchemy import String, engine_from_config, inspect, pool
 
 from app.core.config import Settings
 from app.db import Base
@@ -21,6 +22,38 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
+
+class CreatorProofPostgresqlImpl(PostgresqlImpl):
+    """Keep descriptive revision identifiers within the PostgreSQL column size.
+
+    Alembic defaults to VARCHAR(32). Existing CreatorProof revision identifiers
+    are longer; SQLite silently accepts them but PostgreSQL correctly rejects
+    the version update. Use Alembic's version-table hook for both online and
+    offline fresh schemas, without renaming deployed revision identities.
+    """
+
+    __dialect__ = "postgresql"
+
+    def version_table_impl(self, **kwargs):
+        table = super().version_table_impl(**kwargs)
+        table.c.version_num.type = String(128)
+        return table
+
+
+def _ensure_version_table_capacity(connection) -> None:
+    if connection.dialect.name != "postgresql":
+        return
+    inspector = inspect(connection)
+    if not inspector.has_table("alembic_version"):
+        return
+    columns = inspector.get_columns("alembic_version")
+    version_column = next(item for item in columns if item["name"] == "version_num")
+    length = getattr(version_column["type"], "length", None)
+    if length is not None and length < 128:
+        connection.exec_driver_sql(
+            "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128)"
+        )
 
 
 def _database_url() -> str:
@@ -54,6 +87,7 @@ def run_migrations_online() -> None:
             render_as_batch=connection.dialect.name == "sqlite",
         )
         with context.begin_transaction():
+            _ensure_version_table_capacity(connection)
             context.run_migrations()
 
 

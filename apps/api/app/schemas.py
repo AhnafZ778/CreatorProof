@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field, field_validator
 
 from app.domain.enums import CapabilityExecutionState, CoverageReasonCode, CoverageStatus
 from app.domain.platform import (
@@ -35,6 +35,48 @@ class WorkRead(BaseModel):
     created_at: datetime
 
 
+class MarketplaceProviderRead(BaseModel):
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    configured: bool
+    environment: Literal["sandbox", "production"]
+    marketplace_id: str | None = None
+
+
+class MarketplaceSearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    query: str = Field(min_length=1, max_length=100)
+    page: int = Field(default=1, ge=1, le=1000)
+    per_page: int = Field(default=9, ge=3, le=30)
+
+
+class MarketplaceCandidateRead(BaseModel):
+    observation_id: str
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    external_id: str
+    title: str
+    source_url: HttpUrl
+    image_url: HttpUrl
+    thumbnail_url: HttpUrl | None = None
+    creator: str | None = None
+    width: int | None = None
+    height: int | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class MarketplaceSearchRead(BaseModel):
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    query: str
+    page: int
+    per_page: int
+    results: list[MarketplaceCandidateRead]
+
+
+class MarketplaceSelectionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    observation_id: str = Field(pattern=r"^obs_[a-f0-9]{32}$")
+
+
 class DirectUploadCreateRequest(BaseModel):
     purpose: Literal["scan", "work"]
     filename: str = Field(min_length=1, max_length=255)
@@ -56,10 +98,67 @@ class DirectUploadCreatedRead(BaseModel):
     upload: DirectUploadInstruction
 
 
+class ScanUseContext(BaseModel):
+    """Declared use dimensions, never inferred geography or claimant authority."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    territory: str | None = Field(default=None, min_length=2, max_length=2)
+    channel: str | None = Field(default=None, min_length=1, max_length=160)
+    audience: str | None = Field(default=None, min_length=1, max_length=160)
+    transformation: str | None = Field(default=None, min_length=1, max_length=160)
+    platform: str | None = Field(default=None, min_length=1, max_length=160)
+    model: str | None = Field(default=None, min_length=1, max_length=160)
+    rights_permission: str | None = Field(default=None, min_length=1, max_length=160)
+
+    @field_validator("territory")
+    @classmethod
+    def normalize_territory(cls, value: str | None) -> str | None:
+        if value is not None and (not value.isascii() or not value.isalpha()):
+            raise ValueError("territory must be a two-letter ISO country code")
+        return value.upper() if value else None
+
+    @field_validator("channel", "audience", "transformation", "platform", "model")
+    @classmethod
+    def bounded_text(cls, value: str | None) -> str | None:
+        if value is not None and (not value.strip() or any(ord(c) < 32 for c in value)):
+            raise ValueError("Use dimensions must be nonempty text without control characters")
+        return value.strip() if value else None
+
+    @field_validator("rights_permission")
+    @classmethod
+    def known_permission(cls, value: str | None) -> str | None:
+        from app.services.rights_passport import PERMISSION_ALIASES, PERMISSION_FIELDS
+
+        if value is None:
+            return None
+        normalized = PERMISSION_ALIASES.get(value.strip(), value.strip())
+        if normalized not in PERMISSION_FIELDS:
+            raise ValueError("rights_permission must identify a supported rights-passport field")
+        return normalized
+
+
 class ScanFromUploadRequest(BaseModel):
     upload_token: str = Field(min_length=32, max_length=8192)
     catalog_id: str = Field(min_length=1, max_length=120)
     intended_use: str = Field(min_length=1, max_length=160)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    use_context: ScanUseContext | None = None
+    source_url: HttpUrl | None = Field(default=None, max_length=2048)
+
+    @field_validator("source_url")
+    @classmethod
+    def public_source_declaration(cls, value: HttpUrl | None) -> HttpUrl | None:
+        if value and (value.username or value.password):
+            raise ValueError("source_url must not contain credentials")
+        return value
+
+
+class MarketplaceScanRequest(MarketplaceSelectionRequest):
+    catalog_id: str = Field(min_length=1, max_length=120)
+    intended_use: str = Field(min_length=1, max_length=160)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    use_context: ScanUseContext | None = None
 
 
 class WorkFromUploadRequest(BaseModel):
@@ -109,6 +208,23 @@ class EvidencePacketRead(BaseModel):
     scope: CorpusScopeRead | None = None
 
 
+class FailureEvidencePacketRead(BaseModel):
+    """Explicit terminal-failure envelope; it makes no successful-scope claim."""
+
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
+    schema_version: Literal["creatorproof.failure-evidence.v1"] = Field(alias="schema")
+    scan_id: str
+    decision: dict[str, Any]
+    scope: dict[str, Any]
+
+
+class AdminReviewStatusRead(BaseModel):
+    saved: bool
+    status: Literal["needs_review", "not_flagged", "pending", "unavailable"]
+    category: Literal["CONTENT_FLAG", "ASSESSMENT_GAP"] | None
+    reasons: list[str]
+
+
 class ScanRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -124,10 +240,164 @@ class ScanRead(BaseModel):
     anchor_status: str
     reason_codes: list[str]
     top_match_work_id: str | None
-    evidence_packet: EvidencePacketRead | None
+    evidence_packet: EvidencePacketRead | FailureEvidencePacketRead | None
     error_code: str | None
     created_at: datetime
     completed_at: datetime | None
+    submission_context: dict[str, Any] = Field(default_factory=dict)
+
+    @computed_field
+    @property
+    def admin_review(self) -> AdminReviewStatusRead:
+        from app.services.admin_review import review_signal
+
+        return AdminReviewStatusRead.model_validate(review_signal(self))
+
+
+class MarketplaceScanRead(BaseModel):
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    selected: MarketplaceCandidateRead
+    scan: ScanRead
+
+
+class MarketplaceMonitorRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    query: str = Field(min_length=1, max_length=100)
+    catalog_id: str = Field(min_length=1, max_length=120)
+    intended_use: str = Field(default="marketplace monitoring", min_length=1, max_length=160)
+    page: int = Field(default=1, ge=1, le=1000)
+    per_page: int = Field(default=9, ge=3, le=30)
+    scan_new: bool = True
+
+
+class MarketplaceAssetRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    provider: str
+    external_id: str
+    title: str
+    source_url: str
+    image_url: str
+    thumbnail_url: str | None
+    creator: str | None
+    width: int | None
+    height: int | None
+    metadata: dict[str, Any]
+    observation_id: str | None
+    scan_id: str | None
+    classification: str
+    country_code: str | None
+    jurisdiction_basis: str | None
+    first_seen_at: datetime
+    last_seen_at: datetime
+
+
+class MarketplaceMonitorRead(BaseModel):
+    provider: Literal["unsplash", "pixabay", "ebay"]
+    query: str
+    checked_at: datetime
+    new_images: list[MarketplaceAssetRead]
+    history: list[MarketplaceAssetRead]
+    duplicate_count: int
+
+
+class DetectionWorkRead(BaseModel):
+    id: str
+    title: str
+    claimant: str | None
+    catalog_id: str
+    claim_state: str
+    rights_path: str
+    allowed_uses: list[str]
+    deleted: bool = False
+
+
+class DetectionReviewCaseRead(BaseModel):
+    id: str
+    state: str
+    disposition: str
+    priority: str
+
+
+class UserDetectionRead(BaseModel):
+    """A completed user scan that an operator can investigate and act on."""
+
+    scan_id: str
+    country_code: str | None
+    jurisdiction: str
+    match_status: str | None
+    policy_action: str | None
+    classification: str
+    candidate_sha256: str
+    matched_work_id: str | None
+    evidence_packet: dict[str, Any]
+    created_at: datetime
+    completed_at: datetime | None
+    catalog_id: str
+    intended_use: str
+    use_context: dict[str, Any] = Field(default_factory=dict)
+    submission_context: dict[str, Any] = Field(default_factory=dict)
+    country_basis: str
+    source_url: str | None = None
+    source_provider: str | None = None
+    source_metadata: dict[str, Any] = Field(default_factory=dict)
+    category: Literal["CONTENT_FLAG", "ASSESSMENT_GAP"]
+    flag_reasons: list[str]
+    reason_codes: list[str]
+    review_summary: str
+    candidate_media_url: str | None
+    candidate_media_status: Literal["available", "expired", "not_retained"]
+    candidate_media_expires_at: datetime | None
+    reference_media_url: str | None
+    matched_work: DetectionWorkRead | None
+    reference_work: DetectionWorkRead | None
+    review_case: DetectionReviewCaseRead | None
+    takedown_eligible: bool
+    takedown_block_reason: str | None
+
+
+class TakedownDraftRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    marketplace_asset_id: str | None = Field(default=None, min_length=1, max_length=64)
+    scan_id: str | None = Field(default=None, min_length=1, max_length=64)
+    jurisdiction: str = Field(default="GENERIC", min_length=2, max_length=40)
+    claimant_name: str = Field(min_length=1, max_length=240)
+    claimant_email: str = Field(min_length=3, max_length=320)
+    protected_title: str = Field(min_length=1, max_length=240)
+    protected_url: HttpUrl
+    infringing_url: HttpUrl | None = None
+    evidence_summary: str = Field(min_length=1, max_length=4000)
+    recipient_email: str | None = Field(default=None, max_length=320)
+
+
+class TakedownDraftRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    marketplace_asset_id: str | None
+    scan_id: str | None
+    jurisdiction: str
+    recipient_email: str | None
+    recipient_country_code: str | None
+    subject: str
+    body: str
+    generation_provider: str
+    generation_model: str | None
+    investigation_output_id: str | None = None
+    state: str
+    created_at: datetime
+    sent_at: datetime | None
+
+
+class TakedownSendRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    delivery: Literal["manual", "mailto"] = "manual"
+    recipient_email: str | None = Field(default=None, max_length=320)
 
 
 # ---------------------------------------------------------------------------

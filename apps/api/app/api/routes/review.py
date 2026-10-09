@@ -119,6 +119,19 @@ def append_action(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="A decision requires an explicit disposition",
         )
+    if event_type == ReviewEventType.DECIDED and case.state in {
+        str(ReviewCaseState.RESOLVED),
+        str(ReviewCaseState.CLOSED),
+    }:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "REVIEW_CASE_ALREADY_RESOLVED",
+                "message": "This review case already has a recorded decision.",
+                "case_id": case_id,
+                "disposition": case.disposition,
+            },
+        )
 
     previous_state = case.state
     previous_disposition = case.disposition

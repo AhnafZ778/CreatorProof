@@ -1,11 +1,135 @@
 import hashlib
 import json
+import os
+import selectors
 import shutil
+import signal
 import subprocess
+import tempfile
+import time
 from pathlib import Path
 
 from app.domain.enums import ProvenanceStatus
 from app.providers.contracts import ProvenanceEvidence
+
+_MAX_OUTPUT_BYTES = 8 * 1024 * 1024
+_MAX_JSON_DEPTH = 20
+_MAX_JSON_TOKENS = 50_000
+
+
+class C2PAOutputLimitError(RuntimeError):
+    """The subprocess exceeded its combined stdout/stderr capture budget."""
+
+
+def _run_bounded(
+    args: list[str], *, timeout: float, max_bytes: int = _MAX_OUTPUT_BYTES
+) -> subprocess.CompletedProcess:
+    """Drain both pipes in fixed chunks and kill at the limit, before allocation.
+
+    The Linux deployment uses selectable pipes. stdout and stderr share one
+    budget; no communicate()/capture_output path can buffer arbitrary output.
+    A dedicated process group lets timeout/overflow cleanup terminate descendants
+    that still hold an inherited pipe open, then reap the direct child.
+    """
+    captured = {"stdout": bytearray(), "stderr": bytearray()}
+    count = 0
+    deadline = time.monotonic() + timeout
+    with subprocess.Popen(
+        args,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=os.name == "posix",
+    ) as process:
+        try:
+            with selectors.DefaultSelector() as selector:
+                assert process.stdout is not None and process.stderr is not None
+                selector.register(process.stdout, selectors.EVENT_READ, "stdout")
+                selector.register(process.stderr, selectors.EVENT_READ, "stderr")
+                while selector.get_map():
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise subprocess.TimeoutExpired(args, timeout)
+                    for key, _mask in selector.select(min(remaining, 0.1)):
+                        # At most one excess byte is read, and is never appended.
+                        block = os.read(key.fd, min(64 * 1024, max_bytes - count + 1))
+                        if not block:
+                            selector.unregister(key.fileobj)
+                            continue
+                        if count + len(block) > max_bytes:
+                            raise C2PAOutputLimitError("C2PA output capture limit exceeded")
+                        captured[key.data].extend(block)
+                        count += len(block)
+                returncode = process.wait(timeout=max(0.001, deadline - time.monotonic()))
+        except BaseException:
+            if os.name == "posix":
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            elif process.poll() is None:
+                process.kill()
+            process.wait(timeout=5)
+            raise
+    return subprocess.CompletedProcess(
+        args,
+        returncode,
+        captured["stdout"].decode("utf-8", errors="replace"),
+        captured["stderr"].decode("utf-8", errors="replace"),
+    )
+
+
+def _json_within_budget(text: str) -> bool:
+    """Reject excessive nesting/container tokens before JSON materialization."""
+    depth = tokens = 0
+    quoted = escaped = False
+    for character in text:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quoted = False
+            continue
+        if character == '"':
+            quoted = True
+        elif character in "[{":
+            depth += 1
+            tokens += 1
+        elif character in "]}":
+            depth -= 1
+        elif character in ",:":
+            tokens += 1
+        if depth > _MAX_JSON_DEPTH or tokens > _MAX_JSON_TOKENS:
+            return False
+    return True
+
+
+def _scalar_text(value, limit: int) -> str | None:
+    """Only scalar strings may enter a human-readable manifest projection."""
+    return value[:limit] if isinstance(value, str) else None
+
+
+def _unique_json_object(pairs: list[tuple[str, object]]) -> dict:
+    """Duplicate keys must not overwrite an earlier validation failure."""
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("C2PA JSON contains a duplicate object key")
+        result[key] = value
+    return result
+
+
+def _bounded_json_integer(value: str) -> int:
+    # Do not depend on Python's configurable global integer conversion limit.
+    if len(value) > 128:
+        raise ValueError("C2PA JSON integer is too long")
+    return int(value)
+
+
+def _reject_non_json_constant(value: str):
+    raise ValueError(f"Non-JSON numeric constant: {value}")
 
 
 class NotConfiguredProvenanceProvider:
@@ -40,14 +164,16 @@ _AI_SOURCE_MARKERS = (
 )
 
 
-def _walk(value):
+def _walk(value, depth=0):
+    if depth > 20:
+        return
     if isinstance(value, dict):
         for key, item in value.items():
             yield str(key), item
-            yield from _walk(item)
+            yield from _walk(item, depth + 1)
     elif isinstance(value, list):
         for item in value:
-            yield from _walk(item)
+            yield from _walk(item, depth + 1)
 
 
 def _active_manifest(payload: dict) -> tuple[str | None, dict | None]:
@@ -62,7 +188,9 @@ def _active_manifest(payload: dict) -> tuple[str | None, dict | None]:
 def _validation_entries(payload: dict) -> list[tuple[str, str]]:
     entries: list[tuple[str, str]] = []
 
-    def visit(value, bucket: str) -> None:
+    def visit(value, bucket: str, depth: int = 0) -> None:
+        if depth > 20:
+            return
         if isinstance(value, dict):
             code = value.get("code")
             if isinstance(code, str) and code.strip():
@@ -78,10 +206,10 @@ def _validation_entries(payload: dict) -> list[tuple[str, str]]:
                     if normalized_key in {"informational", "info"}
                     else bucket
                 )
-                visit(item, next_bucket)
+                visit(item, next_bucket, depth + 1)
         elif isinstance(value, list):
             for item in value:
-                visit(item, bucket)
+                visit(item, bucket, depth + 1)
 
     for key in (
         "validation_status",
@@ -156,13 +284,13 @@ class C2PAToolProvenanceProvider:
                 for block in iter(lambda: source.read(1024 * 1024), b""):
                     digest.update(block)
             self.actual_binary_sha256 = digest.hexdigest()
-            completed = subprocess.run(
+            completed = _run_bounded(
                 [self.binary_path, "--version"],
-                check=False,
-                capture_output=True,
-                text=True,
                 timeout=min(self.timeout_seconds, 10),
+                max_bytes=16 * 1024,
             )
+        except C2PAOutputLimitError:
+            return "C2PATOOL_IDENTITY_OUTPUT_OVERSIZED"
         except (OSError, subprocess.TimeoutExpired):
             return "C2PATOOL_IDENTITY_CHECK_FAILED"
         if completed.returncode != 0:
@@ -188,13 +316,74 @@ class C2PAToolProvenanceProvider:
         active_manifest = active_manifest or {}
         ai_markers = _ai_source_markers(active_manifest)
         validation_entries = _validation_entries(payload)
+        actions = []
+        model_names = set()
+        for key, value in _walk(active_manifest.get("assertions") or []):
+            if key == "actions" and isinstance(value, list):
+                for action in value[:100]:
+                    if not isinstance(action, dict):
+                        continue
+                    if len(actions) >= 100:
+                        break
+                    actions.append(
+                        {
+                            "action": _scalar_text(action.get("action"), 120) or "UNKNOWN",
+                            "when": _scalar_text(action.get("when"), 80),
+                            "digital_source_type": _scalar_text(
+                                action.get("digitalSourceType"), 240
+                            ),
+                        }
+                    )
+            if (
+                key in {"model", "modelName", "model_name"}
+                and isinstance(value, str)
+                and len(model_names) < 100
+            ):
+                model_names.add(value[:160])
+        ingredients = []
+        declared_ingredients = active_manifest.get("ingredients") or []
+        for item in (declared_ingredients if isinstance(declared_ingredients, list) else [])[:100]:
+            if not isinstance(item, dict):
+                continue
+            identifier = item.get("instance_id") or item.get("instanceID") or item.get("title")
+            identifier = identifier if isinstance(identifier, str) else "unknown"
+            reference = item.get("active_manifest") or item.get("c2pa_manifest")
+            reference = reference if isinstance(reference, str) else None
+            ingredients.append(
+                {
+                    "identifier_sha256": hashlib.sha256(identifier.encode()).hexdigest(),
+                    "relationship": _scalar_text(item.get("relationship"), 120) or "INGREDIENT",
+                    "manifest_reference_sha256": hashlib.sha256(reference.encode()).hexdigest()
+                    if reference
+                    else None,
+                    "thumbnail_present": bool(item.get("thumbnail")),
+                    "validation_status": "DECLARED_NOT_INDEPENDENTLY_VERIFIED",
+                }
+            )
+        signature_info = active_manifest.get("signature_info")
+        signature_info = signature_info if isinstance(signature_info, dict) else {}
+        claim_version = active_manifest.get("claim_version")
         return {
-            "active_manifest": active,
-            "claim_generator": active_manifest.get("claim_generator")
-            or active_manifest.get("claimGenerator"),
+            "active_manifest": _scalar_text(active, 512),
+            "claim_generator": _scalar_text(
+                active_manifest.get("claim_generator") or active_manifest.get("claimGenerator"), 240
+            ),
             "ai_source_markers": ai_markers,
             "ai_assertion_present": bool(ai_markers),
-            "validation_codes": sorted({code for code, _bucket in validation_entries}),
+            "actions": actions,
+            "creation_actions": [item for item in actions if item["action"] == "c2pa.created"],
+            "editing_actions": [item for item in actions if item["action"] != "c2pa.created"],
+            "model_names": sorted(model_names),
+            "ingredients": ingredients,
+            "thumbnail_present": bool(active_manifest.get("thumbnail")),
+            "manifest_repository_identifier_sha256": hashlib.sha256(active.encode()).hexdigest()
+            if active
+            else None,
+            "signature_timestamp": _scalar_text(signature_info.get("time"), 80),
+            "c2pa_version": claim_version
+            if type(claim_version) is int
+            else _scalar_text(claim_version, 40),
+            "validation_codes": sorted({code[:240] for code, _bucket in validation_entries}),
             "validation_schema": (
                 "STRUCTURED_VALIDATION_RESULTS"
                 if payload.get("validation_results") is not None
@@ -252,12 +441,44 @@ class C2PAToolProvenanceProvider:
                 ),
             )
         try:
-            completed = subprocess.run(
-                [str(self.binary_path), "--detailed", str(source_path)],
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=self.timeout_seconds,
+            # Local read-only inspection may not fetch URLs embedded by an
+            # untrusted uploader (remote manifests, OCSP). Trust remains separate.
+            with tempfile.TemporaryDirectory(prefix="creatorproof-c2pa-") as directory:
+                settings = Path(directory) / "settings.json"
+                settings.write_text(
+                    json.dumps(
+                        {
+                            "verify": {
+                                "remote_manifest_fetch": False,
+                                "ocsp_fetch": False,
+                                "verify_after_reading": True,
+                            }
+                        }
+                    )
+                )
+                completed = _run_bounded(
+                    [
+                        str(self.binary_path),
+                        "--settings",
+                        str(settings),
+                        "--detailed",
+                        str(Path(source_path).resolve()),
+                    ],
+                    timeout=self.timeout_seconds,
+                )
+        except C2PAOutputLimitError:
+            return ProvenanceEvidence(
+                status=ProvenanceStatus.ERROR,
+                provider=self.name,
+                reason_codes=["C2PA_OUTPUT_OVERSIZED"],
+                trust_details=self._trust_details(
+                    manifest_present=None,
+                    manifest_valid=None,
+                    signature_valid=None,
+                    signer_trusted=None,
+                    ai_assertion_present=None,
+                    ingredient_chain_state="NOT_EVALUATED",
+                ),
             )
         except subprocess.TimeoutExpired:
             return ProvenanceEvidence(
@@ -289,6 +510,33 @@ class C2PAToolProvenanceProvider:
             )
 
         absence_message = completed.stderr.strip().casefold()
+        if not _json_within_budget(completed.stdout):
+            return ProvenanceEvidence(
+                status=ProvenanceStatus.ERROR,
+                provider=self.name,
+                reason_codes=["C2PA_JSON_STRUCTURE_LIMIT"],
+                trust_details=self._trust_details(
+                    manifest_present=None,
+                    manifest_valid=None,
+                    signature_valid=None,
+                    signer_trusted=None,
+                    ai_assertion_present=None,
+                    ingredient_chain_state="NOT_EVALUATED",
+                ),
+            )
+        if completed.returncode != 0 and any(
+            token in absence_message
+            for token in (
+                "unsupported",
+                "not supported",
+                "unrecognized file type",
+            )
+        ):
+            return ProvenanceEvidence(
+                status=ProvenanceStatus.NOT_CHECKED,
+                provider=self.name,
+                reason_codes=["C2PA_FORMAT_UNSUPPORTED"],
+            )
         if completed.returncode != 0 and absence_message in {
             "error: no claim found",
             "error: no manifest found",
@@ -310,8 +558,13 @@ class C2PAToolProvenanceProvider:
                 ),
             )
         try:
-            payload = json.loads(completed.stdout)
-        except json.JSONDecodeError:
+            payload = json.loads(
+                completed.stdout,
+                object_pairs_hook=_unique_json_object,
+                parse_int=_bounded_json_integer,
+                parse_constant=_reject_non_json_constant,
+            )
+        except (ValueError, RecursionError):
             if completed.returncode != 0:
                 return ProvenanceEvidence(
                     status=ProvenanceStatus.ERROR,
@@ -400,14 +653,29 @@ class C2PAToolProvenanceProvider:
             else "MALFORMED"
         )
         validation_entries = _validation_entries(payload)
-        normalized_codes = {code.casefold(): bucket for code, bucket in validation_entries}
+        normalized_codes = {}
+        for code, bucket in validation_entries:
+            normalized = code.casefold()
+            # Duplicate display entries cannot erase a recorded failure.
+            if normalized not in normalized_codes or bucket == "failure":
+                normalized_codes[normalized] = bucket
         signature_mismatch = any(
             code.startswith("claimsignature.")
-            and code not in {"claimsignature.validated", "claimsignature.valid"}
-            for code in normalized_codes
+            and (
+                bucket == "failure"
+                or code not in {"claimsignature.validated", "claimsignature.valid"}
+            )
+            for code, bucket in normalized_codes.items()
         )
-        explicitly_trusted = "signingcredential.trusted" in normalized_codes
         explicitly_untrusted = "signingcredential.untrusted" in normalized_codes
+        trust_contradictory = (
+            "signingcredential.trusted" in normalized_codes and explicitly_untrusted
+        )
+        explicitly_trusted = (
+            "signingcredential.trusted" in normalized_codes
+            and normalized_codes["signingcredential.trusted"] != "failure"
+            and not trust_contradictory
+        )
         non_trust_failures = [
             code
             for code, bucket in normalized_codes.items()
@@ -439,6 +707,8 @@ class C2PAToolProvenanceProvider:
             reasons = ["C2PA_MANIFEST_VALID", "C2PA_SIGNER_TRUST_NOT_CONFIRMED"]
         if summary["ai_assertion_present"]:
             reasons.append("C2PA_GENERATIVE_AI_ACTION_ASSERTED")
+        if trust_contradictory:
+            reasons.append("C2PA_SIGNER_TRUST_RESULTS_CONTRADICTORY")
         trust_details = self._trust_details(
             manifest_present=True,
             manifest_valid=not invalid,

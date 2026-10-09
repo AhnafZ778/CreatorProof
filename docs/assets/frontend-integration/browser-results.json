@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "Private portals and API require authentication; only exact public token routes are exempt",
+    "CSRF and finite gateway boundaries",
+    "Artist registration opens a real server-backed artwork workspace",
+    "All permission controls save a new policy version and history remains readable",
+    "Creation events persist with a verified append-only chain",
+    "Missing provenance providers are shown as unavailable rather than human-authored",
+    "Five real exports, scoped anonymous verification, private-contact exclusion, and revocation after reload",
+    "Withdrawal and explicit reissue preserve earlier policy versions",
+    "Real exact-copy scan retains declared use separately from notice country and shows eight evidence lanes",
+    "Expired candidate media remains unavailable while stored provenance and scan-time public evidence remain readable",
+    "Admin corrections append a matrix version and media retention has an understandable comparison fallback",
+    "User matches reach Admin; assistant output has immutable receipts and the human edit survives reload",
+    "Assistant failure is persisted and review remains available",
+    "Responsive layouts at 1440 / 768 / 375 px, pipeline scenarios and playback",
+    "No browser runtime errors"
+  ],
+  "count": 15,
+  "browserErrors": []
+}

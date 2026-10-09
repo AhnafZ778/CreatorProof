@@ -1,0 +1,12 @@
+{
+  "passed": 7,
+  "checks": [
+    "User source selector and listing cards identify eBay sandbox and seller",
+    "User-selected eBay photo matches the registered artwork through the real scan API",
+    "Structured provider errors are visible to the user",
+    "Empty sandbox inventory explains how to obtain test images",
+    "Admin waits 60s then continues checking; repeated listings retain one copied-image record",
+    "Pausing the monitor stops subsequent requests",
+    "Desktop/mobile layout has no overflow or browser exceptions"
+  ]
+}

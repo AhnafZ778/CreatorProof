@@ -7,6 +7,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     String,
@@ -17,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy import (
     inspect as sa_inspect,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, object_session
 
 from app.db import Base
 from app.domain.enums import AnchorStatus, ClaimState, RightsPath, ScanState
@@ -65,6 +66,7 @@ class Tenant(Base):
 class Work(Base):
     __tablename__ = "works"
     __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_work_tenant_identity"),
         Index("ix_work_scope", "tenant_id", "catalog_id"),
         Index("ix_work_sha", "tenant_id", "sha256"),
     )
@@ -84,12 +86,14 @@ class Work(Base):
     # registered before the gate existed or while it was switched off, which is a
     # different thing from a work that was screened and came back quiet.
     origin_assessment: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
 
 
 class Scan(Base):
     __tablename__ = "scans"
     __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_scan_tenant_identity"),
         UniqueConstraint("tenant_id", "idempotency_key", name="uq_scan_idempotency"),
         Index("ix_scan_tenant_created", "tenant_id", "created_at"),
     )
@@ -132,11 +136,60 @@ class Scan(Base):
 
     @property
     def request_digest(self) -> str:
+        session = object_session(self)
+        if session is not None:
+            from sqlalchemy import select
+
+            binding = session.scalar(
+                select(ScanInputBinding).where(
+                    ScanInputBinding.scan_id == self.id,
+                    ScanInputBinding.tenant_id == self.tenant_id,
+                )
+            )
+            if binding is not None:
+                return binding.request_digest
         return scan_request_digest(
             candidate_sha256=self.candidate_sha256,
             catalog_id=self.catalog_id,
             intended_use=self.intended_use,
         )
+
+    @property
+    def submission_context(self) -> dict:
+        """Declared intake facts with their provenance, never inferred residence."""
+        session = object_session(self)
+        capabilities = {}
+        if session is not None:
+            from sqlalchemy import select
+
+            binding = session.scalar(
+                select(ScanInputBinding).where(
+                    ScanInputBinding.scan_id == self.id,
+                    ScanInputBinding.tenant_id == self.tenant_id,
+                )
+            )
+            capabilities = (binding.requested_capabilities or {}) if binding is not None else {}
+        observation = capabilities.get("marketplace_observation") or {}
+        declared_url = capabilities.get("submission_source_url")
+        return {
+            "country_code": capabilities.get("submission_country_code"),
+            "country_basis": (
+                "submitter_declaration_not_verified_residence"
+                if capabilities.get("submission_country_code")
+                else "not_declared"
+            ),
+            "source_url": observation.get("source_url") or declared_url,
+            "source_kind": "marketplace" if observation else "upload",
+            "source_basis": (
+                "server_marketplace_observation"
+                if observation
+                else "submitter_url_declaration"
+                if declared_url
+                else "not_supplied"
+            ),
+            "intended_use": self.intended_use,
+            "use_context": capabilities.get("use_context") or {},
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -263,6 +316,7 @@ class AssetVersion(Base):
 
     __tablename__ = "asset_versions"
     __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_asset_version_tenant_identity"),
         UniqueConstraint("work_id", "version", name="uq_asset_version"),
         Index("ix_asset_version_tenant", "tenant_id", "work_id"),
     )
@@ -824,6 +878,398 @@ class PolicyVersion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
 
 
+class RightsPolicyVersion(Base):
+    """Immutable, machine-readable rights preferences for one registered work.
+
+    Claims and licenses remain the authoritative evidence used by the policy
+    evaluator.  This row is the versioned rights-passport projection that can be
+    exported to JSON, ai.txt and TDM representations without overwriting those
+    underlying facts.
+    """
+
+    __tablename__ = "rights_policy_versions"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "work_id", "version", name="uq_rights_policy_work_version"),
+        Index("ix_rights_policy_work", "tenant_id", "work_id", "created_at"),
+        CheckConstraint("version >= 1", name="ck_rights_policy_positive_version"),
+        CheckConstraint(
+            "effective_from IS NULL OR effective_until IS NULL OR effective_until > effective_from",
+            name="ck_rights_policy_effective_interval",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "work_id"],
+            ["works.tenant_id", "works.id"],
+            name="fk_rights_policy_tenant_work",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("rpol"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    work_id: Mapped[str] = mapped_column(String(64), index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    permissions: Mapped[dict] = mapped_column(JSON, default=dict)
+    dimensions: Mapped[dict] = mapped_column(JSON, default=dict)
+    creator_assertions: Mapped[dict] = mapped_column(JSON, default=dict)
+    consent_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    revocation_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    corroboration: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    effective_from: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    effective_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    superseded_by_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    digest_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    created_by_principal_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class ProvenanceRecord(Base):
+    """Immutable normalized result of a read-only provenance inspection."""
+
+    __tablename__ = "provenance_records"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_provenance_tenant_identity"),
+        Index("ix_provenance_subject", "tenant_id", "subject_type", "subject_id"),
+        Index("ix_provenance_scan", "tenant_id", "scan_id"),
+        ForeignKeyConstraint(
+            ["tenant_id", "work_id"],
+            ["works.tenant_id", "works.id"],
+            name="fk_provenance_tenant_work",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "scan_id"],
+            ["scans.tenant_id", "scans.id"],
+            name="fk_provenance_tenant_scan",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("prov"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    subject_type: Mapped[str] = mapped_column(String(40))
+    subject_id: Mapped[str] = mapped_column(String(64), index=True)
+    scan_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    work_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    input_sha256: Mapped[str] = mapped_column(String(64), index=True)
+    provider: Mapped[str] = mapped_column(String(120))
+    provider_version: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    status: Mapped[str] = mapped_column(String(40))
+    legacy_status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    manifest_summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    trust_details: Mapped[dict] = mapped_column(JSON, default=dict)
+    metadata_summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    artifact_refs: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    error_code: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    fallback_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class ProvenanceIngredient(Base):
+    """Immutable relationship extracted from a provenance manifest."""
+
+    __tablename__ = "provenance_ingredients"
+    __table_args__ = (
+        Index("ix_provenance_ingredient_record", "tenant_id", "record_id"),
+        ForeignKeyConstraint(
+            ["tenant_id", "record_id"],
+            ["provenance_records.tenant_id", "provenance_records.id"],
+            name="fk_provenance_ingredient_tenant_record",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("pvi"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    record_id: Mapped[str] = mapped_column(String(64), index=True)
+    ingredient_id: Mapped[str] = mapped_column(String(240))
+    relationship: Mapped[str] = mapped_column(String(120), default="INGREDIENT")
+    source_reference: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    input_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    trust_status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    metadata_summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class EvidenceSignal(Base):
+    """One immutable, normalized signal contributing to a scan matrix."""
+
+    __tablename__ = "evidence_signals"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "signal_id", name="uq_evidence_signal_id"),
+        Index("ix_evidence_signal_scan", "tenant_id", "scan_id", "lane"),
+        CheckConstraint(
+            "confidence IS NULL OR (confidence >= 0 AND confidence <= 1)",
+            name="ck_evidence_signal_confidence_range",
+        ),
+        CheckConstraint(
+            "started_at IS NULL OR completed_at IS NULL OR completed_at >= started_at",
+            name="ck_evidence_signal_time_order",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "scan_id"],
+            ["scans.tenant_id", "scans.id"],
+            name="fk_evidence_signal_tenant_scan",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "matrix_id"],
+            ["evidence_matrices.tenant_id", "evidence_matrices.id"],
+            name="fk_evidence_signal_tenant_matrix",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    signal_id: Mapped[str] = mapped_column(String(96), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    scan_id: Mapped[str] = mapped_column(String(64), index=True)
+    matrix_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    lane: Mapped[str] = mapped_column(String(40), index=True)
+    provider: Mapped[str] = mapped_column(String(120))
+    provider_version: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    signal_type: Mapped[str] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(40))
+    score: Mapped[float | None] = mapped_column(nullable=True)
+    score_semantics: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    confidence: Mapped[float | None] = mapped_column(nullable=True)
+    confidence_level: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    evidence_quality: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    coverage_status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    coverage: Mapped[dict] = mapped_column(JSON, default=dict)
+    reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    artifact_refs: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    input_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    fallback_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    model_version: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    rule_version: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    model_or_rule_identifier: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class EvidenceCoverage(Base):
+    """Immutable provider/lane coverage accounting for a scan."""
+
+    __tablename__ = "evidence_coverages"
+    __table_args__ = (
+        Index("ix_evidence_coverage_scan", "tenant_id", "scan_id", "lane"),
+        CheckConstraint(
+            "coverage_percent IS NULL OR (coverage_percent >= 0 AND coverage_percent <= 100)",
+            name="ck_evidence_coverage_percent_range",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "scan_id"],
+            ["scans.tenant_id", "scans.id"],
+            name="fk_evidence_coverage_tenant_scan",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "matrix_id"],
+            ["evidence_matrices.tenant_id", "evidence_matrices.id"],
+            name="fk_evidence_coverage_tenant_matrix",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("ecv"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    scan_id: Mapped[str] = mapped_column(String(64), index=True)
+    matrix_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    lane: Mapped[str] = mapped_column(String(40))
+    provider: Mapped[str] = mapped_column(String(120))
+    requested_scope: Mapped[dict] = mapped_column(JSON, default=dict)
+    completed_scope: Mapped[dict] = mapped_column(JSON, default=dict)
+    unavailable_scope: Mapped[dict] = mapped_column(JSON, default=dict)
+    coverage_percent: Mapped[float | None] = mapped_column(nullable=True)
+    reason_codes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class EvidenceMatrix(Base):
+    """Immutable finalized normalized evidence decision for a scan."""
+
+    __tablename__ = "evidence_matrices"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_evidence_matrix_tenant_identity"),
+        UniqueConstraint("tenant_id", "scan_id", "version", name="uq_evidence_matrix_scan_version"),
+        CheckConstraint("version >= 1", name="ck_evidence_matrix_positive_version"),
+        ForeignKeyConstraint(
+            ["tenant_id", "scan_id"],
+            ["scans.tenant_id", "scans.id"],
+            name="fk_evidence_matrix_tenant_scan",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "previous_matrix_id"],
+            ["evidence_matrices.tenant_id", "evidence_matrices.id"],
+            name="fk_evidence_matrix_tenant_predecessor",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("emat"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    scan_id: Mapped[str] = mapped_column(String(64), index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    previous_matrix_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    matrix_version: Mapped[str] = mapped_column(
+        String(80), default="creatorproof.evidence_matrix.v1"
+    )
+    final_status: Mapped[str] = mapped_column(String(80))
+    abstention: Mapped[bool] = mapped_column(Boolean, default=False)
+    abstention_code: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recommended_action: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    policy_decision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    packet_hash_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    coverage_summary: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ContributionEvent(Base):
+    """Append-only factual contribution event forming a per-work hash chain."""
+
+    __tablename__ = "contribution_events"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "event_id", name="uq_contribution_event_id"),
+        UniqueConstraint("tenant_id", "work_id", "sequence", name="uq_contribution_work_sequence"),
+        Index("ix_contribution_work_sequence", "tenant_id", "work_id", "sequence"),
+        CheckConstraint("sequence >= 1", name="ck_contribution_positive_sequence"),
+        ForeignKeyConstraint(
+            ["tenant_id", "work_id"],
+            ["works.tenant_id", "works.id"],
+            name="fk_contribution_tenant_work",
+        ),
+        ForeignKeyConstraint(
+            ["tenant_id", "output_asset_id"],
+            ["asset_versions.tenant_id", "asset_versions.id"],
+            name="fk_contribution_tenant_output_asset",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    event_id: Mapped[str] = mapped_column(String(96), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    work_id: Mapped[str] = mapped_column(String(64), index=True)
+    sequence: Mapped[int] = mapped_column(Integer)
+    actor_type: Mapped[str] = mapped_column(String(40))
+    actor_id: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    event_type: Mapped[str] = mapped_column(String(80))
+    description: Mapped[str] = mapped_column(Text, default="")
+    classification: Mapped[str] = mapped_column(String(80), default="UNKNOWN")
+    provider: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    input_asset_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
+    output_asset_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    software_or_model: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    human_decision: Mapped[str | None] = mapped_column(Text, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    evidence_artifact_reference: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    c2pa_reference: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_by: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    input_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    output_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    prompt_reference: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    previous_event_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    event_hash: Mapped[str] = mapped_column(String(64), index=True)
+    source_reference: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class InvestigationRun(Base):
+    """Mutable lifecycle for one human-supervised investigation assistant run."""
+
+    __tablename__ = "investigation_runs"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_investigation_run_tenant_identity"),
+        Index("ix_investigation_run_scan", "tenant_id", "scan_id", "created_at"),
+        ForeignKeyConstraint(
+            ["tenant_id", "scan_id"],
+            ["scans.tenant_id", "scans.id"],
+            name="fk_investigation_run_tenant_scan",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("irun"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    scan_id: Mapped[str] = mapped_column(String(64), index=True)
+    status: Mapped[str] = mapped_column(String(40), default="QUEUED")
+    requested_by: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    provider: Mapped[str] = mapped_column(String(120), default="aiand")
+    model: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    prompt_template_version: Mapped[str] = mapped_column(String(80), default="v1")
+    evidence_packet_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    input_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class InvestigationOutput(Base):
+    """Structured, hashable assistant output awaiting human disposition."""
+
+    __tablename__ = "investigation_outputs"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "id", name="uq_investigation_output_tenant_identity"),
+        UniqueConstraint("tenant_id", "run_id", name="uq_investigation_output_run"),
+        ForeignKeyConstraint(
+            ["tenant_id", "run_id"],
+            ["investigation_runs.tenant_id", "investigation_runs.id"],
+            name="fk_investigation_output_tenant_run",
+        ),
+        CheckConstraint(
+            "(human_decision IS NULL AND human_decision_by IS NULL AND human_decision_at IS NULL) "
+            "OR (human_decision IN ('ACCEPTED', 'EDITED', 'REJECTED') "
+            "AND human_decision_by IS NOT NULL AND human_decision_at IS NOT NULL)",
+            name="ck_investigation_output_human_decision",
+        ),
+    )
+    __creatorproof_immutable__ = True
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("iout"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    run_id: Mapped[str] = mapped_column(String(64), index=True)
+    summary: Mapped[str] = mapped_column(Text, default="")
+    evidence_references: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    missing_facts: Mapped[list[str]] = mapped_column(JSON, default=list)
+    next_steps: Mapped[list[str]] = mapped_column(JSON, default=list)
+    duplicate_groups: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    factual_notice_draft: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    unsupported_claims: Mapped[list[str]] = mapped_column(JSON, default=list)
+    output_hash: Mapped[str] = mapped_column(String(64), index=True)
+    provider: Mapped[str] = mapped_column(String(120))
+    model: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    human_decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    human_decision_by: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    human_decision_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class PublicVerificationToken(Base):
+    """Revocable, tenant-scoped token for the redacted public verifier."""
+
+    __tablename__ = "public_verification_tokens"
+    __table_args__ = (
+        Index("ix_public_verification_token_lookup", "token_hash"),
+        Index("ix_public_verification_resource", "tenant_id", "resource_type", "resource_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("pvt"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    resource_type: Mapped[str] = mapped_column(String(40))
+    resource_id: Mapped[str] = mapped_column(String(64), index=True)
+    token_hash: Mapped[str] = mapped_column(String(128), unique=True)
+    scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_by: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
 # ---------------------------------------------------------------------------
 # S16 — reviewer workflow and integrations
 # ---------------------------------------------------------------------------
@@ -869,6 +1315,71 @@ class ReviewEvent(Base):
     disposition: Mapped[str | None] = mapped_column(String(40), nullable=True)
     attributes: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class MarketplaceAsset(Base):
+    """Durable, tenant-scoped history for a monitored provider result."""
+
+    __tablename__ = "marketplace_assets"
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant_id", "provider", "external_id", name="uq_marketplace_asset_source"
+        ),
+        Index("ix_marketplace_asset_tenant_seen", "tenant_id", "last_seen_at"),
+        Index("ix_marketplace_asset_classification", "tenant_id", "classification"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("mas"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(24))
+    external_id: Mapped[str] = mapped_column(String(100))
+    title: Mapped[str] = mapped_column(String(240), default="")
+    source_url: Mapped[str] = mapped_column(String(512))
+    image_url: Mapped[str] = mapped_column(String(1024))
+    thumbnail_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    creator: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    provider_metadata: Mapped[dict] = mapped_column("metadata", JSON, default=dict)
+    observation_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    scan_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    classification: Mapped[str] = mapped_column(String(40), default="UNCLASSIFIED")
+    country_code: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    jurisdiction_basis: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+
+
+class TakedownDraft(Base):
+    """Reviewable notice text; sending remains an explicit operator action."""
+
+    __tablename__ = "takedown_drafts"
+    __table_args__ = (
+        Index("ix_takedown_draft_tenant_created", "tenant_id", "created_at"),
+        ForeignKeyConstraint(
+            ["tenant_id", "investigation_output_id"],
+            ["investigation_outputs.tenant_id", "investigation_outputs.id"],
+            name="fk_takedown_draft_tenant_investigation_output",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=lambda: new_id("tdr"))
+    tenant_id: Mapped[str] = mapped_column(ForeignKey("tenants.id"), index=True)
+    marketplace_asset_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    scan_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    investigation_output_id: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, index=True
+    )
+    jurisdiction: Mapped[str] = mapped_column(String(40))
+    recipient_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    recipient_country_code: Mapped[str | None] = mapped_column(String(2), nullable=True)
+    subject: Mapped[str] = mapped_column(String(320))
+    body: Mapped[str] = mapped_column(Text)
+    generation_provider: Mapped[str] = mapped_column(String(40), default="template")
+    generation_model: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    state: Mapped[str] = mapped_column(String(32), default="DRAFT")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class WebhookEndpoint(Base):
@@ -947,6 +1458,33 @@ def _reject_immutable_update(mapper, connection, target) -> None:  # noqa: ARG00
     references the previous one. PostgreSQL adds a matching rule-level guard in
     the migration; this listener keeps SQLite development honest too.
     """
+    if isinstance(target, InvestigationOutput):
+        state = sa_inspect(target)
+        changed = {
+            attribute.key
+            for attribute in state.mapper.column_attrs
+            if state.attrs[attribute.key].history.has_changes()
+        }
+        if not changed:
+            return
+        decision_fields = {"human_decision", "human_decision_by", "human_decision_at"}
+        original_decision = connection.execute(
+            InvestigationOutput.__table__.select()
+            .with_only_columns(InvestigationOutput.__table__.c.human_decision)
+            .where(InvestigationOutput.__table__.c.id == target.id)
+        ).scalar_one()
+        if (
+            changed <= decision_fields
+            and original_decision is None
+            and target.human_decision in {"ACCEPTED", "EDITED", "REJECTED"}
+            and target.human_decision_by
+            and target.human_decision_at is not None
+        ):
+            return
+        raise ImmutableRecordError(
+            "investigation_outputs content is immutable; only the first attributable "
+            "human disposition is permitted"
+        )
     if isinstance(target, TransparencyCheckpoint):
         state = sa_inspect(target)
         changed = {

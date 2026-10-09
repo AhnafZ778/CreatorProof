@@ -35,6 +35,11 @@ _UPLOAD_PROCESSING_PATHS = frozenset(
 )
 
 
+def safe_request_path(path: str) -> str:
+    """Opaque verification tokens are credentials, never log/metric labels."""
+    return "/verify/{public_token}" if path.startswith("/verify/") else path
+
+
 class TokenBucketLimiter:
     def __init__(self, *, requests_per_minute: int, burst: int) -> None:
         self._rate_per_second = requests_per_minute / 60.0
@@ -66,6 +71,7 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
         correlation_id = set_correlation_id(request.headers.get(CORRELATION_HEADER))
         request.state.correlation_id = correlation_id
         started = time.perf_counter()
+        request_path = safe_request_path(request.url.path)
         try:
             response = await call_next(request)
         except Exception:
@@ -73,7 +79,7 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
             METRICS.increment(
                 "creatorproof_http_requests_total",
                 method=request.method,
-                path=request.url.path,
+                path=request_path,
                 status="500",
             )
             log_event(
@@ -81,29 +87,37 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
                 "http_request_failed",
                 level=logging.ERROR,
                 method=request.method,
-                path=request.url.path,
+                path=request_path,
                 duration_ms=round(duration_ms, 3),
             )
             raise
         duration_ms = (time.perf_counter() - started) * 1000.0
         response.headers[CORRELATION_HEADER] = correlation_id
+        if request.url.path.startswith("/verify/"):
+            response.headers.update(
+                {
+                    "Cache-Control": "no-store",
+                    "Referrer-Policy": "no-referrer",
+                    "X-Content-Type-Options": "nosniff",
+                }
+            )
         METRICS.increment(
             "creatorproof_http_requests_total",
             method=request.method,
-            path=request.url.path,
+            path=request_path,
             status=str(response.status_code),
         )
         METRICS.observe(
             "creatorproof_http_request_duration_ms",
             duration_ms,
             method=request.method,
-            path=request.url.path,
+            path=request_path,
         )
         log_event(
             logger,
             "http_request",
             method=request.method,
-            path=request.url.path,
+            path=request_path,
             status_code=response.status_code,
             duration_ms=round(duration_ms, 3),
         )
@@ -121,7 +135,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Bucketing by credential prefix keeps one noisy tenant from consuming
         # another tenant's admission budget.
         api_key = request.headers.get("X-API-Key", "")
-        key = api_key[:16] if api_key else (request.client.host if request.client else "anonymous")
+        public_verifier = request.url.path.startswith("/verify/")
+        remote = request.client.host if request.client else "anonymous"
+        # An unauthenticated verifier must not accept an arbitrary X-API-Key as
+        # a new budget identity; otherwise random headers bypass its IP limit.
+        key = (
+            f"public-verifier:{remote}" if public_verifier else api_key[:16] if api_key else remote
+        )
         # Scan status is intentionally polled while CPU-bound evidence stages run.
         # Charge those authenticated, read-only requests at one tenth of a normal
         # request so progress polling remains bounded without exhausting the same
@@ -129,7 +149,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         is_scan_status_poll = request.method == "GET" and request.url.path.startswith("/v1/scans/")
         allowed, retry_after = self._limiter.allow(key, cost=0.1 if is_scan_status_poll else 1.0)
         if not allowed:
-            METRICS.increment("creatorproof_rate_limited_total", path=request.url.path)
+            METRICS.increment(
+                "creatorproof_rate_limited_total", path=safe_request_path(request.url.path)
+            )
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 content={
@@ -141,6 +163,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 headers={
                     "Retry-After": str(int(retry_after)),
                     CORRELATION_HEADER: current_correlation_id(),
+                    **(
+                        {"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"}
+                        if public_verifier
+                        else {}
+                    ),
                 },
             )
         return await call_next(request)

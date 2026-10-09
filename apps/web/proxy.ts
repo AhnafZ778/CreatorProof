@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { readWebAuthConfig, ServerConfigurationError } from "./app/lib/serverEnv";
+import { isPublicVerificationApiPath } from "./app/lib/phase1Contract";
 
 function constantTimeEqual(left: string, right: string): boolean {
   const encoder = new TextEncoder();
@@ -40,7 +41,10 @@ function authenticationResponse() {
 }
 
 function protectedPath(pathname: string): boolean {
+  if (isPublicVerificationApiPath(pathname)) return false;
   return (
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
     pathname === "/artist" ||
     pathname.startsWith("/artist/") ||
     pathname === "/user" ||
@@ -95,6 +99,7 @@ export const config = {
   matcher: [
     "/",
     "/artist/:path*",
+    "/admin/:path*",
     "/user/:path*",
     "/api/:path*",
     "/workbench",

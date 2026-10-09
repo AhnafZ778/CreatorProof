@@ -141,6 +141,7 @@ export default function ScanVerdict({
   const scope = asRecord(packet?.scope);
   const decision = asRecord(packet?.decision);
   const proof = asRecord(packet?.proof);
+  const protection = asRecord(packet?.protection);
 
   const coverageStatus = text(scope?.coverage_status, "UNKNOWN").toUpperCase();
   const coverage = COVERAGE_COPY[coverageStatus] ?? {
@@ -207,6 +208,12 @@ export default function ScanVerdict({
           <div className="verdictNext">
             <small>WHAT TO DO NEXT</small>
             <p>{outcome.next}</p>
+            {protection && (
+              <p className="verdictProtectionNote">
+                <b>Protection posture:</b> {text(protection.mode, "evidence to action").replaceAll("_", " ").toLowerCase()}
+                {text(protection.case_action, "") && ` · ${text(protection.case_action, "").replaceAll("_", " ").toLowerCase()}`}
+              </p>
+            )}
             <div className="verdictActions">
               {onOpenEvidence && (
                 <button type="button" className="isPrimary" onClick={onOpenEvidence}>

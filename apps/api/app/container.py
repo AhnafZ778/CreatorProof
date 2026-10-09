@@ -29,6 +29,7 @@ from app.services.jobs import (
     RedisJobQueue,
     RedisStreamsJobQueue,
 )
+from app.services.marketplaces import MarketplaceClient
 from app.services.model_bundle import (
     ModelBundle,
     load_model_bundle,
@@ -58,6 +59,7 @@ class Container:
     database: Database
     storage: ObjectStore
     fingerprints: BaselineFingerprintProvider
+    marketplaces: MarketplaceClient
     ai_retrieval: SSCDVisualEmbeddingProvider | RemoteSSCDVisualEmbeddingProvider
     style_retrieval: StyleEmbeddingRouter
     style_profiles: StyleProfileRegistry
@@ -93,8 +95,11 @@ class Container:
             # enqueue synchronously and tests may invoke dispatch_once explicitly.
             return
         settings = self.settings
+        from app.services.retention import CandidateRetentionThread
+
         assert self.outbox is not None
         threads = [
+            CandidateRetentionThread(self),
             OutboxDispatcherThread(self.outbox, settings.outbox_dispatch_interval_seconds),
             StageReaperThread(
                 session_factory=self.database.system_session,
@@ -178,6 +183,7 @@ def build_container(settings: Settings) -> Container:
         signer=signer,
         checkpoint_interval=settings.transparency_checkpoint_interval,
     )
+    object_store = build_object_store(settings)
     container = Container(
         settings=settings,
         model_bundle=model_bundle,
@@ -192,8 +198,21 @@ def build_container(settings: Settings) -> Container:
             include_optional_artifacts=False,
         ),
         database=build_database(settings),
-        storage=build_object_store(settings),
+        storage=object_store,
         fingerprints=BaselineFingerprintProvider(),
+        marketplaces=MarketplaceClient(
+            storage=object_store,
+            unsplash_access_key=settings.unsplash_access_key,
+            pixabay_api_key=settings.pixabay_api_key,
+            ebay_client_id=settings.ebay_client_id,
+            ebay_client_secret=settings.ebay_client_secret,
+            ebay_environment=settings.ebay_environment,
+            ebay_marketplace_id=settings.ebay_marketplace_id,
+            timeout_seconds=settings.marketplace_timeout_seconds,
+            max_download_bytes=min(
+                settings.marketplace_max_download_bytes, settings.max_upload_bytes
+            ),
+        ),
         ai_retrieval=(
             RemoteSSCDVisualEmbeddingProvider(
                 endpoint_url=settings.sscd_remote_url,

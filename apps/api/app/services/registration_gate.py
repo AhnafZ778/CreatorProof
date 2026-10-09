@@ -71,6 +71,7 @@ class OriginGateOutcome:
     analysis: dict
     score: float | None = None
     threshold: float | None = None
+    provenance: object | None = None
 
     def record(self) -> dict:
         """The compact verdict stored on the work.
@@ -187,6 +188,7 @@ def screen_registration_origin(
         score=score,
         threshold=threshold,
         analysis=analysis,
+        provenance=provenance,
     )
 
 

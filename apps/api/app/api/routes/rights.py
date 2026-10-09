@@ -141,7 +141,7 @@ _LICENSE_TRANSITIONS = {
 
 def _require_work(db: Session, tenant_id: str, work_id: str) -> Work:
     work = db.get(Work, work_id)
-    if work is None or work.tenant_id != tenant_id:
+    if work is None or work.tenant_id != tenant_id or work.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Work not found")
     return work
 

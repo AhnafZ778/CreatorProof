@@ -14,6 +14,13 @@ can quietly edit.
 **[Open the live product →](https://creatorproof.uaenorth.cloudapp.azure.com/)**
 · v0.10.0 · [How the models run](MODELS.md)
 
+Phase 1 backend: [implementation plan](PHASE1_IMPLEMENTATION_PLAN.md),
+[implementation and validation report](PHASE1_IMPLEMENTATION_REPORT.md),
+[provider setup](docs/PHASE1_PROVIDER_SETUP.md), and
+[tests and benchmark](docs/PHASE1_TESTING.md).
+
+Frontend integration: [available pages, behavior and browser validation](docs/FRONTEND_INTEGRATION_REPORT.md).
+
 ---
 
 ## The idea
@@ -48,10 +55,14 @@ evidence. Policy cannot rewrite what the models saw.
 
 ## What a reviewer actually gets
 
-Two portals, one scan.
+Three portals, shared evidence.
 
-- **Artist** — register works, attach a creator profile, gate origin at upload.
-- **Checker** — drop an image, get three question cards, open the **Evidence Microscope** (side-by-side, copy regions, correspondence points, style map), then a sealed statement.
+- **Artist** — register works, record eleven AI-use preferences, document creation history, inspect provenance, export policies and create revocable verification links.
+- **Checker** — declare intended use, submit an image, inspect the eight-lane Evidence Matrix and **Evidence Microscope** (side-by-side, copy regions, correspondence points, style map), then a sealed statement.
+- **Admin** — review stored detections, request a structured investigation, record a human decision and prepare a notice.
+
+The **How it works** page adds an interactive node walkthrough of the complete
+pipeline, with clearly labeled illustrative examples.
 
 The UI leads with a bottom line a human can act on. Forensic detail is there
 when they need to defend the call.
@@ -140,6 +151,13 @@ overruled, and sealed is the system.
 
 Pins, preprocess, and `make inference`: **[MODELS.md](MODELS.md)**.
 
+CreatorProof also follows a protection workflow inspired by the public product
+principles of 2026 Imagine Cup winner CopyFlag: detection should lead to an
+accountable action, transformed copies need multiple signals, uncertainty must
+remain visible, and repeated evidence should eventually improve prioritisation.
+The current implementation is deliberately pre-publication and source-scoped;
+the adoption plan is documented in **[COPYFLAG_PHILOSOPHY_INTEGRATION.md](docs/COPYFLAG_PHILOSOPHY_INTEGRATION.md)**.
+
 ---
 
 ## Run it
@@ -153,6 +171,26 @@ cd apps/web && npm install && npm run dev
 
 `http://localhost:3000` · Python 3.12+, [uv](https://docs.astral.sh/uv/), Node 20+.
 Full setup: [DEVELOPER_SETUP_GUIDE.md](DEVELOPER_SETUP_GUIDE.md).
+
+### Image-source connector smoke test
+
+Unsplash, Pixabay and eBay can be searched from the backend and the User/Admin
+portals. eBay supports sandbox testing and separately configured production access.
+Put the provider credentials in `apps/api/.env` using the names in
+[the connector guide](docs/MARKETPLACE_CONNECTORS.md), then run:
+
+```bash
+curl -sS http://localhost:8000/v1/marketplaces/search \
+  -H 'X-API-Key: change-me-before-sharing' \
+  -H 'Content-Type: application/json' \
+  -d '{"provider":"pixabay","query":"painting","per_page":3}'
+```
+
+Use the returned `observation_id` with `/v1/marketplaces/scan` to download the
+selected image and send it through the normal catalog scan. The connector keeps
+provider keys server-side and records the source observation in the evidence
+packet. See [MARKETPLACE_CONNECTORS.md](docs/MARKETPLACE_CONNECTORS.md) for the
+full flow and testing commands.
 
 ```text
 apps/api/app/providers/    copy, origin, style, C2PA, OCR, proof

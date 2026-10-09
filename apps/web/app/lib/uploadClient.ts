@@ -5,6 +5,7 @@ import {
   MAX_IMAGE_UPLOAD_BYTES,
   validateImageMetadata,
 } from "./deployment";
+import { completionFields } from "./phase1Contract";
 
 type UploadPurpose = "scan" | "work";
 
@@ -141,7 +142,7 @@ async function directUpload(
   return fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify({ ...textFields(form), upload_token: grantBody.upload_token }),
+    body: JSON.stringify({ ...completionFields(textFields(form)), upload_token: grantBody.upload_token }),
     signal: AbortSignal.timeout(180_000),
   });
 }

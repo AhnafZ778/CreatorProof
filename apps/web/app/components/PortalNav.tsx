@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Workflow } from "lucide-react";
 
 import {
   portalPath,
@@ -8,7 +9,7 @@ import {
 } from "@/app/lib/portalSession";
 
 type Props = {
-  active: PortalRole;
+  active: PortalRole | "pipeline";
 };
 
 export default function PortalNav({ active }: Props) {
@@ -49,9 +50,20 @@ export default function PortalNav({ active }: Props) {
             </svg>
             User
           </Link>
+          <Link
+            href={portalPath("admin")}
+            className={active === "admin" ? "active" : ""}
+            aria-current={active === "admin" ? "page" : undefined}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
+              <path d="M12 3 3 7v6c0 5 9 9 9 9s9-4 9-9V7l-9-4Z" />
+              <path d="m8 12 3 3 5-5" />
+            </svg>
+            Admin
+          </Link>
         </div>
 
-        <div className="portalNavSpacer" aria-hidden="true" />
+        <Link href="/pipeline" aria-label="How CreatorProof works" className={`cpNavLearn ${active === "pipeline" ? "isActive" : ""}`} aria-current={active === "pipeline" ? "page" : undefined}><Workflow size={16} aria-hidden="true" /><span>How it works</span></Link>
       </div>
     </header>
   );

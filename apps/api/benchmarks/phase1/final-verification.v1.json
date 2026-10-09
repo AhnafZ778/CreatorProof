@@ -1,0 +1,89 @@
+{
+  "additional_checks": {
+    "backend_ruff": {
+      "command": "uv run ruff check app scripts migrations tests",
+      "exit_code": 0
+    },
+    "compose_configuration": {
+      "command": "docker compose config --quiet",
+      "exit_code": 0
+    },
+    "documentation_links": {
+      "broken_local_links": 0,
+      "checked_final_documents": 6
+    },
+    "frontend_guard": {
+      "changed_files": 0,
+      "command": "python3 scripts/phase1_frontend_guard.py",
+      "exit_code": 0,
+      "source_files": 105
+    },
+    "required_artifacts": {
+      "count": 14,
+      "missing": []
+    },
+    "sqlite_schema_parity": {
+      "command": "uv run alembic check",
+      "exit_code": 0,
+      "head": "0013_unknown_rights_baseline"
+    },
+    "whitespace": {
+      "command": "git diff --check",
+      "exit_code": 0
+    }
+  },
+  "benchmark": {
+    "artifact": "apps/api/benchmarks/phase1/final-offline-smoke.v1.json",
+    "cases": 67,
+    "grade": "SMOKE_TEST_ONLY",
+    "production_accuracy_qualified": false
+  },
+  "frontend": {
+    "baseline": "docs/phase1-frontend-baseline.json",
+    "changed_files": [],
+    "file_count": 105,
+    "frontend_unchanged": true
+  },
+  "limits": [
+    "REMOTE_PROVIDERS_NOT_LIVE_CHECKED",
+    "MODEL_RUNTIME_ENVIRONMENT_DRIFT",
+    "MODEL_TERMS_REVIEW_REQUIRED",
+    "SIGNED_C2PA_FIXTURES_NOT_LIVE_QUALIFIED"
+  ],
+  "postgresql": {
+    "artifact": "apps/api/benchmarks/phase1/postgresql17-verification.v1.json",
+    "checks": 15,
+    "passed": true,
+    "server_version": "17.10"
+  },
+  "recorded_at": "2026-10-09T09:01:35.198103+00:00",
+  "schema": "creatorproof.phase1_final_verification.v1",
+  "source_revision": {
+    "actual": "creatorproof-source-tree-sha256:c6817076d8558033e59d8821a0c7a22593a60406e4208ac2566d9c1e9196d9d9",
+    "expected": "creatorproof-source-tree-sha256:c6817076d8558033e59d8821a0c7a22593a60406e4208ac2566d9c1e9196d9d9",
+    "matches": true
+  },
+  "suite": {
+    "command": "uv run pytest -o addopts='' -q -ra --tb=short",
+    "elapsed_seconds": 260.511,
+    "errors": 0,
+    "failures": 0,
+    "passed": 796,
+    "skipped": 3,
+    "skips": [
+      {
+        "reason": "collection skipped",
+        "test": "::tests.test_multiparty_attestation"
+      },
+      {
+        "reason": "Set CREATORPROOF_RUN_DISPOSABLE_POSTGRES=1 to run disposable Docker integration",
+        "test": "tests.test_phase1_postgres_live::test_disposable_postgresql_migrations_rls_and_immutable_guards"
+      },
+      {
+        "reason": "This scan did not require review, so no case was opened.",
+        "test": "tests.test_platform_api::test_review_actions_are_attributable_and_immutable"
+      }
+    ],
+    "tests": 799
+  }
+}

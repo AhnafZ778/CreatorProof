@@ -1,0 +1,371 @@
+{
+  "claim_boundary": "Configuration and binary identity do not prove provider availability, accuracy, ownership, infringement, or production readiness. --live probes only database and Redis connectivity; use an authorized scan/investigation for provider contracts.",
+  "dependencies": {
+    "database": {
+      "backend": "sqlite",
+      "state": "LIVE_REACHABLE"
+    },
+    "queue": {
+      "backend": "local",
+      "state": "LOCAL_QUEUE_CONFIGURED"
+    },
+    "storage": {
+      "backend": "local",
+      "state": "LOCAL_PATH_ACCESSIBLE"
+    }
+  },
+  "failures": [],
+  "live": true,
+  "model_bundle_validation": {
+    "application_revision": {
+      "actual": "creatorproof-source-tree-sha256:c6817076d8558033e59d8821a0c7a22593a60406e4208ac2566d9c1e9196d9d9",
+      "expected": "creatorproof-source-tree-sha256:c6817076d8558033e59d8821a0c7a22593a60406e4208ac2566d9c1e9196d9d9",
+      "matches": true
+    },
+    "bundle": {
+      "bundle_id": "creatorproof-runtime-ready-evidence-v1",
+      "domain_id": "CREATIVE_OPERATIONS_IMAGE_REVIEW_UNCALIBRATED",
+      "manifest_digest_sha256": "fa6a3a150f4e72462fbafe72cc0df9beb455bf9ba70e3b53486005c3c40ffcf5",
+      "manifest_path": "model_lab/bundles/creatorproof-runtime-ready-v1.json",
+      "manifest_state": "VALID",
+      "qualification_state": "RUNTIME_READY",
+      "reason_codes": []
+    },
+    "component_state_failures": [],
+    "components": [
+      {
+        "actual_artifact_sha256": "9f26bd4c848cc19b73d2ae92eea6e04886f61a7b764ceb7a13aeee62e6a6db56",
+        "artifact_required": true,
+        "artifact_sha256": "9f26bd4c848cc19b73d2ae92eea6e04886f61a7b764ceb7a13aeee62e6a6db56",
+        "artifact_state": "VERIFIED",
+        "component_id": "copy-retrieval-sscd",
+        "configured_artifact_path": "models/sscd_disc_mixup.torchscript.pt",
+        "limitations": [
+          "The selected artifact and deterministic CPU probe passed; retrieval quality remains uncalibrated.",
+          "Similarity is retrieval evidence, not a copying or infringement probability.",
+          "The whole image and five overlapping regions nominate candidates; regional similarity cannot bypass geometric and structural verification."
+        ],
+        "model_version": "official-disc-mixup-artifact+regional-query-v2",
+        "preprocessing_id": "SSCD_RGB_SHORTEST_SIDE_288_IMAGENET_NORMALIZATION_V1",
+        "provider_id": "sscd-disc-mixup-torchscript",
+        "qualification_state": "RUNTIME_READY",
+        "required_for_demo": true,
+        "resolution_reason": null,
+        "resolved_artifact_path": "models/sscd_disc_mixup.torchscript.pt",
+        "role": "COPY_CANDIDATE_RETRIEVAL",
+        "source_revision": "https://dl.fbaipublicfiles.com/sscd-copy-detection/sscd_disc_mixup.torchscript.pt",
+        "terms_state": "REVIEW_REQUIRED"
+      },
+      {
+        "actual_artifact_sha256": null,
+        "artifact_required": false,
+        "artifact_sha256": null,
+        "artifact_state": "NOT_FILE_BACKED",
+        "component_id": "copy-geometry-opencv",
+        "configured_artifact_path": null,
+        "limitations": [
+          "Prototype geometry thresholds require target-domain hard-negative evaluation."
+        ],
+        "model_version": "opencv-runtime-bound",
+        "preprocessing_id": "OPENCV_GRAYSCALE_LOCAL_FEATURES_V2",
+        "provider_id": "mutual-orb-usac-magsac-v2",
+        "qualification_state": "RUNTIME_READY",
+        "required_for_demo": true,
+        "resolution_reason": null,
+        "resolved_artifact_path": null,
+        "role": "COPY_GEOMETRIC_VERIFICATION",
+        "source_revision": "opencv-python-headless>=4.11,<5",
+        "terms_state": "RESOLVED"
+      },
+      {
+        "actual_artifact_sha256": null,
+        "artifact_required": false,
+        "artifact_sha256": null,
+        "artifact_state": "NOT_FILE_BACKED",
+        "component_id": "copy-aligned-structure",
+        "configured_artifact_path": null,
+        "limitations": [
+          "Runs only after geometry validates and remains corroborative evidence.",
+          "Support-region envelopes are point-support evidence, not semantic segmentation or copied-area ground truth."
+        ],
+        "model_version": "creatorproof-v2",
+        "preprocessing_id": "VALIDATED_HOMOGRAPHY_WARP_PLUS_GEOMETRY_SUPPORT_MASK_V2",
+        "provider_id": "aligned-structure-ncc-gms-ssim-region-aware-v2",
+        "qualification_state": "RUNTIME_READY",
+        "required_for_demo": true,
+        "resolution_reason": null,
+        "resolved_artifact_path": null,
+        "role": "COPY_ALIGNMENT_CORROBORATION",
+        "source_revision": "creatorproof-0.10.0",
+        "terms_state": "NOT_APPLICABLE"
+      },
+      {
+        "actual_artifact_sha256": "b89f36275f3bf5e2b040eee36597a8f19db051bff9a473a9cf7b2466284fb387",
+        "artifact_required": true,
+        "artifact_sha256": "b89f36275f3bf5e2b040eee36597a8f19db051bff9a473a9cf7b2466284fb387",
+        "artifact_state": "VERIFIED",
+        "component_id": "origin-community-forensics",
+        "configured_artifact_path": "models/community-forensics-384",
+        "limitations": [
+          "Deployment-domain calibration and separate model/data terms review are required.",
+          "A quiet score cannot establish human origin."
+        ],
+        "model_version": "official-384-checkpoint",
+        "preprocessing_id": "COMMUNITY_FORENSICS_SHORT_SIDE_440_CENTER_CROP_384_V1",
+        "provider_id": "community-forensics-vit-small-384",
+        "qualification_state": "RUNTIME_READY",
+        "required_for_demo": false,
+        "resolution_reason": null,
+        "resolved_artifact_path": "models/community-forensics-384/model.safetensors",
+        "role": "PASSIVE_AI_ORIGIN_EVIDENCE",
+        "source_revision": "OwensLab/commfor-model-384@6076002bf0d9dd37537f965ee2f06f826c333b61",
+        "terms_state": "REVIEW_REQUIRED"
+      },
+      {
+        "actual_artifact_sha256": null,
+        "artifact_required": false,
+        "artifact_sha256": null,
+        "artifact_state": "NOT_FILE_BACKED",
+        "component_id": "origin-sightengine-genai",
+        "configured_artifact_path": null,
+        "limitations": [
+          "The service model and deployment can change remotely and are not byte-pinned by CreatorProof.",
+          "The global and generator-category scores are vendor review signals, not CreatorProof-calibrated probabilities, provenance, or pixel-level explanations.",
+          "Authorized-domain evaluation, service terms review, network availability, and credential rotation remain operator responsibilities."
+        ],
+        "model_version": "sightengine-genai-api-vendor-managed",
+        "preprocessing_id": "SIGHTENGINE_GENAI_ORIGINAL_MEDIA_UPLOAD_V1",
+        "provider_id": "sightengine-genai",
+        "qualification_state": "SOURCE_VERIFIED",
+        "required_for_demo": false,
+        "resolution_reason": null,
+        "resolved_artifact_path": null,
+        "role": "PASSIVE_AI_ORIGIN_EVIDENCE",
+        "source_revision": "https://sightengine.com/docs/ai-generated-image-detection",
+        "terms_state": "REVIEW_REQUIRED"
+      },
+      {
+        "actual_artifact_sha256": null,
+        "artifact_required": false,
+        "artifact_sha256": null,
+        "artifact_state": "NOT_FILE_BACKED",
+        "component_id": "origin-c2pa",
+        "configured_artifact_path": null,
+        "limitations": [
+          "Manifest validity, signature validity, signer trust, and AI assertions are distinct facts.",
+          "Manifest absence is unknown provenance."
+        ],
+        "model_version": "operator-installed-binary",
+        "preprocessing_id": "ORIGINAL_CANDIDATE_BYTES_V1",
+        "provider_id": "c2patool-official",
+        "qualification_state": "SOURCE_VERIFIED",
+        "required_for_demo": false,
+        "resolution_reason": null,
+        "resolved_artifact_path": null,
+        "role": "SIGNED_PROVENANCE_INSPECTION",
+        "source_revision": "c2pa-rs/c2patool-version-must-be-recorded",
+        "terms_state": "RESOLVED"
+      },
+      {
+        "actual_artifact_sha256": null,
+        "artifact_required": false,
+        "artifact_sha256": null,
+        "artifact_state": "NOT_FILE_BACKED",
+        "component_id": "origin-visible-marker",
+        "configured_artifact_path": null,
+        "limitations": [
+          "Visible labels can be forged, removed, or misread and are not authenticated provenance."
+        ],
+        "model_version": "operator-installed-binary-and-language-data",
+        "preprocessing_id": "VISIBLE_MARKER_MULTIVIEW_GRAYSCALE_V1",
+        "provider_id": "tesseract-visible-ai-marker-v1",
+        "qualification_state": "SOURCE_VERIFIED",
+        "required_for_demo": false,
+        "resolution_reason": null,
+        "resolved_artifact_path": null,
+        "role": "FORGEABLE_VISIBLE_LABEL_OBSERVATION",
+        "source_revision": "tesseract-runtime-version-must-be-recorded",
+        "terms_state": "RESOLVED"
+      },
+      {
+        "actual_artifact_sha256": "40e92fad63a361b8136100cd234c42d401ef9b34ff1748234318929ebcc7e7a1",
+        "artifact_required": true,
+        "artifact_sha256": "40e92fad63a361b8136100cd234c42d401ef9b34ff1748234318929ebcc7e7a1",
+        "artifact_state": "VERIFIED",
+        "component_id": "style-csd",
+        "configured_artifact_path": "models/csd-vit-l/pytorch_model.bin",
+        "limitations": [
+          "The upstream checkpoint discrepancy and profile-domain performance block promotion.",
+          "Creator-profile resemblance is advisory and is not authorship or copying."
+        ],
+        "model_version": "external-checkpoint",
+        "preprocessing_id": "UPSTREAM_CSD_TRANSFORMS_BRANCH0",
+        "provider_id": "csd-vit-l-style-descriptor",
+        "qualification_state": "RUNTIME_READY",
+        "required_for_demo": false,
+        "resolution_reason": null,
+        "resolved_artifact_path": "models/csd-vit-l/pytorch_model.bin",
+        "role": "CREATOR_PROFILE_RESEMBLANCE",
+        "source_revision": "learn2phoenix/CSD@3a9df32605b869eceb704897839be80977a9f1ea;tomg-group-umd/CSD-ViT-L@5bc26a6fb0487f3f00a2a7313135103a005b1b67",
+        "terms_state": "REVIEW_REQUIRED"
+      },
+      {
+        "actual_artifact_sha256": null,
+        "artifact_required": false,
+        "artifact_sha256": null,
+        "artifact_state": "NOT_FILE_BACKED",
+        "component_id": "style-diagnostic",
+        "configured_artifact_path": null,
+        "limitations": [
+          "Diagnostic factors cannot trigger creator attribution or policy enforcement."
+        ],
+        "model_version": "creatorproof-v1",
+        "preprocessing_id": "PALETTE_TONE_EDGE_TEXTURE_TILE_MAP_V1",
+        "provider_id": "diagnostic-style-signature-v1",
+        "qualification_state": "RUNTIME_READY",
+        "required_for_demo": false,
+        "resolution_reason": null,
+        "resolved_artifact_path": null,
+        "role": "DESCRIPTIVE_STYLE_DIAGNOSTICS",
+        "source_revision": "creatorproof-0.10.0",
+        "terms_state": "NOT_APPLICABLE"
+      }
+    ],
+    "demo_ready": false,
+    "runtime_artifact_failures": [],
+    "runtime_environment": {
+      "actual_python": "3.12.3",
+      "actual_python_major_minor": "3.12",
+      "configured": true,
+      "expected_python": "3.12.3",
+      "expected_python_major_minor": "3.12",
+      "matches": false,
+      "packages": [
+        {
+          "actual_version": "1.0",
+          "expected_version": "1.0",
+          "matches": true,
+          "package": "clip"
+        },
+        {
+          "actual_version": "1.33.0",
+          "expected_version": "1.27.0",
+          "matches": false,
+          "package": "huggingface-hub"
+        },
+        {
+          "actual_version": "2.5.1",
+          "expected_version": "2.5.1",
+          "matches": true,
+          "package": "numpy"
+        },
+        {
+          "actual_version": "4.14.0.94",
+          "expected_version": "4.14.0.94",
+          "matches": true,
+          "package": "opencv-python-headless"
+        },
+        {
+          "actual_version": "12.3.0",
+          "expected_version": "12.3.0",
+          "matches": true,
+          "package": "pillow"
+        },
+        {
+          "actual_version": "0.8.0",
+          "expected_version": "0.8.0",
+          "matches": true,
+          "package": "safetensors"
+        },
+        {
+          "actual_version": "2.14.1+cpu",
+          "expected_version": "2.13.0",
+          "matches": false,
+          "package": "torch"
+        },
+        {
+          "actual_version": "0.29.1+cpu",
+          "expected_version": "0.28.0",
+          "matches": false,
+          "package": "torchvision"
+        }
+      ],
+      "requirement_files": [
+        {
+          "actual_sha256": "4cce6d663600a9020b5dd1cb959773b56d4b815eecdaa3b6ea959eabb2f5e9e9",
+          "expected_sha256": "4cce6d663600a9020b5dd1cb959773b56d4b815eecdaa3b6ea959eabb2f5e9e9",
+          "matches": true,
+          "path": "requirements-ai.txt"
+        },
+        {
+          "actual_sha256": "5028af4aa6e89de433264a281f2d628251c6089df8d0726aa1efd89432bf8fe6",
+          "expected_sha256": "5028af4aa6e89de433264a281f2d628251c6089df8d0726aa1efd89432bf8fe6",
+          "matches": true,
+          "path": "requirements-style-experimental.txt"
+        },
+        {
+          "actual_sha256": "3333fd94f308fb9eaa0c01109f2aa31f975f5ed730b13b6e5810901f2d34b064",
+          "expected_sha256": "3333fd94f308fb9eaa0c01109f2aa31f975f5ed730b13b6e5810901f2d34b064",
+          "matches": true,
+          "path": "requirements-synthetic.txt"
+        }
+      ]
+    },
+    "runtime_lock": {
+      "actual_sha256": "fe607b658b8c125f618905b4c41f24c02cbceac37f53bb9b8b99a37277eefc36",
+      "expected_sha256": "fe607b658b8c125f618905b4c41f24c02cbceac37f53bb9b8b99a37277eefc36",
+      "matches": true,
+      "path": "uv.lock"
+    },
+    "runtime_requirement_met_for_declared_state": false,
+    "schema": "creatorproof.model_bundle_runtime_validation.v1",
+    "terms_failures": [
+      "copy-retrieval-sscd"
+    ]
+  },
+  "privacy": {
+    "candidate_retention_seconds": 0,
+    "secrets_included": false
+  },
+  "providers": {
+    "assistant": {
+      "configured": true,
+      "live_checked": false,
+      "model": "deepseek-ai/deepseek-v4-flash",
+      "provider": "aiand",
+      "reason_code": null,
+      "state": "CONFIGURED_NOT_LIVE_CHECKED"
+    },
+    "c2pa": {
+      "available": true,
+      "binary_sha256": "cceb21184cf0f5f3e4dce38275a225ad8ea50d2cda559df7a90ca0737248ad70",
+      "configured": true,
+      "live_checked": false,
+      "reason_code": null,
+      "state": "LOCAL_IDENTITY_VERIFIED",
+      "version": "0.27.7"
+    },
+    "pixabay": {
+      "configured": true,
+      "live_checked": false,
+      "state": "CONFIGURED_NOT_LIVE_CHECKED"
+    },
+    "sightengine": {
+      "configured": true,
+      "live_checked": false,
+      "reason_code": null,
+      "state": "CONFIGURED_NOT_LIVE_CHECKED"
+    },
+    "unsplash": {
+      "configured": true,
+      "live_checked": false,
+      "state": "CONFIGURED_NOT_LIVE_CHECKED"
+    }
+  },
+  "required_capabilities_unmet": [],
+  "schema": "creatorproof.phase1_preflight.v1",
+  "valid": true,
+  "warnings": [
+    "CANDIDATE_MEDIA_DELETED_AFTER_SCAN"
+  ]
+}

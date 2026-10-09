@@ -12,6 +12,7 @@ import json
 import logging
 import math
 import os
+import re
 import threading
 import time
 from collections import defaultdict
@@ -36,6 +37,28 @@ _REDACTED_KEYS = frozenset(
         "token",
     }
 )
+_PUBLIC_VERIFICATION_PATH_RE = re.compile(r"(/verify/)[^\s?\"']+", re.IGNORECASE)
+
+
+class PublicVerificationLogFilter(logging.Filter):
+    """Keep bearer-like public verification tokens out of Uvicorn access logs."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        def redact(value):
+            return (
+                _PUBLIC_VERIFICATION_PATH_RE.sub(r"\1[redacted]", value)
+                if isinstance(value, str)
+                else value
+            )
+
+        record.msg = redact(record.msg)
+        # Preserve the five positional access-log args: Uvicorn's own formatter
+        # unpacks them to render the request line and status code.
+        if isinstance(record.args, tuple):
+            record.args = tuple(redact(value) for value in record.args)
+        elif isinstance(record.args, dict):
+            record.args = {key: redact(value) for key, value in record.args.items()}
+        return True
 
 
 def new_correlation_id() -> str:
@@ -74,10 +97,31 @@ def correlation_scope(value: str | None = None):
 
 
 def _redact(payload: dict[str, Any]) -> dict[str, Any]:
-    return {
-        key: ("[redacted]" if key.lower() in _REDACTED_KEYS else value)
-        for key, value in payload.items()
-    }
+    """Redact nested connector/provider credentials before serializing logs."""
+
+    def visit(value: Any) -> Any:
+        if isinstance(value, dict):
+            return {
+                key: (
+                    "[redacted]"
+                    if str(key).lower() in _REDACTED_KEYS
+                    or re.search(
+                        r"(?:api[_-]?key|api[_-]?secret|access[_-]?key|secret[_-]?key|"
+                        r"(?:auth|refresh|access|bearer|session|id|jwt)[_-]?token|"
+                        r"client[_-]?secret|(?:^|[_-])(?:token|secret)$|"
+                        r"private[_-]?key|password|credential|cookie)",
+                        str(key),
+                        re.IGNORECASE,
+                    )
+                    else visit(item)
+                )
+                for key, item in value.items()
+            }
+        if isinstance(value, (list, tuple)):
+            return [visit(item) for item in value]
+        return value
+
+    return visit(payload)
 
 
 class JsonLogFormatter(logging.Formatter):
@@ -86,7 +130,7 @@ class JsonLogFormatter(logging.Formatter):
             "timestamp": datetime.fromtimestamp(record.created, UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
-            "message": record.getMessage(),
+            "message": _PUBLIC_VERIFICATION_PATH_RE.sub(r"\1[redacted]", record.getMessage()),
         }
         correlation = _correlation_id.get()
         if correlation:
@@ -115,6 +159,9 @@ def configure_logging(log_format: str = "json", level: int = logging.INFO) -> No
         root.removeHandler(existing)
     root.addHandler(handler)
     root.setLevel(level)
+    access_logger = logging.getLogger("uvicorn.access")
+    if not any(isinstance(item, PublicVerificationLogFilter) for item in access_logger.filters):
+        access_logger.addFilter(PublicVerificationLogFilter())
 
 
 def log_event(logger: logging.Logger, message: str, /, level: int = logging.INFO, **fields) -> None:

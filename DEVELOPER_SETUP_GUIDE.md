@@ -7,6 +7,12 @@
 
 This guide provides an end-to-end, automated setup specification designed for an AI agent or developer to configure a completely identical environment with all active detection lanes (SSCD visual copy retrieval, CSD style attribution, Community Forensics & Sightengine synthetic origin analysis, and Merkle proof anchoring).
 
+For the Phase 1 backend additions, use the [access checklist](PHASE1_ACCESS_CHECKLIST.md)
+and [provider setup](docs/PHASE1_PROVIDER_SETUP.md). Read the
+[implementation report](PHASE1_IMPLEMENTATION_REPORT.md) for the actual local
+verification results and remaining model/provider qualification limits. Optional
+credentials and downloaded artifacts alone do not establish active, qualified lanes.
+
 ---
 
 ## 1. System Requirements & Prerequisites
@@ -49,6 +55,12 @@ CREATORPROOF_JOB_BACKEND=local
 CREATORPROOF_LOCAL_JOB_WORKERS=1
 CREATORPROOF_REDIS_URL=redis://localhost:6379/0
 CREATORPROOF_API_URL=http://localhost:8000
+
+# AI & Inference notice drafting (API server only)
+CREATORPROOF_AIAND_API_KEY=
+CREATORPROOF_AIAND_BASE_URL=https://api.aiand.com/v1
+CREATORPROOF_AIAND_MODEL=deepseek-ai/deepseek-v4-flash
+CREATORPROOF_AIAND_TIMEOUT_SECONDS=30
 
 # SSCD Copy Retrieval Lane
 CREATORPROOF_SSCD_MODEL_PATH=./models/sscd_disc_mixup.torchscript.pt
@@ -98,6 +110,12 @@ CREATORPROOF_SYNTHETIC_DETECTOR=auto
 CREATORPROOF_SYNTHETIC_POLICY_MODE=INFORMATIONAL
 CREATORPROOF_SIGHTENGINE_API_USER=your-api-user
 CREATORPROOF_SIGHTENGINE_API_SECRET=your-api-secret
+
+# Image-source connectors (server-side only)
+CREATORPROOF_UNSPLASH_ACCESS_KEY=your-unsplash-access-key
+CREATORPROOF_PIXABAY_API_KEY=your-pixabay-api-key
+CREATORPROOF_MARKETPLACE_TIMEOUT_SECONDS=20
+CREATORPROOF_MARKETPLACE_MAX_RESULTS=30
 CREATORPROOF_SIGHTENGINE_TIMEOUT_SECONDS=20
 CREATORPROOF_SYNTHETIC_COMMUNITY_MODEL_PATH=./models/community-forensics-384
 CREATORPROOF_SYNTHETIC_TORCHSCRIPT_MODEL_PATH=./models/synthetic-detector.torchscript.pt

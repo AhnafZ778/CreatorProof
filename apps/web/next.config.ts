@@ -8,6 +8,8 @@ const appRoot = path.dirname(fileURLToPath(import.meta.url));
 // bundle; emitting it on Vercel makes `npm run build` look for a directory
 // the platform never uses, then fail in finalize-standalone.mjs.
 const nextConfig: NextConfig = {
+  // A separate output directory lets browser checks run beside a developer's server.
+  distDir: process.env.CREATORPROOF_WEB_DIST_DIR || ".next",
   ...(process.env.VERCEL === "1" ? {} : { output: "standalone" as const }),
   turbopack: {
     root: appRoot,
@@ -29,6 +31,7 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
+      ...["/verify/:path*", "/api/public-verification/:path*"].map((source) => ({ source, headers: [{ key: "Referrer-Policy", value: "no-referrer" }, { key: "X-Robots-Tag", value: "noindex, nofollow" }, { key: "Cache-Control", value: "no-store" }] })),
     ];
   },
 };

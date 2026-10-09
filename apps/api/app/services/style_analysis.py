@@ -384,6 +384,7 @@ def analyze_style(
             select(Work).where(
                 Work.tenant_id == tenant_id,
                 Work.catalog_id == catalog_id,
+                Work.deleted_at.is_(None),
             )
         )
     )
